@@ -1,0 +1,1 @@
+Do the following using deep planning, multiple subagents, and check cases to ensure accuracy. Ask user questions using prompts if necessary. If you arrive at a large issue that requires debugging make a new deep plan and continue. Deeply think about this. Ensure no future bugs arise because of these changes. Check all affected elements for functionality and bugs.
