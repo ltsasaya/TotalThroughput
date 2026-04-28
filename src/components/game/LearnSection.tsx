@@ -86,6 +86,44 @@ export function LearnSection() {
           </p>
         </div>
       </section>
+
+      {/* Section 4: Defining a System */}
+      <section className="bg-gray-900 border-t border-gray-800">
+        <div className="max-w-3xl mx-auto px-6 py-20">
+          <p className="text-xs uppercase tracking-widest text-gray-500">Defining a System</p>
+          <h2 className="text-2xl font-bold text-white mt-2 mb-4">
+            What counts as a system?
+          </h2>
+          <p className="text-gray-400 leading-relaxed">
+            A system is any setup that takes in work, processes it, and produces results. Every
+            system has three core parts: arrivals (work coming in), one or more workers (the things
+            doing the processing), and a queue (where work waits when the workers are busy). The
+            behavior you see under load emerges from how these parts interact, not from any one of
+            them alone.
+          </p>
+          <p className="text-gray-400 leading-relaxed mt-4">
+            Real-world systems take many forms. A web server is a system: requests arrive, threads
+            handle them, and a backlog forms when traffic spikes. A coffee shop is a system:
+            customers arrive, baristas serve, and a line builds during the morning rush. A CPU is a
+            system: instructions arrive, cores execute, and the run queue holds the rest. The same
+            intuition applies to all of them.
+          </p>
+          <div className="mt-6 grid grid-cols-3 gap-4">
+            <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Arrivals</p>
+              <p className="text-gray-400 text-sm">Work entering the system over time.</p>
+            </div>
+            <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Workers</p>
+              <p className="text-gray-400 text-sm">The cores, threads, or servers doing the processing.</p>
+            </div>
+            <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Queue</p>
+              <p className="text-gray-400 text-sm">Where work waits when every worker is busy.</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
