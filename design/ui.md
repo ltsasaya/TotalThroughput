@@ -6,17 +6,17 @@
 * Score
 * Timer
 * Current phase
-* Dropped task count
+* Dropped request count
 * Warning state
 
 ### Left Panel
-* Queue of waiting tasks
-* Each task shows waiting time and size/type estimate
+* Queue of waiting requests
+* Each request shows waiting time and size/type estimate
 
 ### Center Panel
-* Cores shown as cards or lanes
+* Server workers shown as cards or lanes
 * Idle or busy status
-* Currently running task
+* Currently running request
 * Progress bar
 
 ### Right Panel
@@ -24,7 +24,7 @@
 * Throughput
 * Queue length
 * Utilization
-* Average latency
+* Average response time
 
 ### Bottom Panel or Modal
 * Optional instructional hints

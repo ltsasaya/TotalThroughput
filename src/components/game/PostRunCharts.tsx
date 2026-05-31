@@ -48,7 +48,7 @@ export function PostRunCharts({ throughputHistory, queueLengthHistory }: PostRun
             />
             <YAxis
               tick={{ fill: '#6b7280', fontSize: 11 }}
-              label={{ value: 'tasks/s', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 11 }}
+              label={{ value: 'req/s', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 11 }}
             />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Line type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={2} dot={false} />

@@ -20,13 +20,13 @@ export function SummaryHeader({ failed, survivedMs, phaseDuration, difficulty, c
   const survivedSec = Math.round(survivedMs / 1000)
 
   const subheader = failed
-    ? `${DIFFICULTY_LABEL[difficulty]} | ${coreCount} cores | Survived: ${survivedSec}s / ${totalSec}s`
-    : `${DIFFICULTY_LABEL[difficulty]} | ${coreCount} cores | ${totalSec}s`
+    ? `${DIFFICULTY_LABEL[difficulty]} | ${coreCount} workers | Survived: ${survivedSec}s / ${totalSec}s`
+    : `${DIFFICULTY_LABEL[difficulty]} | ${coreCount} workers | ${totalSec}s`
 
   return (
     <div className="mb-8">
       <h1 className={`text-3xl font-bold mb-1 ${failed ? 'text-red-400' : 'text-white'}`}>
-        {failed ? 'Phase 2 Failed — Queue Overloaded' : 'Phase 2 Complete — Multi-Core Scheduling'}
+        {failed ? 'Phase 2 Failed - Queue Overloaded' : 'Phase 2 Complete - Server Pool Dispatch'}
       </h1>
       <p className="text-sm text-gray-400">{subheader}</p>
     </div>

@@ -41,16 +41,16 @@ export default function Phase2DebriefPopup({ onDismiss }: Props) {
         onClick={e => e.stopPropagation()}
       >
         <h2 className="text-xl font-bold text-white mb-1">Run Complete</h2>
-        <p className="text-sm text-gray-500 mb-6">Your measured performance on the theory curves.</p>
+        <p className="text-sm text-gray-500 mb-6">Your measured server-pool performance on the reference curves.</p>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-gray-800 rounded-lg p-3">
-            <div className="font-mono text-blue-300 text-sm">U = {(avgUtil * 100).toFixed(0)}%</div>
-            <div className="text-xs text-gray-500 mt-1">core utilization  (U = XD)</div>
+            <div className="font-mono text-blue-300 text-sm">rho = {(avgUtil * 100).toFixed(0)}%</div>
+            <div className="text-xs text-gray-500 mt-1">avg worker utilization</div>
           </div>
           <div className="bg-gray-800 rounded-lg p-3">
             <div className="font-mono text-blue-300 text-sm">R/D = {rdExpansion.toFixed(2)}×</div>
-            <div className="text-xs text-gray-500 mt-1">response time expansion</div>
+            <div className="text-xs text-gray-500 mt-1">observed response/service ratio</div>
           </div>
           <div className="bg-gray-800 rounded-lg p-3">
             <div className="font-mono text-blue-300 text-sm">
@@ -60,7 +60,7 @@ export default function Phase2DebriefPopup({ onDismiss }: Props) {
           </div>
           <div className="bg-gray-800 rounded-lg p-3">
             <div className="font-mono text-blue-300 text-sm">N = λR ≈ {N}</div>
-            <div className="text-xs text-gray-500 mt-1">Little's Law — avg queue length</div>
+            <div className="text-xs text-gray-500 mt-1">Little's Law - avg requests in system</div>
           </div>
         </div>
 

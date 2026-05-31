@@ -16,21 +16,22 @@ export function Phase1Complete() {
   const failed = phase1Result.failed === true
 
   const D = phase1Result.avgServiceTime / 1000
-  const lambdaMax = phase1Result.measuredTasksPerSecond
-  const U = Math.min(lambdaMax * D, 1.0)
+  const lambdaMax = D > 0 ? 1 / D : 0
 
   const totalArrived = Object.keys(tasks).length
   const lambdaArrival = phaseElapsed > 0 ? totalArrived / (phaseElapsed / 1000) : 0
+  const observedThroughput = phaseElapsed > 0 ? phase1Result.completedCount / (phaseElapsed / 1000) : 0
+  const offeredLoad = lambdaMax > 0 ? lambdaArrival / lambdaMax : 0
 
   const R = phase1Result.avgResponseTime / 1000
 
   let statusMessage: string
   if (failed) {
-    statusMessage = 'Queue overflowed — tasks backed up faster than you could process them. Phase 2 is locked.'
+    statusMessage = 'Queue overflowed because requests backed up faster than the server could process them. Phase 2 is locked.'
   } else if (dropRate > 0.3) {
-    statusMessage = 'Many tasks dropped — dispatch quickly in Phase 2 to avoid queue buildup.'
+    statusMessage = 'Many requests dropped. Dispatch quickly in Phase 2 to avoid queue buildup.'
   } else {
-    statusMessage = 'Your baseline is calibrated. Phase 2 cores process at your measured service rate.'
+    statusMessage = 'Your single-server baseline is calibrated. Phase 2 workers process at your measured service demand.'
   }
 
   return (
@@ -51,9 +52,9 @@ export function Phase1Complete() {
 
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Service Rate</p>
+            <p className="text-xs text-gray-500 mb-1">Observed Throughput</p>
             <p className="text-xl font-bold text-white">
-              {phase1Result.measuredTasksPerSecond.toFixed(2)} tasks/s
+              {observedThroughput.toFixed(2)} req/s
             </p>
           </div>
 
@@ -103,8 +104,8 @@ export function Phase1Complete() {
                 <div className="text-xs text-gray-500 mt-1">= 1/D  peak rate</div>
               </div>
               <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <div className="font-mono text-blue-300 text-sm">U = {(U * 100).toFixed(0)}%</div>
-                <div className="text-xs text-gray-500 mt-1">λ / λmax</div>
+                <div className="font-mono text-blue-300 text-sm">λD = {(offeredLoad * 100).toFixed(0)}%</div>
+                <div className="text-xs text-gray-500 mt-1">offered load</div>
               </div>
             </div>
 
@@ -122,7 +123,10 @@ export function Phase1Complete() {
             <div className="mb-6">
               <SaturationChart
                 phase1={{
-                  measuredTasksPerSecond: lambdaMax,
+                  measuredTasksPerSecond: phase1Result.measuredTasksPerSecond,
+                  lambdaMax,
+                  arrivalRate: lambdaArrival,
+                  actualThroughput: observedThroughput,
                   completedCount: phase1Result.completedCount,
                   droppedCount: phase1Result.droppedCount,
                 }}
@@ -140,7 +144,7 @@ export function Phase1Complete() {
             <div className="mb-6 bg-gray-800 rounded-lg px-4 py-3">
               <div className="font-mono text-blue-300 text-sm">N = λR  (Little's Law)</div>
               <div className="text-xs text-gray-400 mt-1">
-                λ = {lambdaArrival.toFixed(2)}/s approached λmax = {lambdaMax.toFixed(2)}/s — as U → 1, R grows unbounded.
+                λ = {lambdaArrival.toFixed(2)}/s compared with λmax = {lambdaMax.toFixed(2)}/s. As λD approaches 1, R grows sharply.
               </div>
             </div>
           </>
@@ -152,7 +156,7 @@ export function Phase1Complete() {
           </p>
         ) : (
           <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-            D = {D.toFixed(2)}s carries into Phase 2 — each core processes at this rate.
+            D = {D.toFixed(2)}s carries into Phase 2. Each worker processes requests at this rate.
           </p>
         )}
 

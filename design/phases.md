@@ -6,77 +6,109 @@ Phase 2 is locked until the player completes Phase 1 calibration.
 
 | Phase | Role | Status |
 |---|---|---|
-| Phase 1 | Single-core calibration — player types to complete tasks | MVP |
-| Phase 2 | Multi-core scheduling — player dispatches tasks to automatic workers | MVP |
-| Phase 3 | Workflow mode — task completions trigger downstream tasks | Planned, out of scope |
+| Phase 1 | Single-server calibration: player types to complete client RPCs | MVP overhaul |
+| Phase 2 | Multi-server dispatch: player routes queued RPCs to automatic workers | MVP overhaul |
+| Phase 3 | Workflow mode: task completions trigger downstream tasks | Planned, out of scope |
 
 ---
 
-## Phase 1: Single-Core Calibration
+## Phase 1: Single-Server Calibration
 
 ### Purpose
 
-Measure the player's baseline service rate and introduce queueing.
+Introduce clients sending RPCs to one server, measure the player's baseline
+server service demand, and make response time intuitive:
+
+```
+response time = waiting time + service time
+```
+
+Phase 1 should show that queues form when arrivals approach service capacity,
+and that response time can grow without bound when arrivals exceed capacity.
 
 ### Flow
 
-* Before Phase 1 begins, a modal popup explains what calibration simulates and how the typing mechanic works. Dismissed by any key or outside click.
-* Tasks arrive at a moderate pace.
-* The player completes them by typing multi-word strings.
-* Arrival rate gradually increases.
-* The player continues for a fixed duration.
-* The system computes baseline capacity.
-* After Phase 1 ends, a post-phase popup explains the metrics seen and connects them to real system concepts before the calibration results screen is shown.
+* Before Phase 1 begins, a modal popup explains that clients send RPCs to a
+  server and the player is the server worker. Dismissed by any key or outside
+  click.
+* The player enters a sequence of short levels with fixed arrival rates.
+* The player completes client RPCs by typing multi-word strings.
+* Each level uses one constant Poisson arrival rate.
+* Later levels increase arrival rate to move from low load to near saturation
+  and then overload.
+* The system computes baseline capacity from completed typing work.
+* After Phase 1 ends, a post-phase popup explains the metrics seen and connects
+  them to real system concepts before the calibration results screen is shown.
 
 ### Typing Mechanic (monkeytype-style)
 
-* Each task is a multi-word string (2–8 words of system-performance vocabulary, depending on size).
+* Each task is a multi-word string of server-performance vocabulary.
 * The player types character by character including spaces between words.
 * Incorrect characters are appended and shown in red.
 * Backspace removes the last typed character.
-* A task only completes when `typedContent.length === content.length` and every character matches.
-* Task size determines word count: S = 2–3 words, M = 3–5 words, L = 5–8 words.
+* A task only completes when `typedContent.length === content.length` and every
+  character matches.
+* Phase 1 should use S-heavy prompts so enough arrivals fit in each short
+  level.
 
 ### Deadline Windows
 
-All task sizes share a flat **20-second** deadline window (base), scaled by the difficulty's `deadlineMultiplier` (Beginner 1.25×, Standard 1.0×, Hard 0.75×). Queue pressure is driven by arrival tempo rather than task length.
+Phase 1 has no drops or expirations. Tasks may remain queued when a trial ends,
+but level success is based on observed average response time and completion
+count, not deadline failure.
 
 ### Duration
 
-60 seconds.
+Each level derives duration from expected arrivals:
 
-### Failure Condition
+```
+trialDuration = expectedArrivals / lambda
+```
 
-The player may fail if:
-* Too many tasks expire or are missed.
-* Queue exceeds a hard threshold.
+Target 12-16 expected arrivals per Phase 1 level. Keep most levels around
+35-60 seconds by using short S-heavy typing prompts.
 
-Any task that is still waiting or in-progress when the phase ends is counted as dropped in the final summary (it does not retroactively trip the mid-run failure threshold).
+### Success Condition
 
-Even on failure, the game records a baseline from completed portions if enough data exists.
+A Phase 1 level passes when:
+* enough tasks complete to estimate service demand
+* average response time stays under the level threshold
+
+The player does not fail from drops in Phase 1. Overload levels may be framed
+as demonstrations rather than required first-play gates.
 
 ### Output
 
 * Measured tasks per second
-* Average service time
+* Average service demand
 * Queue length over time
 * Waiting time and response time summary
+* Reference model comparison using `U = lambda * D` and `R ~= D / (1 - U)`
 
 ---
 
-## Phase 2: Multi-Core Scheduling
+## Phase 2: Multi-Server Dispatch
 
 ### Purpose
 
-Teach parallelism and coordination limits via M/M/c queueing theory. At a given utilization (load factor), more parallel cores lower mean response time R. But as cores saturate, queue length and response time grow unboundedly — the M/M/c expansion factor R/D = 1/(1-(U/c)), where c is core count and U is utilization. The player experiences this directly: the same arrival rate that overwhelms c=1 becomes manageable at c=4, and the same load at c=4 becomes critical at high utilization.
+Teach server-pool parallelism and dispatch limits using the course
+back-of-napkin queueing model. More workers raise peak rate because
+`lambda_max ~= c / D`. At a fixed arrival rate this lowers per-worker load,
+shortens queues, and lowers response time. As per-worker load approaches 1,
+queue length and response time rise sharply again.
 
-### Default Core Count
+The exact M/M/c mean response time formula is more complex than the classroom
+capacity approximation. Treat `R ~= D / (1 - lambda D / c)` as an intuition
+curve unless the implementation adds an exact Erlang C or simulation-derived
+reference.
 
-Recommended starting value: 4 cores.
+### Default Worker Count
+
+Recommended starting value: 4 workers.
 
 ### Progression
 
-| Difficulty | Cores |
+| Difficulty | Workers |
 |---|---|
 | Early | 4 |
 | Medium | 6 |
@@ -84,18 +116,23 @@ Recommended starting value: 4 cores.
 
 ### Flow
 
-* Before Phase 2 begins, a modal popup explains what the scheduling challenge simulates. Dismissed by any key or outside click.
-* Player sees a queue of incoming tasks; the first is labeled NEXT.
-* Tasks are dispatched FIFO — clicking an idle core assigns queue[0] to it.
-* Player must react quickly to click cores as they go idle.
-* Arrival rate increases during the level.
-* Score prioritizes low latency while maintaining productivity.
+* Before Phase 2 begins, a modal popup explains that the RPC server now has a
+  pool of workers. Dismissed by any key or outside click.
+* Player sees a queue of incoming RPCs; the first is labeled NEXT.
+* Requests are dispatched FIFO: clicking an idle worker assigns `queue[0]` to it.
+* Player must react quickly to click workers as they go idle.
+* Each run uses one constant Poisson arrival rate.
+* Difficulty or level selection changes arrival rate between runs.
+* Score prioritizes low server response time while maintaining productivity.
 * Phase ends when time runs out or the player loses.
-* After Phase 2 ends, a post-phase popup explains metrics, the M/M/c model (R = D/(1-(U/c))), and why more parallelism flattens the response-time curve at moderate utilization but still blows up near saturation — before the PostRunSummary is shown.
+* After Phase 2 ends, a post-phase popup explains metrics and why more
+  parallelism shifts the response-time curve right without making saturation
+  disappear.
 
 ### Visible Queue Size
 
-Recommended: 6–8 tasks at once. Enough decision depth without overwhelming the player.
+Recommended: 6-8 tasks at once. Enough decision depth without overwhelming the
+player.
 
 ### Failure Conditions
 
@@ -103,7 +140,8 @@ Player loses if either:
 * Queue exceeds a threshold.
 * Too many tasks are dropped, expired, or missed.
 
-Any task still queued, assigned, or running when the phase ends is counted as dropped in the final summary (not toward the mid-run drop threshold).
+Any task still queued, assigned, or running when the phase ends is counted as
+dropped in the final summary, not toward the mid-run drop threshold.
 
 ### Metrics Output
 
@@ -112,8 +150,8 @@ Any task still queued, assigned, or running when the phase ends is counted as dr
 * Queue length over time
 * Average and max waiting time
 * Average and max response time
-* Response time breakdown (waiting vs service)
-* Per-core utilization
+* Response time breakdown: waiting vs service
+* Per-worker utilization
 * Dropped or expired task count
 * Ideal throughput vs actual throughput
 
@@ -121,4 +159,6 @@ Any task still queued, assigned, or running when the phase ends is counted as dr
 
 ## Phase 3: Workflow Mode (Planned, Out of Scope)
 
-Completion of a task may cause one or more downstream tasks to fire. Introduces fan-out, bursty arrivals, and workflow dependencies. See [future.md](future.md) for details.
+Completion of a request may cause one or more downstream requests to fire.
+Introduces fan-out, bursty arrivals, and workflow dependencies. See
+[future.md](future.md) for details.

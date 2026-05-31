@@ -26,7 +26,7 @@ export function Phase1UtilizationChart({ tasks, elapsedMs, avgServiceTime }: Pro
     t => t.status === 'completed' && t.serviceStartTime !== undefined && t.completionTime !== undefined,
   )
 
-  // Cumulative U(T) = totalBusyMs_up_to_T / T — running average utilization
+  // Cumulative U(T) = totalBusyMs_up_to_T / T: running average utilization
   const data: { t: number; U: number }[] = []
   for (let tick = TICK_MS; tick <= elapsedMs + TICK_MS; tick += TICK_MS) {
     const T = Math.min(tick, elapsedMs)
@@ -48,7 +48,7 @@ export function Phase1UtilizationChart({ tasks, elapsedMs, avgServiceTime }: Pro
 
   return (
     <div>
-      <div className="text-sm font-semibold text-gray-400 mb-1">Phase 1 — Cumulative Worker Utilization</div>
+      <div className="text-sm font-semibold text-gray-400 mb-1">Phase 1 - Cumulative Worker Utilization</div>
       <ResponsiveContainer width="100%" height={180}>
         <LineChart data={data} margin={{ top: 10, right: 40, bottom: 20, left: 10 }}>
           <CartesianGrid {...GRID_STYLE} />
@@ -78,7 +78,7 @@ export function Phase1UtilizationChart({ tasks, elapsedMs, avgServiceTime }: Pro
         </LineChart>
       </ResponsiveContainer>
       <div className="text-xs text-gray-600 mt-1">
-        U(t) = cumulative busy time / t. D = {D.toFixed(2)}s per task — as arrivals increase, U rises toward 100%.
+        U(t) = cumulative busy time / t. D = {D.toFixed(2)}s per request. As arrivals increase, U rises toward 100%.
       </div>
     </div>
   )

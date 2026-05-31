@@ -44,13 +44,13 @@ export function QueuePanel({ isFinalStretch }: QueuePanelProps) {
 
       {isFinalStretch && (
         <div className="mb-3 px-2 py-1.5 bg-red-950/60 border-l-2 border-red-500 rounded text-xs text-red-300 font-semibold">
-          No more tasks incoming — clear the queue
+          No more requests incoming - clear the queue
         </div>
       )}
 
       <div className="overflow-y-auto flex-1 flex flex-col gap-2">
         {queue.length === 0 && !isFinalStretch && (
-          <span className="text-gray-600 text-sm">No tasks waiting</span>
+          <span className="text-gray-600 text-sm">No requests waiting</span>
         )}
         {queue.map((id, index) => {
             const task = tasks[id]

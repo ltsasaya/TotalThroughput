@@ -65,7 +65,7 @@ export function Phase1View() {
     nextArrivalIndex >= arrivalScheduleLength &&
     remaining > 0
 
-  // Arrival rate: total tasks spawned / elapsed seconds
+  // Arrival rate: total requests spawned / elapsed seconds
   const totalArrived = Object.keys(tasks).length
   const arrivalRate = phaseElapsed > 0 ? totalArrived / (phaseElapsed / 1000) : 0
 
@@ -89,7 +89,7 @@ export function Phase1View() {
   return (
     <div className="flex flex-col h-screen bg-gray-950 relative">
       <TopBar
-        label="Phase 1: Calibration"
+        label="Phase 1: One Server"
         remaining={remaining}
         droppedCount={liveMetrics.droppedCount}
         dropLimit={config.dropLimit}
@@ -123,7 +123,7 @@ export function Phase1View() {
 
         <div className="flex-1 flex flex-col items-center justify-center text-center relative">
           {!activeTask ? (
-            <p className="text-gray-500 text-xl">Waiting for tasks...</p>
+            <p className="text-gray-500 text-xl">Waiting for requests...</p>
           ) : (
             <>
               <div className="mb-4 flex items-center justify-center gap-3">
@@ -186,12 +186,12 @@ export function Phase1View() {
           </div>
           {isFinalStretch && (
             <div className="mb-3 px-2 py-1.5 bg-red-950/60 border-l-2 border-red-500 rounded text-xs text-red-300 font-semibold">
-              No more tasks incoming — clear the queue
+              No more requests incoming - clear the queue
             </div>
           )}
           {queue.length === 0 && !isFinalStretch ? (
             <div className="flex-1 flex items-center justify-center">
-              <span className="text-gray-600 text-sm">No tasks waiting</span>
+              <span className="text-gray-600 text-sm">No requests waiting</span>
             </div>
           ) : (
             <div className="overflow-y-auto flex-1 flex flex-col gap-1.5">

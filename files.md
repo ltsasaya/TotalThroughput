@@ -1,5 +1,13 @@
 # File Index
 
+## Project Docs
+
+| File | Description |
+|---|---|
+| `README.md` | Project overview, local setup, commands, and contribution entry point |
+| `CONTRIBUTING.md` | GitHub contributor setup, workflow, code expectations, and backend direction |
+| `PROJECT_STATUS.md` | Teammate-facing current state, recent work, remaining work, and verification |
+
 ## Source
 
 | File | Description |
@@ -14,7 +22,7 @@
 | File | Description |
 |---|---|
 | `src/types/task.ts` | `Task`, `TaskEvent`, `TaskSize`, `TaskStatus`, `TaskEventType` |
-| `src/types/core.ts` | `Core`, `CoreStatus` |
+| `src/types/core.ts` | `Core`, `CoreStatus` — internal worker/core model |
 | `src/types/game.ts` | `GamePhase`, `DifficultyMode`, `LoadRegime`, `BucketBudgets`, `GameConfig` |
 | `src/types/metrics.ts` | `LiveMetrics`, `RunSummary`, `Phase1Result`, `GradeLevel`, `TimePoint` |
 
@@ -50,20 +58,20 @@
 
 | File | Description |
 |---|---|
-| `src/components/game/StartScreen.tsx` | Idle phase — difficulty selector (Beginner/Standard/Hard) + Start button |
+| `src/components/game/StartScreen.tsx` | Idle phase — server-first intro, difficulty selector (Beginner/Standard/Hard), Start button |
 | `src/components/game/TopBar.tsx` | Shared header — phase label, countdown timer, dropped counter, queue warning, optional score |
 | `src/components/game/Phase1View.tsx` | Phase 1 typing interface — character-level word display, queue preview, live stats sidebar |
 | `src/components/game/Phase1Complete.tsx` | Post-Phase-1 transition — calibration results, "Start Phase 2" button |
-| `src/components/game/Phase2View.tsx` | Phase 2 layout — TopBar + QueuePanel + core grid + StatsPanel; keyboard shortcuts 1–8 |
-| `src/components/game/QueuePanel.tsx` | Scrollable list of waiting tasks — click to select, waiting time color coding |
-| `src/components/game/CoreCard.tsx` | Individual core display — idle/busy status, progress bar, dispatch target pulsing |
-| `src/components/game/StatsPanel.tsx` | Live stats sidebar — throughput vs ideal, queue length, utilization, wait time, counts |
+| `src/components/game/Phase2View.tsx` | Phase 2 server-pool layout — TopBar + QueuePanel + worker grid + StatsPanel |
+| `src/components/game/QueuePanel.tsx` | Scrollable list of waiting requests — NEXT marker, waiting time color coding |
+| `src/components/game/CoreCard.tsx` | Individual worker display — idle/busy status, progress bar, dispatch target pulsing |
+| `src/components/game/StatsPanel.tsx` | Live stats sidebar — throughput vs ideal, queue length, worker utilization, wait time, counts |
 | `src/components/game/PostRunSummary.tsx` | Full end-of-game summary — section-based layout: header, metrics, charts, wait/service bar, analysis |
 | `src/components/game/PostRunCharts.tsx` | Recharts line charts — throughput over time + queue length over time |
 | `src/components/game/postrun/SummaryHeader.tsx` | Run outcome header — success/failure title, difficulty + cores + duration subheader |
 | `src/components/game/postrun/MetricSections.tsx` | SUMMARY, LATENCY, CORE UTILIZATION sections with CSS progress bars per core |
-| `src/components/game/postrun/AnalysisSection.tsx` | Prose analysis, M/M/c expansion factor, bottleneck warning banner |
-| `src/components/game/EducationalCharts.tsx` | Theory charts — Phase 1 saturation, Phase 2 expansion factor, per-core utilization, parallelism scaling (not currently rendered) |
+| `src/components/game/postrun/AnalysisSection.tsx` | Prose analysis, observed response/service ratio, dispatcher bottleneck warning banner |
+| `src/components/game/EducationalCharts.tsx` | Theory charts — Phase 1 saturation, Phase 2 reference curve, per-worker utilization, ideal server-pool capacity (not currently rendered) |
 | `src/components/game/EducationalGlossary.tsx` | Expandable metric reference glossary — all queueing theory symbols, formulas, definitions (not currently rendered) |
 
 ## Config
