@@ -1,12 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useGameStore } from '../gameStore'
+import type { Task } from '../../types/task'
 
 function getState() {
   return useGameStore.getState()
 }
 
 beforeEach(() => {
+  vi.useRealTimers()
   getState().reset()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('initial state', () => {
@@ -37,20 +43,22 @@ describe('startGame', () => {
     expect(getState().arrivalSchedule.length).toBeGreaterThan(0)
   })
 
-  it('applies difficulty config — beginner has higher dropLimit', () => {
+  it('applies difficulty config for Phase 1 level sets', () => {
     getState().startGame('beginner')
-    const beginnerDrop = getState().config.dropLimit
+    const beginnerLevels = getState().phase1Levels.length
     getState().reset()
     getState().startGame('hard')
-    const hardDrop = getState().config.dropLimit
-    expect(beginnerDrop).toBeGreaterThan(hardDrop)
+    const hardLevels = getState().phase1Levels.length
+    expect(beginnerLevels).toBe(3)
+    expect(hardLevels).toBe(5)
   })
 
-  it('phase1Duration is 60_000ms for all difficulties', () => {
+  it('phase1Duration matches the current level duration', () => {
     for (const d of ['beginner', 'standard', 'hard', 'theory'] as const) {
       getState().reset()
       getState().startGame(d)
-      expect(getState().config.phase1Duration).toBe(60_000)
+      const currentLevel = getState().phase1Levels[getState().currentPhase1LevelIndex]
+      expect(getState().config.phase1Duration).toBe(currentLevel.arrivalWindowMs + currentLevel.drainTailMs)
     }
   })
 })
@@ -162,6 +170,28 @@ describe('typeChar', () => {
     expect(getState().tasks[activeId].completionTime).not.toBeUndefined()
   })
 
+  it('uses wall-clock time for typing completions between game-loop ticks', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-01T00:00:00Z'))
+    const activeId = setupActiveTask()
+    const task = getState().tasks[activeId]
+    const content = task.content!
+    const firstTypeAt = getState().gameStartTime! + getState().phaseElapsed + 500
+    const completeAt = firstTypeAt + 1000
+
+    vi.setSystemTime(firstTypeAt)
+    getState().typeChar(content[0])
+    vi.setSystemTime(completeAt)
+    for (const char of content.slice(1)) {
+      getState().typeChar(char)
+    }
+
+    const completed = getState().tasks[activeId]
+    expect(completed.status).toBe('completed')
+    expect(completed.completionTime).toBeGreaterThan(completed.serviceStartTime!)
+    expect(completed.completionTime).toBeGreaterThan(completed.firstKeystrokeTime!)
+  })
+
   it('clears activePhase1TaskId after task completes (when queue is empty)', () => {
     const activeId = setupActiveTask()
     const content = getState().tasks[activeId].content!
@@ -265,16 +295,31 @@ describe('reset', () => {
 })
 
 describe('Phase 1 end condition', () => {
-  it('transitions to postrun when phase duration elapses', () => {
+  function completedTask(id: string, index: number): Task {
+    const arrivalTime = index * 1000
+    return {
+      id,
+      arrivalTime,
+      size: 'S',
+      trueServiceDemand: 0,
+      status: 'completed',
+      content: 'test rpc',
+      typedContent: 'test rpc',
+      serviceStartTime: arrivalTime,
+      firstKeystrokeTime: arrivalTime + 100,
+      completionTime: arrivalTime + 1000,
+    }
+  }
+
+  it('transitions to postrun when the first gated level ends without passing', () => {
     getState().startGame('standard')
     const { gameStartTime, config } = getState()
 
-    // Simulate a tick far past the phase duration
     getState().tick(gameStartTime! + config.phase1Duration + 100)
     expect(getState().phase).toBe('postrun')
   })
 
-  it('stores phase1Result on phase end', () => {
+  it('stores phase1Result with level results on phase end', () => {
     getState().startGame('standard')
     const { gameStartTime, config } = getState()
 
@@ -283,12 +328,29 @@ describe('Phase 1 end condition', () => {
 
     expect(phase1Result).not.toBeNull()
     expect(phase1Result!.avgServiceTime).toBeGreaterThan(0)
+    expect(phase1Result!.levelResults).toHaveLength(1)
+    expect(phase1Result!.droppedCount).toBe(0)
   })
 
-  it('phase 1 ends when elapsed reaches exactly 60_000ms', () => {
+  it('advances to the next level when a gate passes', () => {
     getState().startGame('standard')
-    const { gameStartTime } = getState()
-    getState().tick(gameStartTime! + 60_000)
+    const { gameStartTime, config } = getState()
+    const tasks = Object.fromEntries(
+      Array.from({ length: 8 }, (_, i) => [`t${i}`, completedTask(`t${i}`, i)]),
+    )
+    useGameStore.setState({ tasks, arrivalSchedule: [] })
+    getState().tick(gameStartTime! + config.phase1Duration)
+
+    expect(getState().phase).toBe('phase1')
+    expect(getState().currentPhase1LevelIndex).toBe(1)
+    expect(getState().phase1LevelResults[0].passed).toBe(true)
+    expect(Object.keys(getState().tasks)).toHaveLength(0)
+  })
+
+  it('phase 1 level ends when elapsed reaches the current level duration', () => {
+    getState().startGame('standard')
+    const { gameStartTime, config } = getState()
+    getState().tick(gameStartTime! + config.phase1Duration)
     expect(getState().phase).toBe('postrun')
   })
 })

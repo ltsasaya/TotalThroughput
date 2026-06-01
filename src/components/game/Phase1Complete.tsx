@@ -1,162 +1,118 @@
 import { useGameStore } from '@/store/gameStore'
 import { SaturationChart } from './EducationalCharts'
-import { Phase1UtilizationChart } from './Phase1Charts'
+
+function StatCard({ label, value, tone = 'text-white' }: { label: string; value: string; tone?: string }) {
+  return (
+    <div className="bg-gray-800 rounded-lg p-4">
+      <p className="text-xs text-gray-500 mb-1">{label}</p>
+      <p className={`text-xl font-bold ${tone}`}>{value}</p>
+    </div>
+  )
+}
 
 export function Phase1Complete() {
   const phase1Result = useGameStore(s => s.phase1Result)
-  const tasks = useGameStore(s => s.tasks)
-  const phaseElapsed = useGameStore(s => s.phaseElapsed)
   const returnToMenu = useGameStore(s => s.returnToMenu)
   const reset = useGameStore(s => s.reset)
 
   if (!phase1Result) return null
 
-  const total = phase1Result.completedCount + phase1Result.droppedCount
-  const dropRate = total > 0 ? phase1Result.droppedCount / total : 0
-  const failed = phase1Result.failed === true
-
   const D = phase1Result.avgServiceTime / 1000
-  const lambdaMax = D > 0 ? 1 / D : 0
-
-  const totalArrived = Object.keys(tasks).length
-  const lambdaArrival = phaseElapsed > 0 ? totalArrived / (phaseElapsed / 1000) : 0
-  const observedThroughput = phaseElapsed > 0 ? phase1Result.completedCount / (phaseElapsed / 1000) : 0
-  const offeredLoad = lambdaMax > 0 ? lambdaArrival / lambdaMax : 0
-
   const R = phase1Result.avgResponseTime / 1000
-
-  let statusMessage: string
-  if (failed) {
-    statusMessage = 'Queue overflowed because requests backed up faster than the server could process them. Phase 2 is locked.'
-  } else if (dropRate > 0.3) {
-    statusMessage = 'Many requests dropped. Dispatch quickly in Phase 2 to avoid queue buildup.'
-  } else {
-    statusMessage = 'Your single-server baseline is calibrated. Phase 2 workers process at your measured service demand.'
-  }
+  const lambdaMax = phase1Result.measuredTasksPerSecond
+  const hasMeasuredService = phase1Result.completedCount > 0
+  const statusMessage = phase1Result.passed
+    ? 'Your single-server service demand is calibrated. Phase 2 workers will process RPCs at this measured D.'
+    : 'Calibration needs a retry. Complete enough gated sample RPCs with stable served-client response time before Phase 2.'
+  const gatedCount = phase1Result.levelResults.filter(result => result.isGate).length
+  const passedGates = phase1Result.levelResults.filter(result => result.isGate && result.passed).length
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center py-8">
-      <div className="bg-gray-900 rounded-2xl p-10 max-w-md mx-auto w-full">
-        {failed ? (
-          <>
-            <div className="text-xs text-red-500 uppercase tracking-widest mb-1">Phase 1 Failed</div>
-            <h2 className="text-3xl font-bold text-red-400 mb-2">Queue Overflowed</h2>
-          </>
-        ) : (
-          <>
-            <div className="text-xs text-blue-400 uppercase tracking-widest mb-1">Calibration Complete</div>
-            <h2 className="text-3xl font-bold text-white mb-2">Phase 1 Complete</h2>
-          </>
-        )}
-        <p className="text-gray-400 mb-8">{statusMessage}</p>
-
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Observed Throughput</p>
-            <p className="text-xl font-bold text-white">
-              {observedThroughput.toFixed(2)} req/s
-            </p>
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center py-8 px-4">
+      <div className="bg-gray-900 rounded-2xl p-8 max-w-3xl mx-auto w-full">
+        <div className="mb-6">
+          <div className={`text-xs uppercase tracking-widest mb-1 ${phase1Result.passed ? 'text-blue-400' : 'text-amber-400'}`}>
+            {phase1Result.passed ? 'Calibration Complete' : 'Calibration Retry Needed'}
           </div>
+          <h2 className="text-3xl font-bold text-white mb-2">Phase 1 Complete</h2>
+          <p className="text-gray-400">{statusMessage}</p>
+        </div>
 
-          <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Avg Service D</p>
-            <p className="text-xl font-bold text-white">
-              {(phase1Result.avgServiceTime / 1000).toFixed(1)}s
-            </p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <StatCard label="Worker Capacity" value={hasMeasuredService ? `${lambdaMax.toFixed(2)} req/s` : '-'} />
+          <StatCard label="Avg Service D" value={hasMeasuredService ? `${D.toFixed(2)}s` : '-'} />
+          <StatCard label="Served Avg R" value={R > 0 ? `${R.toFixed(2)}s` : '-'} />
+          <StatCard label="Completed Samples" value={String(phase1Result.completedCount)} />
+          <StatCard label="Still Waiting" value={String(phase1Result.unfinishedAtEndCount)} />
+          <StatCard
+            label="Gated Levels"
+            value={`${passedGates}/${gatedCount}`}
+            tone={phase1Result.passed ? 'text-white' : 'text-amber-300'}
+          />
+          <StatCard
+            label="Typing Speed"
+            value={phase1Result.avgTypingSpeed > 0 ? `${Math.round(phase1Result.avgTypingSpeed)} WPM` : '-'}
+          />
+        </div>
 
-          <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Avg Response R</p>
-            <p className="text-xl font-bold text-white">
-              {R > 0 ? `${R.toFixed(1)}s` : '—'}
-            </p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Completed</p>
-            <p className="text-xl font-bold text-white">{phase1Result.completedCount}</p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Dropped</p>
-            <p className={`text-xl font-bold ${phase1Result.droppedCount > 0 ? 'text-red-400' : 'text-white'}`}>
-              {phase1Result.droppedCount}
-            </p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Typing Speed</p>
-            <p className="text-xl font-bold text-gray-400">
-              {Math.round(phase1Result.avgTypingSpeed)} WPM
-            </p>
+        <div className="bg-gray-800 rounded-lg p-4 mb-6">
+          <div className="font-mono text-blue-300 text-sm">R = W + D</div>
+          <div className="text-xs text-gray-400 mt-1">
+            Served-client response time includes queue waiting plus service. The simple M/M/1 reference curve rises sharply near saturation, but this finite burst reports observed samples.
           </div>
         </div>
 
-        {!failed && (
-          <>
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <div className="font-mono text-blue-300 text-sm">D = {D.toFixed(2)}s</div>
-                <div className="text-xs text-gray-500 mt-1">service demand</div>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <div className="font-mono text-blue-300 text-sm">λmax = {lambdaMax.toFixed(2)}/s</div>
-                <div className="text-xs text-gray-500 mt-1">= 1/D  peak rate</div>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <div className="font-mono text-blue-300 text-sm">λD = {(offeredLoad * 100).toFixed(0)}%</div>
-                <div className="text-xs text-gray-500 mt-1">offered load</div>
-              </div>
-            </div>
+        <div className="mb-6">
+          <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Level Results</div>
+          <div className="flex flex-col gap-2">
+            {phase1Result.levelResults.map((result) => {
+              const responseRatio = result.avgServiceTime > 0 ? result.avgResponseTime / result.avgServiceTime : 0
+              const status = result.isDemo ? 'Demo' : result.passed ? 'Pass' : 'Retry'
+              const statusTone = result.isDemo
+                ? 'text-blue-300 bg-blue-950'
+                : result.passed
+                  ? 'text-green-300 bg-green-950'
+                  : 'text-amber-300 bg-amber-950'
+              return (
+                <div key={result.levelId} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 bg-gray-800 rounded-lg px-3 py-2">
+                  <div>
+                    <div className="text-sm text-white font-semibold">{result.label}</div>
+                    <div className="text-xs text-gray-500">
+                      lambda {result.lambda.toFixed(2)}/s during burst - ref load {Math.round(result.referenceLoad * 100)}%
+                    </div>
+                  </div>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded ${statusTone}`}>{status}</span>
+                  <span className="text-xs text-gray-400">
+                    {result.completedCount} served, {result.unfinishedAtEndCount} waiting
+                  </span>
+                  <span className="text-xs text-gray-400">R/D {responseRatio > 0 ? responseRatio.toFixed(1) : '-'}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <div className="font-mono text-emerald-300 text-sm">λ = {lambdaArrival.toFixed(2)}/s</div>
-                <div className="text-xs text-gray-500 mt-1">arrival rate</div>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-3 text-center">
-                <div className="font-mono text-emerald-300 text-sm">R = {R > 0 ? R.toFixed(2) : '—'}s</div>
-                <div className="text-xs text-gray-500 mt-1">response time (W+D)</div>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <SaturationChart
-                phase1={{
-                  measuredTasksPerSecond: phase1Result.measuredTasksPerSecond,
-                  lambdaMax,
-                  arrivalRate: lambdaArrival,
-                  actualThroughput: observedThroughput,
-                  completedCount: phase1Result.completedCount,
-                  droppedCount: phase1Result.droppedCount,
-                }}
-              />
-            </div>
-
-            <div className="mb-6">
-              <Phase1UtilizationChart
-                tasks={tasks}
-                elapsedMs={phaseElapsed}
-                avgServiceTime={phase1Result.avgServiceTime}
-              />
-            </div>
-
-            <div className="mb-6 bg-gray-800 rounded-lg px-4 py-3">
-              <div className="font-mono text-blue-300 text-sm">N = λR  (Little's Law)</div>
-              <div className="text-xs text-gray-400 mt-1">
-                λ = {lambdaArrival.toFixed(2)}/s compared with λmax = {lambdaMax.toFixed(2)}/s. As λD approaches 1, R grows sharply.
-              </div>
-            </div>
-          </>
+        {phase1Result.completedCount > 0 && (
+          <div className="mb-6">
+            <SaturationChart
+              phase1={{
+                measuredTasksPerSecond: phase1Result.measuredTasksPerSecond,
+                lambdaMax,
+                arrivalRate: phase1Result.arrivalRate,
+                actualThroughput: phase1Result.activeWindowThroughput,
+                completedCount: phase1Result.completedCount,
+              }}
+            />
+          </div>
         )}
 
-        {failed ? (
-          <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-            Complete Phase 1 without letting the queue overflow to unlock Phase 2. Try a lower difficulty or type faster.
+        {phase1Result.passed ? (
+          <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+            D = {D.toFixed(2)}s carries into Phase 2. Each server worker uses that service demand while you manage the shared RPC queue.
           </p>
         ) : (
           <p className="text-gray-400 text-sm mb-8 leading-relaxed">
-            D = {D.toFixed(2)}s carries into Phase 2. Each worker processes requests at this rate.
+            Replay Phase 1 to gather a stable service demand. Phase 2 unlocks after all gated levels pass with at least eight completed sample RPCs.
           </p>
         )}
 

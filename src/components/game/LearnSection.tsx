@@ -98,11 +98,11 @@ export function LearnSection() {
           </h2>
           <p className="text-gray-400 leading-relaxed">
             Utilization (U) is the fraction of time a server is busy. At low utilization, requests
-            flow through quickly. As U approaches 100%, the queue grows without bound and response
-            time climbs sharply. The reference model is nonlinear: doubling load near capacity can
-            multiply response time many times over.
+            flow through quickly. As sustained offered load approaches capacity, queues become
+            sensitive to bursts and response time climbs sharply. The simple reference curve is
+            nonlinear: doubling load near capacity can multiply response time many times over.
           </p>
-          <p className="font-mono text-blue-400 text-lg mt-6">R = D / (1 &minus; U)</p>
+          <p className="font-mono text-blue-400 text-lg mt-6">R &asymp; D / (1 &minus; &rho;)</p>
 
           <div className="mt-6 bg-gray-950 border border-gray-800 rounded-lg p-5">
             <p className="text-xs uppercase tracking-widest text-gray-500 mb-3">What is D?</p>

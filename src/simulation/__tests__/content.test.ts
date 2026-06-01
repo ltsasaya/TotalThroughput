@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateTask } from '../content'
+import { generatePhase1Task, generateTask } from '../content'
 
 describe('generateTask', () => {
   it('returns a task with the correct shape', () => {
@@ -41,6 +41,24 @@ describe('generateTask', () => {
     const l = generateTask('L', 0)
     expect(s.deadline).toBe(l.deadline)
     expect(m.deadline).toBe(l.deadline)
+  })
+})
+
+describe('generatePhase1Task', () => {
+  it('creates two-word S-only prompts without deadlines', () => {
+    const task = generatePhase1Task(500, 10)
+    expect(task.arrivalTime).toBe(500)
+    expect(task.size).toBe('S')
+    expect(task.deadline).toBeUndefined()
+    expect(task.content!.split(' ')).toHaveLength(2)
+  })
+
+  it('uses the content seed to produce repeatable prompt text', () => {
+    const first = generatePhase1Task(0, 42)
+    const second = generatePhase1Task(100, 42)
+    const third = generatePhase1Task(0, 43)
+    expect(second.content).toBe(first.content)
+    expect(third.content).not.toBe(first.content)
   })
 })
 

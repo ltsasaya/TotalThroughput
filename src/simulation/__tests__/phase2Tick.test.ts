@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { computePhase2Tick, type Phase2TickInput } from '../phase2Tick'
+import { buildPhase1Levels } from '../phase1Levels'
 import type { Task } from '../../types/task'
 import type { Core } from '../../types/core'
 
@@ -15,6 +16,7 @@ const BASE_CONFIG = {
   showTrueServiceDemand: false,
   deadlineMultiplier: 1.0,
   referenceWPM: 70,
+  phase1Levels: buildPhase1Levels('standard'),
   phase1Buckets: [1, 3, 4, 6] as const,
   phase2Buckets: [1, 6, 14, 15] as const,
 }

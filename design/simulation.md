@@ -46,13 +46,15 @@ scenarios. Use random but replayable seeds for free play.
 
 ### Task size distribution
 
-Task sizes are sampled independently of arrival times. Phase 1 should be
-S-heavy so the player sees enough arrivals in a short trial. Phase 2 may use a
-wider S/M/L mix because automatic workers process assigned work.
+Task sizes are sampled independently of arrival times. Current Phase 1 uses
+S-only two-word RPC prompts so enough arrivals fit in each short level. Phase 2
+may use a wider S/M/L mix because automatic workers process assigned work.
 
-The generator should avoid spawning work so late that the expected task cannot
-finish before the trial ends unless the level deliberately includes a clear
-queue-drain tail.
+Phase 1 emits arrivals only during the level's arrival window, then adds a
+drain tail. The tail is for observing leftover queue behavior created by the
+burst, not for deadline failure or score punishment. Arrival rate, offered
+load, and arrival-window busy fraction use the arrival window as their
+denominator; tail completions and still-waiting work are reported separately.
 
 ### Reference WPM
 
@@ -75,21 +77,26 @@ Levels should teach these load regimes:
 | Low | 0.35-0.55 | Queue remains short, latency is stable |
 | Moderate | 0.70-0.85 | Queue forms but often recovers |
 | Near saturation | 0.90-0.98 | Response time becomes sensitive to small bursts |
-| Overload | > 1.0 | Queue growth demonstrates instability |
+| Overload | > 1.0 | Backlog at window end demonstrates capacity pressure |
 
-For a single serial server, `loadFactor = lambda * D`. For `c` parallel server
-workers, `perWorkerLoad = lambda * D / c`.
+For a single serial server, `rho ~= lambda * D`. For `c` parallel server
+workers, `perWorkerLoad = lambda * D / c`. In Phase 1, `D` is estimated from
+completed served RPCs, so `rho` is a reference-load estimate rather than an
+exact busy fraction.
 
 ## Phase 1 Service Model
 
 The player processes requests directly by typing. Performance is measured as a
 typing-based single-server service rate.
 
-### Possible calibration outputs
+### Calibration outputs
 
-* Tasks completed per second
-* Average effective service time per task type
-* Accuracy-adjusted throughput
+* Per-level arrival count, served completions, still-waiting work, response
+  time, service demand, and max queue
+* Backlog at arrival-window end and tail completions
+* Aggregate completed-sample average service demand `D`
+* Single-worker capacity estimate `lambda_max = 1 / D`
+* Gate status for stable levels; demo levels do not block Phase 2
 
 ### Recommended baseline
 
@@ -114,14 +121,16 @@ This produces a clean run-to-completion server-dispatch model.
 The instructional reference model is intentionally back-of-napkin:
 
 ```
-U = lambda * D
+rho ~= lambda * D
 N = lambda * R
-R ~= D / (1 - U)
+R ~= D / (1 - rho)
 ```
 
-This assumes a stable, steady-state, FIFO, single-server queue with independent
-Poisson arrivals. It is a teaching reference, not an exact prediction for one
-finite gameplay run. Multi-worker summaries may use the rough capacity
-intuition `perWorkerLoad = lambda * D / c`, but exact M/M/c response time
-should not be claimed unless the implementation uses Erlang C or
+The response curve above is simple stable M/M/1 intuition. Phase 1 itself is a
+finite-run approximation to an M/G/1 single-server queue with FCFS service:
+arrivals are Poisson, but player typing gives general, player-dependent service
+times. Gameplay summaries should present finite-window observations separately
+from steady-state reference intuition. Multi-worker summaries may use the rough
+capacity intuition `perWorkerLoad = lambda * D / c`, but exact M/M/c response
+time should not be claimed unless the implementation uses Erlang C or
 simulation-derived curves.

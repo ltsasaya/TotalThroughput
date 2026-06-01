@@ -1,22 +1,28 @@
 import { describe, it, expect } from 'vitest'
 import { computePhase1Tick, type Phase1TickInput } from '../phase1Tick'
+import { buildPhase1Levels, phase1LevelDurationMs } from '../phase1Levels'
+import type { GameConfig, Phase1LevelConfig } from '../../types/game'
+import type { LiveMetrics } from '../../types/metrics'
 import type { Task } from '../../types/task'
 
-const BASE_CONFIG = {
-  difficulty: 'standard' as const,
+const LEVEL = buildPhase1Levels('standard')[0]
+
+const BASE_CONFIG: GameConfig = {
+  difficulty: 'standard',
   phase2CoreCount: 4,
-  phase1Duration: 60_000,
+  phase1Duration: phase1LevelDurationMs(LEVEL),
   phase2Duration: 120_000,
   queueSizeLimit: 6,
   dropLimit: 5,
   showTrueServiceDemand: false,
   deadlineMultiplier: 1.0,
   referenceWPM: 70,
-  phase1Buckets: [1, 3, 4, 6] as const,
-  phase2Buckets: [1, 6, 14, 15] as const,
+  phase1Levels: [LEVEL],
+  phase1Buckets: [1, 3, 4, 6],
+  phase2Buckets: [1, 6, 14, 15],
 }
 
-const BASE_METRICS = {
+const BASE_METRICS: LiveMetrics = {
   throughput: 0,
   queueLength: 0,
   avgWaitingTime: 0,
@@ -29,9 +35,9 @@ const BASE_METRICS = {
   actualThroughput: 0,
 }
 
-function minimalInput(): Phase1TickInput {
+function minimalInput(level: Phase1LevelConfig = LEVEL): Phase1TickInput {
   return {
-    config: { ...BASE_CONFIG },
+    config: { ...BASE_CONFIG, phase1Duration: phase1LevelDurationMs(level), phase1Levels: [level] },
     tasks: {},
     queue: [],
     activePhase1TaskId: null,
@@ -39,6 +45,8 @@ function minimalInput(): Phase1TickInput {
     arrivalSchedule: [],
     nextArrivalIndex: 0,
     phaseElapsed: 0,
+    currentPhase1Level: level,
+    phase1MaxQueueLength: 0,
   }
 }
 
@@ -49,7 +57,7 @@ function waitingTask(id: string, deadline?: number): Task {
     size: 'S',
     trueServiceDemand: 0,
     status: 'waiting',
-    content: 'test task content',
+    content: 'test task',
     typedContent: '',
     deadline,
   }
@@ -69,209 +77,106 @@ function completedTask(id: string, serviceStartTime: number, completionTime: num
   }
 }
 
-describe('computePhase1Tick — phase-end behavior', () => {
-  it('returns no phase or phase1Result when elapsed < phase1Duration', () => {
-    const output = computePhase1Tick(minimalInput(), 1000)
-    expect(output.phase).toBeUndefined()
-    expect(output.phase1Result).toBeUndefined()
+describe('computePhase1Tick - level timing', () => {
+  it('does not end the level before duration elapses', () => {
+    const output = computePhase1Tick(minimalInput(), phase1LevelDurationMs(LEVEL) - 1)
+    expect(output.levelEnded).toBe(false)
   })
 
-  it('sets phase to postrun when elapsed >= phase1Duration', () => {
-    const output = computePhase1Tick(minimalInput(), 60_001)
-    expect(output.phase).toBe('postrun')
-    expect(output.phase1Result).toBeDefined()
-  })
-
-  it('sets phase to postrun when elapsed equals exactly phase1Duration', () => {
-    const output = computePhase1Tick(minimalInput(), 60_000)
-    expect(output.phase).toBe('postrun')
-  })
-
-  it('phase ends early when droppedCount exceeds dropLimit', () => {
-    const task = waitingTask('t1', 0)
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      config: { ...BASE_CONFIG, dropLimit: 0 },
-      tasks: { t1: task },
-      queue: ['t1'],
-    }
-    const output = computePhase1Tick(input, 100)
-    expect(output.phase).toBe('postrun')
+  it('ends the level when elapsed reaches duration', () => {
+    const output = computePhase1Tick(minimalInput(), phase1LevelDurationMs(LEVEL))
+    expect(output.levelEnded).toBe(true)
   })
 })
 
-describe('computePhase1Tick — phase1Result metrics', () => {
-  it('avgServiceTime defaults to 3000 when no tasks are completed', () => {
-    const output = computePhase1Tick(minimalInput(), 60_001)
-    expect(output.phase1Result!.avgServiceTime).toBe(3_000)
-    expect(output.phase1Result!.avgReactionSpeed).toBe(0)
-    expect(output.phase1Result!.avgTypingSpeed).toBe(0)
-  })
-
-  it('avgServiceTime is computed from completed task service windows', () => {
-    const task = completedTask('t1', 1000, 4000)
+describe('computePhase1Tick - no-drop task flow', () => {
+  it('spawns elapsed Poisson arrivals as Phase 1 S prompts without deadlines', () => {
     const input: Phase1TickInput = {
       ...minimalInput(),
-      tasks: { t1: task },
+      arrivalSchedule: [
+        { arrivalTime: 100, size: 'S' },
+        { arrivalTime: 200, size: 'S' },
+      ],
     }
-    const output = computePhase1Tick(input, 60_001)
-    expect(output.phase1Result!.avgServiceTime).toBe(3000)
-    expect(output.phase1Result!.completedCount).toBe(1)
-    expect(output.phase1Result!.avgReactionSpeed).toBe(0)
-    expect(output.phase1Result!.avgTypingSpeed).toBe(0)
+    const output = computePhase1Tick(input, 250)
+    const spawned = Object.values(output.tasks)
+    expect(spawned).toHaveLength(2)
+    expect(spawned.every(task => task.size === 'S')).toBe(true)
+    expect(spawned.every(task => task.deadline === undefined)).toBe(true)
+    expect(output.nextArrivalIndex).toBe(2)
   })
 
-  it('avgResponseTime is computed from arrivalTime to completionTime', () => {
-    // completedTask sets arrivalTime: 0, serviceStartTime: 1000, completionTime: 4000
+  it('activates the first waiting task when no task is active', () => {
+    const task = waitingTask('t1')
+    const output = computePhase1Tick({ ...minimalInput(), tasks: { t1: task }, queue: ['t1'] }, 100)
+    expect(output.activePhase1TaskId).toBe('t1')
+    expect(output.tasks.t1.status).toBe('active')
+    expect(output.tasks.t1.serviceStartTime).toBe(100)
+  })
+
+  it('does not expire or drop tasks, even if a legacy deadline is present', () => {
+    const task = waitingTask('t1', 0)
+    const output = computePhase1Tick({ ...minimalInput(), tasks: { t1: task }, queue: ['t1'] }, 100)
+    expect(output.tasks.t1.status).toBe('active')
+    expect(output.liveMetrics.droppedCount).toBe(0)
+  })
+
+  it('leaves unfinished work unchanged when a level ends', () => {
+    const waiting = waitingTask('waiting')
+    const active: Task = {
+      ...waitingTask('active'),
+      status: 'active',
+      typedContent: 'te',
+      serviceStartTime: 1000,
+    }
+    const input: Phase1TickInput = {
+      ...minimalInput(),
+      tasks: { waiting, active },
+      queue: ['waiting'],
+      activePhase1TaskId: 'active',
+    }
+    const output = computePhase1Tick(input, phase1LevelDurationMs(LEVEL))
+    expect(output.levelEnded).toBe(true)
+    expect(output.tasks.waiting.status).toBe('waiting')
+    expect(output.tasks.active.status).toBe('active')
+    expect(output.liveMetrics.droppedCount).toBe(0)
+  })
+})
+
+describe('computePhase1Tick - metrics', () => {
+  it('computes service, waiting, response, and throughput metrics from completed tasks', () => {
     const task = completedTask('t1', 1000, 4000)
     const input: Phase1TickInput = { ...minimalInput(), tasks: { t1: task } }
-    const output = computePhase1Tick(input, 60_001)
-    expect(output.phase1Result!.avgResponseTime).toBe(4000)
+    const output = computePhase1Tick(input, 10_000)
+    expect(output.liveMetrics.completedCount).toBe(1)
+    expect(output.liveMetrics.avgWaitingTime).toBe(1000)
+    expect(output.liveMetrics.avgServiceTime).toBe(3000)
+    expect(output.liveMetrics.avgResponseTime).toBe(4000)
+    expect(output.liveMetrics.throughput).toBeCloseTo(0.1)
   })
 
-  it('completedCount is 0 and droppedCount is 0 on empty run', () => {
-    const output = computePhase1Tick(minimalInput(), 60_001)
-    expect(output.phase1Result!.completedCount).toBe(0)
-    expect(output.phase1Result!.droppedCount).toBe(0)
-    expect(output.phase1Result!.avgReactionSpeed).toBe(0)
-    expect(output.phase1Result!.avgTypingSpeed).toBe(0)
-  })
-
-  it('computes avgReactionSpeed and avgTypingSpeed when firstKeystrokeTime is set', () => {
+  it('computes reaction speed and typing speed when firstKeystrokeTime is set', () => {
     const task: Task = {
       ...completedTask('t1', 1000, 5000),
       firstKeystrokeTime: 1500,
       content: 'hello world',
     }
-    const input: Phase1TickInput = { ...minimalInput(), tasks: { t1: task } }
-    const output = computePhase1Tick(input, 60_001)
-    expect(output.phase1Result!.avgReactionSpeed).toBe(500)
-    // typingMs = 5000 - 1500 = 3500ms; chars = 11; WPM = (11/5) / (3500/60000) ≈ 37.7
-    expect(output.phase1Result!.avgTypingSpeed).toBeCloseTo(37.7, 0)
-  })
-})
-
-describe('computePhase1Tick — task expiry', () => {
-  it('removes expired tasks from the queue', () => {
-    const task = waitingTask('t1', 0)
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { t1: task },
-      queue: ['t1'],
-    }
-    const output = computePhase1Tick(input, 100)
-    expect(output.queue).not.toContain('t1')
-    expect(output.tasks['t1'].status).toBe('expired')
+    const output = computePhase1Tick({ ...minimalInput(), tasks: { t1: task } }, 10_000)
+    expect(output.liveMetrics.avgReactionSpeed).toBe(500)
+    expect(output.liveMetrics.avgTypingSpeed).toBeCloseTo(37.7, 0)
   })
 
-  it('does not expire tasks whose deadline has not passed', () => {
-    const task = waitingTask('t1', 60_000)
+  it('tracks max queue length across ticks', () => {
     const input: Phase1TickInput = {
       ...minimalInput(),
-      tasks: { t1: task },
-      queue: ['t1'],
+      arrivalSchedule: [
+        { arrivalTime: 100, size: 'S' },
+        { arrivalTime: 101, size: 'S' },
+        { arrivalTime: 102, size: 'S' },
+      ],
+      phase1MaxQueueLength: 1,
     }
-    const output = computePhase1Tick(input, 100)
-    // Task is valid — it gets activated, not expired
-    expect(output.tasks['t1'].status).not.toBe('expired')
-  })
-
-  it('counts expired tasks in droppedCount', () => {
-    const task = waitingTask('t1', 0)
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { t1: task },
-      queue: ['t1'],
-    }
-    const output = computePhase1Tick(input, 100)
-    expect(output.liveMetrics.droppedCount).toBe(1)
-  })
-})
-
-describe('computePhase1Tick — end-of-phase drop accounting', () => {
-  it('counts tasks still waiting at phase end as dropped in phase1Result', () => {
-    const t1 = waitingTask('t1', 60_000)
-    const t2 = waitingTask('t2', 60_000)
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { t1, t2 },
-      queue: ['t1', 't2'],
-    }
-    const output = computePhase1Tick(input, 60_000)
-    expect(output.phase1Result!.droppedCount).toBe(2)
-    expect(output.tasks['t1'].status).toBe('dropped')
-    expect(output.tasks['t2'].status).toBe('dropped')
-  })
-
-  it('counts the active (in-progress) task as dropped at phase end', () => {
-    const active: Task = {
-      id: 't1',
-      arrivalTime: 0,
-      size: 'S',
-      trueServiceDemand: 0,
-      status: 'active',
-      content: 'test',
-      typedContent: 'te',
-      serviceStartTime: 1000,
-      deadline: 60_000,
-    }
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { t1: active },
-      activePhase1TaskId: 't1',
-    }
-    const output = computePhase1Tick(input, 60_000)
-    expect(output.phase1Result!.droppedCount).toBe(1)
-    expect(output.tasks['t1'].status).toBe('dropped')
-  })
-
-  it('does not reclassify already-expired or completed tasks', () => {
-    const completed = completedTask('done', 1000, 4000)
-    const expired: Task = {
-      id: 'exp',
-      arrivalTime: 0,
-      size: 'S',
-      trueServiceDemand: 0,
-      status: 'expired',
-      content: 'test',
-      typedContent: '',
-      deadline: 0,
-    }
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { done: completed, exp: expired },
-    }
-    const output = computePhase1Tick(input, 60_000)
-    expect(output.tasks['done'].status).toBe('completed')
-    expect(output.tasks['exp'].status).toBe('expired')
-    expect(output.phase1Result!.completedCount).toBe(1)
-    expect(output.phase1Result!.droppedCount).toBe(1)
-  })
-})
-
-describe('computePhase1Tick — task activation', () => {
-  it('activates the first queued task when no task is active', () => {
-    const task = waitingTask('t1', 60_000)
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { t1: task },
-      queue: ['t1'],
-    }
-    const output = computePhase1Tick(input, 100)
-    expect(output.activePhase1TaskId).toBe('t1')
-    expect(output.tasks['t1'].status).toBe('active')
-  })
-
-  it('skips expired tasks during activation and picks the next valid one', () => {
-    const expired = waitingTask('t1', 0)
-    const valid = waitingTask('t2', 60_000)
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { t1: expired, t2: valid },
-      queue: ['t1', 't2'],
-    }
-    const output = computePhase1Tick(input, 100)
-    expect(output.activePhase1TaskId).toBe('t2')
-    expect(output.tasks['t2'].status).toBe('active')
+    const output = computePhase1Tick(input, 150)
+    expect(output.phase1MaxQueueLength).toBe(2)
   })
 })

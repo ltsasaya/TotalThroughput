@@ -6,6 +6,18 @@ export interface ScheduledArrival {
   size: TaskSize
 }
 
+export interface ArrivalSizeWeight {
+  size: TaskSize
+  weight: number
+}
+
+export interface PoissonArrivalScheduleOptions {
+  lambdaPerSecond: number
+  arrivalWindowMs: number
+  seed: number
+  sizeMix?: readonly ArrivalSizeWeight[]
+}
+
 // Fixed time boundaries for the four named buckets, in ms since phase start.
 // A: [0, 5000), B: [5000, 20000), C: [20000, 40000), D: [40000, 50000).
 // Nothing spawns after 50s — the 50-60s tail is the "final stretch" for in-flight work.
@@ -35,6 +47,10 @@ const BUCKET_SIZE_MIX: ReadonlyArray<readonly [number, number]> = [
   [0.25, 0.65],  // D: 25% S, 40% M, 35% L
 ]
 
+const DEFAULT_POISSON_SIZE_MIX: readonly ArrivalSizeWeight[] = [
+  { size: 'S', weight: 1 },
+]
+
 // No-spawn zone (ms before phase end) for a task of the given size at the reference WPM.
 // = expected typing time at that WPM * 1.5 safety buffer.
 // WPM uses the standard "5 chars = 1 word" convention, so chars/sec = WPM * 5 / 60.
@@ -49,6 +65,41 @@ function sampleSize(mix: readonly [number, number]): TaskSize {
   if (r < mix[0]) return 'S'
   if (r < mix[1]) return 'M'
   return 'L'
+}
+
+function createSeededRandom(seed: number): () => number {
+  let state = seed >>> 0
+  return () => {
+    state = (1664525 * state + 1013904223) >>> 0
+    return state / 0x1_0000_0000
+  }
+}
+
+function sampleExponentialMs(random: () => number, lambdaPerSecond: number): number {
+  const u = Math.max(Number.MIN_VALUE, 1 - random())
+  return (-Math.log(u) / lambdaPerSecond) * 1000
+}
+
+function normalizeSizeMix(sizeMix: readonly ArrivalSizeWeight[]): readonly ArrivalSizeWeight[] {
+  if (sizeMix.length === 0) throw new RangeError('sizeMix must include at least one size')
+  let totalWeight = 0
+  for (const entry of sizeMix) {
+    if (entry.weight <= 0 || !Number.isFinite(entry.weight)) {
+      throw new RangeError('sizeMix weights must be finite positive numbers')
+    }
+    totalWeight += entry.weight
+  }
+  return sizeMix.map(entry => ({ ...entry, weight: entry.weight / totalWeight }))
+}
+
+function sampleWeightedSize(random: () => number, sizeMix: readonly ArrivalSizeWeight[]): TaskSize {
+  const r = random()
+  let cumulative = 0
+  for (const entry of sizeMix) {
+    cumulative += entry.weight
+    if (r < cumulative) return entry.size
+  }
+  return sizeMix[sizeMix.length - 1].size
 }
 
 // Sample a size by the bucket mix, then accept or resample if invalid at time `t`.
@@ -109,6 +160,40 @@ export function generateBucketedArrivalSchedule(
     ))
   }
   arrivals.sort((a, b) => a.arrivalTime - b.arrivalTime)
+  return arrivals
+}
+
+// Generate one constant-rate seeded Poisson schedule. Arrivals are emitted only
+// inside the arrival window; any drain-tail timing is handled by the caller.
+export function generatePoissonArrivalSchedule({
+  lambdaPerSecond,
+  arrivalWindowMs,
+  seed,
+  sizeMix = DEFAULT_POISSON_SIZE_MIX,
+}: PoissonArrivalScheduleOptions): ScheduledArrival[] {
+  if (lambdaPerSecond <= 0 || !Number.isFinite(lambdaPerSecond)) {
+    throw new RangeError('lambdaPerSecond must be a finite positive number')
+  }
+  if (arrivalWindowMs <= 0 || !Number.isFinite(arrivalWindowMs)) {
+    throw new RangeError('arrivalWindowMs must be a finite positive number')
+  }
+
+  const arrivalRandom = createSeededRandom(seed)
+  const sizeRandom = createSeededRandom(seed ^ 0x9e37_79b9)
+  const normalizedSizeMix = normalizeSizeMix(sizeMix)
+  const arrivals: ScheduledArrival[] = []
+  let arrivalTime = 0
+
+  while (true) {
+    arrivalTime += sampleExponentialMs(arrivalRandom, lambdaPerSecond)
+    if (arrivalTime >= arrivalWindowMs) break
+
+    arrivals.push({
+      arrivalTime: Math.round(arrivalTime),
+      size: sampleWeightedSize(sizeRandom, normalizedSizeMix),
+    })
+  }
+
   return arrivals
 }
 

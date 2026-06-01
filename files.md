@@ -13,7 +13,7 @@
 | File | Description |
 |---|---|
 | `src/main.tsx` | React 19 entry point — mounts `<App>` into DOM root |
-| `src/App.tsx` | Root component — mounts `useGameLoop`, routes to phase-specific views |
+| `src/App.tsx` | Root component — mounts `useGameLoop`, routes to phase-specific views and debrief popups |
 | `src/index.css` | Global styles — Tailwind v4 import |
 | `src/vite-env.d.ts` | Vite client type declarations |
 
@@ -23,8 +23,8 @@
 |---|---|
 | `src/types/task.ts` | `Task`, `TaskEvent`, `TaskSize`, `TaskStatus`, `TaskEventType` |
 | `src/types/core.ts` | `Core`, `CoreStatus` — internal worker/core model |
-| `src/types/game.ts` | `GamePhase`, `DifficultyMode`, `LoadRegime`, `BucketBudgets`, `GameConfig` |
-| `src/types/metrics.ts` | `LiveMetrics`, `RunSummary`, `Phase1Result`, `GradeLevel`, `TimePoint` |
+| `src/types/game.ts` | `GamePhase`, `DifficultyMode`, `LoadRegime`, `Phase1LevelConfig`, `BucketBudgets`, `GameConfig` |
+| `src/types/metrics.ts` | `LiveMetrics`, `RunSummary`, `Phase1LevelResult`, `Phase1Result`, `GradeLevel`, `TimePoint` |
 
 ## Store
 
@@ -38,14 +38,18 @@
 
 | File | Description |
 |---|---|
-| `src/simulation/content.ts` | Task word pools (S/M/L) + `generateTask(size, arrivalTime, trueServiceDemand?)` |
-| `src/simulation/arrival.ts` | `generateBucketedArrivalSchedule` — fixed 4-bucket schedule (A 0-5s / B 5-20s / C 20-40s / D 40-50s) with workload budgets (S=1/M=2/L=3) and per-bucket size mix; size-dependent no-spawn zones; used for both phases |
-| `src/simulation/phase1Tick.ts` | `computePhase1Tick` — pure Phase 1 tick: arrivals, expiry, activation, metrics, phase-end |
+| `src/simulation/content.ts` | Task word pools (S/M/L), Phase 2 `generateTask(...)`, and Phase 1 two-word `generatePhase1Task(...)` |
+| `src/simulation/arrival.ts` | Arrival schedule generation — bucketed generator retained for Phase 2 plus seeded constant-rate Poisson generator for Phase 1 levels |
+| `src/simulation/phase1Levels.ts` | Phase 1 level table, fixed seeds, per-level durations, and Poisson schedule helper |
+| `src/simulation/phase1Results.ts` | Phase 1 per-level and aggregate calibration result builders, including active-window rate and backlog/tail metrics |
+| `src/simulation/phase1Tick.ts` | `computePhase1Tick` — pure no-drop Phase 1 tick: Poisson arrivals, activation, metrics, level-end flag |
 | `src/simulation/phase2Tick.ts` | `computePhase2Tick` — pure Phase 2 tick: arrivals, core progress, completion, idle waste, RunSummary + grade computation |
-| `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, word count ranges per size, exact deadline values |
+| `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, Phase 1 two-word prompts, word count ranges per size, exact deadline values |
 | `src/simulation/__tests__/arrival.test.ts` | Unit tests — Phase 1 bucketed arrival schedule (per-bucket workload floor + overshoot bounds, no-spawn zones, size-mix skew) |
+| `src/simulation/__tests__/arrival.poisson.test.ts` | Unit tests — seeded Poisson arrival schedule determinism, bounds, expected count, S-only default, weighted mix, and invalid inputs |
 | `src/simulation/__tests__/arrival.phase2.test.ts` | Unit tests — Phase 2 bucketed arrival schedule (per-bucket workload floor + overshoot bounds, no-spawn zones at refWPM=100, difficulty skew) |
-| `src/simulation/__tests__/phase1Tick.test.ts` | Unit tests — computePhase1Tick: phase-end, phase1Result metrics, task expiry, task activation |
+| `src/simulation/__tests__/phase1Results.test.ts` | Unit tests — Phase 1 gate/demo result math and aggregate unlock rules |
+| `src/simulation/__tests__/phase1Tick.test.ts` | Unit tests — computePhase1Tick: no-drop level timing, Phase 1 prompt spawning, activation, live metrics |
 | `src/simulation/__tests__/phase2Tick.test.ts` | Unit tests — computePhase2Tick: phase-end, score formula, grade thresholds, idle waste, task completion |
 
 ## Hooks
@@ -59,9 +63,9 @@
 | File | Description |
 |---|---|
 | `src/components/game/StartScreen.tsx` | Idle phase — server-first intro, difficulty selector (Beginner/Standard/Hard), Start button |
-| `src/components/game/TopBar.tsx` | Shared header — phase label, countdown timer, dropped counter, queue warning, optional score |
-| `src/components/game/Phase1View.tsx` | Phase 1 typing interface — character-level word display, queue preview, live stats sidebar |
-| `src/components/game/Phase1Complete.tsx` | Post-Phase-1 transition — calibration results, "Start Phase 2" button |
+| `src/components/game/TopBar.tsx` | Shared header — phase label, countdown timer, optional dropped counter, queue display, optional score |
+| `src/components/game/Phase1View.tsx` | Phase 1 typing interface — fixed-rate RPC level status, character-level word display, queue preview, live stats sidebar |
+| `src/components/game/Phase1Complete.tsx` | Post-Phase-1 calibration results — gate/demo level summary, formulas, Phase 2 readiness |
 | `src/components/game/Phase2View.tsx` | Phase 2 server-pool layout — TopBar + QueuePanel + worker grid + StatsPanel |
 | `src/components/game/QueuePanel.tsx` | Scrollable list of waiting requests — NEXT marker, waiting time color coding |
 | `src/components/game/CoreCard.tsx` | Individual worker display — idle/busy status, progress bar, dispatch target pulsing |

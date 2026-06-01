@@ -5,11 +5,35 @@ export type DifficultyMode = 'beginner' | 'standard' | 'hard' | 'theory'
 // Observable load regimes during a run
 export type LoadRegime = 'low' | 'moderate' | 'high'
 
+export type Phase1LoadRegime =
+  | 'low'
+  | 'moderate-low'
+  | 'moderate'
+  | 'near-saturation'
+  | 'overload'
+  | 'overload-plus'
+
 // Workload budgets (units, not task counts) for the four fixed time buckets of a phase.
 // Bucket A: 0-5s (intro), B: 5-20s (training), C: 20-40s (main body), D: 40-50s (peak).
 // Each task consumes workload = 1 (S), 2 (M), or 3 (L); a bucket keeps emitting tasks
 // until its cumulative workload meets or exceeds the budget. No tasks spawn in 50-60s.
 export type BucketBudgets = readonly [number, number, number, number]
+
+export interface Phase1LevelConfig {
+  levelId: string
+  label: string
+  regime: Phase1LoadRegime
+  seed: number
+  lambda: number              // requests/sec during the arrival window
+  referenceLoad: number       // reference rho = lambda * D_ref
+  expectedArrivals: number
+  arrivalWindowMs: number
+  drainTailMs: number
+  minCompletedSamples: number
+  responseThresholdMultiplier: number
+  isGate: boolean
+  isDemo: boolean
+}
 
 export interface GameConfig {
   difficulty: DifficultyMode
@@ -21,6 +45,7 @@ export interface GameConfig {
   showTrueServiceDemand: boolean // theory mode: reveal exact task runtimes
   deadlineMultiplier: number    // scales task deadline windows (1.0 = standard)
   referenceWPM: number          // reference typing speed for size no-spawn zones (Phase 1)
-  phase1Buckets: BucketBudgets  // workload budget per bucket in Phase 1
+  phase1Levels: readonly Phase1LevelConfig[]
+  phase1Buckets: BucketBudgets  // legacy bucket budget retained until Phase 2 overhaul
   phase2Buckets: BucketBudgets  // workload budget per bucket in Phase 2
 }

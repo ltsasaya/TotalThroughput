@@ -14,13 +14,13 @@ export const GLOSSARY: GlossaryEntry[] = [
   {
     symbol: 'D',
     name: 'Service Demand',
-    definition: 'How long a request occupies one server worker. In this game: your typing time per task.',
+    definition: 'How long a served request occupies one server worker. In Phase 1 this is estimated from completed typing samples.',
   },
   {
     symbol: 'R',
     name: 'Response Time',
     formula: 'R = D + W',
-    definition: 'Client-observed time from RPC arrival to completion. Includes waiting time and service time.',
+    definition: 'Client-observed time from RPC arrival to completion for served requests. Includes waiting time and service time.',
   },
   {
     symbol: 'W',
@@ -36,13 +36,13 @@ export const GLOSSARY: GlossaryEntry[] = [
     symbol: 'λmax',
     name: 'Peak Rate',
     formula: 'λmax = 1/D (one server)  |  λmax ≈ c/D (c workers)',
-    definition: 'Maximum RPC arrival rate at saturation. A server cannot sustain arrivals above λmax.',
+    definition: 'Reference RPC arrival rate at saturation. A continuing queue cannot sustain arrivals above λmax without growing backlog.',
   },
   {
-    symbol: 'U',
-    name: 'Utilization',
-    formula: 'U = XD = λ / λmax (one server)',
-    definition: 'Fraction of time one server is busy. In a worker pool, use per-worker load to compare against saturation.',
+    symbol: 'ρ',
+    name: 'Offered Load',
+    formula: 'ρ ≈ λD',
+    definition: 'Reference load for one server during the arrival window. It estimates pressure against capacity, not an exact finite-run busy fraction.',
   },
   {
     symbol: '1 − U',
@@ -63,12 +63,12 @@ export const GLOSSARY: GlossaryEntry[] = [
   {
     symbol: 'N = λR',
     name: "Little's Law",
-    definition: 'Long-run requests in the server equal arrival rate times response time. This generalizes to stable systems.',
+    definition: 'Long-run requests in the server equal arrival rate times response time for stable systems. Use as reference intuition for finite runs.',
   },
   {
-    symbol: 'R = D / (1 − U)',
-    name: 'Response Time Law',
-    definition: 'Single-server reference model: as utilization approaches 1, response time grows sharply.',
+    symbol: 'R = D / (1 − ρ)',
+    name: 'Simple Response Reference',
+    definition: 'Simple stable M/M/1 reference curve: as offered load approaches 1, response time grows sharply. It is not the game\'s exact finite-run model.',
   },
   {
     symbol: 'λmax ≈ c / D',

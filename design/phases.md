@@ -24,7 +24,9 @@ response time = waiting time + service time
 ```
 
 Phase 1 should show that queues form when arrivals approach service capacity,
-and that response time can grow without bound when arrivals exceed capacity.
+and that sustained overload can make response time grow rapidly. In a finite
+level, overload appears as backlog at the arrival-window end, long tail
+responses, and possibly work still waiting when observation ends.
 
 ### Flow
 
@@ -32,7 +34,7 @@ and that response time can grow without bound when arrivals exceed capacity.
   server and the player is the server worker. Dismissed by any key or outside
   click.
 * The player enters a sequence of short levels with fixed arrival rates.
-* The player completes client RPCs by typing multi-word strings.
+* The player completes client RPCs by typing short two-word strings.
 * Each level uses one constant Poisson arrival rate.
 * Later levels increase arrival rate to move from low load to near saturation
   and then overload.
@@ -53,37 +55,44 @@ and that response time can grow without bound when arrivals exceed capacity.
 
 ### Deadline Windows
 
-Phase 1 has no drops or expirations. Tasks may remain queued when a trial ends,
-but level success is based on observed average response time and completion
-count, not deadline failure.
+Phase 1 has no punitive drops or expirations. Tasks may remain queued when a
+trial ends; those tasks are reported as still waiting when observation ended,
+not as failed or dropped requests. Level success is based on enough completed
+samples and completed-sample response time, not clearing every arrival.
 
 ### Duration
 
-Each level derives duration from expected arrivals:
+Each level derives its arrival window from expected arrivals, then adds a drain
+tail. The drain tail is a tail-observation period for work created during the
+burst, not penalty time:
 
 ```
-trialDuration = expectedArrivals / lambda
+arrivalWindow = expectedArrivals / lambda
+levelDuration = arrivalWindow + drainTail
 ```
 
 Target 12-16 expected arrivals per Phase 1 level. Keep most levels around
-35-60 seconds by using short S-heavy typing prompts.
+35-60 seconds by using short S-only typing prompts.
 
 ### Success Condition
 
 A Phase 1 level passes when:
 * enough tasks complete to estimate service demand
-* average response time stays under the level threshold
+* completed-sample average response time stays under the level threshold
 
-The player does not fail from drops in Phase 1. Overload levels may be framed
-as demonstrations rather than required first-play gates.
+The player does not fail from drops or leftover backlog in Phase 1. Overload
+levels may be framed as demonstrations rather than required first-play gates.
 
 ### Output
 
-* Measured tasks per second
-* Average service demand
-* Queue length over time
-* Waiting time and response time summary
-* Reference model comparison using `U = lambda * D` and `R ~= D / (1 - U)`
+* Single-worker capacity estimate `lambda_max = 1 / D`
+* Completed-sample average service demand
+* Per-level max queue length
+* Waiting time and response time summary for served RPCs
+* Backlog at arrival-window end, tail completions, and still-waiting count
+* Reference-load comparison using `rho ~= lambda * D`
+* Optional simple M/M/1 reference curve `R ~= D / (1 - rho)`, labeled as
+  steady-state intuition rather than the finite-run response model
 
 ---
 
@@ -98,9 +107,9 @@ shortens queues, and lowers response time. As per-worker load approaches 1,
 queue length and response time rise sharply again.
 
 The exact M/M/c mean response time formula is more complex than the classroom
-capacity approximation. Treat `R ~= D / (1 - lambda D / c)` as an intuition
-curve unless the implementation adds an exact Erlang C or simulation-derived
-reference.
+capacity approximation. Treat `R ~= D / (1 - lambda D / c)` as a simple
+single-server-style intuition curve unless the implementation adds an exact
+Erlang C or simulation-derived reference.
 
 ### Default Worker Count
 

@@ -17,7 +17,7 @@ const DIFFICULTIES: {
     step: 1,
     label: 'Beginner',
     selected: 'ring-2 ring-green-500 bg-green-950 text-green-300',
-    phase1Desc: 'Low request pressure · forgiving queue limit',
+    phase1Desc: 'Fixed RPC rates - low and moderate gates',
     phase2Desc: '4 workers · relaxed queue limit · FIFO dispatch',
   },
   {
@@ -25,7 +25,7 @@ const DIFFICULTIES: {
     step: 2,
     label: 'Standard',
     selected: 'ring-2 ring-blue-500 bg-blue-950 text-blue-300',
-    phase1Desc: 'Moderate request pressure · standard queue limit',
+    phase1Desc: 'Fixed RPC rates - stable gates plus demos',
     phase2Desc: '4 workers · standard queue limit · FIFO dispatch',
   },
   {
@@ -33,7 +33,7 @@ const DIFFICULTIES: {
     step: 3,
     label: 'Hard',
     selected: 'ring-2 ring-red-500 bg-red-950 text-red-300',
-    phase1Desc: 'High request pressure · tight queue limit',
+    phase1Desc: 'Fixed RPC rates - higher gate pressure',
     phase2Desc: '6 workers · tight queue limit · fast dispatch',
   },
 ]
@@ -97,7 +97,7 @@ export function StartScreen() {
           </div>
 
           {/* Phase 2 Box */}
-          {phase1Result === null || phase1Result.failed ? (
+          {phase1Result === null || !phase1Result.passed ? (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-7 opacity-40 pointer-events-none select-none">
               <div className="mb-1">
                 <span className="text-xs text-gray-500 uppercase tracking-widest">Phase 2</span>
@@ -113,7 +113,7 @@ export function StartScreen() {
                 <div className="h-8 bg-gray-800 rounded-lg" />
               </div>
               <p className="text-xs text-gray-500 mt-6 text-center">
-                {phase1Result?.failed ? 'Complete Phase 1 without failing to unlock' : 'Unlocks after Phase 1'}
+                {phase1Result === null ? 'Complete Phase 1 calibration first' : 'Retry Phase 1 calibration to unlock'}
               </p>
             </div>
           ) : phase1Result.completedCount === 0 ? (
@@ -150,7 +150,7 @@ export function StartScreen() {
 
               <div className="bg-gray-800 rounded-lg px-3 py-2 mb-4 flex items-center gap-3">
                 <div>
-                  <p className="text-xs text-gray-500">Calib. rate</p>
+                  <p className="text-xs text-gray-500">Worker cap.</p>
                   <p className="text-sm font-bold text-white">
                     {phase1Result.measuredTasksPerSecond.toFixed(2)} req/s
                   </p>

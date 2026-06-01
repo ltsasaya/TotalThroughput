@@ -5,9 +5,9 @@ export type GradeLevel = 'S' | 'A' | 'B' | 'C' | 'D' | 'F'
 export interface LiveMetrics {
   throughput: number           // tasks completed per second (rolling window)
   queueLength: number          // tasks currently waiting in queue
-  avgWaitingTime: number       // ms — average time tasks wait before service starts
-  avgResponseTime: number      // ms — average waiting + service time
-  avgServiceTime: number       // ms — average active processing time per task
+  avgWaitingTime: number       // ms — completed-sample average wait before service starts
+  avgResponseTime: number      // ms — completed-sample average waiting + service time
+  avgServiceTime: number       // ms — completed-sample active processing time per task
   perCoreUtilization: number[] // 0–1 per core (Phase 2 only)
   droppedCount: number         // tasks dropped or expired so far
   completedCount: number       // tasks fully completed so far
@@ -17,16 +17,56 @@ export interface LiveMetrics {
   avgTypingSpeed?: number      // WPM — avg (chars/5) / typingMinutes per task (Phase 1 only)
 }
 
-// Captured from Phase 1 calibration run
-export interface Phase1Result {
-  measuredTasksPerSecond: number  // player's observed service rate
-  avgServiceTime: number          // ms — used as per-task processing time for Phase 2 cores
-  avgResponseTime: number         // ms — avg (waitingTime + serviceTime) per completed task
+export interface Phase1LevelResult {
+  levelId: string
+  label: string
+  regime: string
+  lambda: number
+  referenceLoad: number
+  isGate: boolean
+  isDemo: boolean
+  passed: boolean
+  arrivalCount: number
   completedCount: number
-  droppedCount: number
+  activeWindowCompletedCount: number
+  tailCompletedCount: number
+  backlogAtArrivalEndCount: number
+  unfinishedAtEndCount: number
+  servedShare: number
+  avgWaitingTime: number
+  avgServiceTime: number
+  avgResponseTime: number
   avgReactionSpeed: number
   avgTypingSpeed: number
-  failed?: boolean                // true if run ended due to queue overflow or drop limit
+  maxQueueLength: number
+  responseThresholdMs: number
+  arrivalWindowMs: number
+  drainTailMs: number
+  durationMs: number
+}
+
+// Captured from Phase 1 calibration levels
+export interface Phase1Result {
+  measuredTasksPerSecond: number  // calibrated single-worker capacity, 1 / avgServiceTime
+  avgServiceTime: number          // ms — completed-sample service demand used for Phase 2 cores
+  avgResponseTime: number         // ms — completed-sample avg waitingTime + serviceTime
+  arrivalRate: number             // requests/sec generated during Phase 1 arrival windows
+  arrivalCount: number
+  completedCount: number
+  activeWindowCompletedCount: number
+  tailCompletedCount: number
+  activeWindowThroughput: number
+  droppedCount: number
+  unfinishedAtEndCount: number
+  servedShare: number
+  avgReactionSpeed: number
+  avgTypingSpeed: number
+  passed: boolean
+  levelResults: Phase1LevelResult[]
+  arrivalWindowMs: number
+  drainTailMs: number
+  durationMs: number
+  failed?: boolean                // legacy compatibility; Phase 1 no longer drops or overflows
 }
 
 // Time-series data point (used in post-run graphs)

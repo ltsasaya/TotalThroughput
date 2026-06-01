@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-05-30
+Last updated: 2026-06-01
 
 ## Current State
 
@@ -22,11 +22,14 @@ feedback.
   performance first, with broader systems concepts introduced from that model.
 - Added clients/RPCs as the concrete introductory story for arrivals, queues,
   service demand, and response time.
+- Rebuilt Phase 1 as fixed-rate seeded Poisson RPC levels with no punitive
+  drops, completed-sample calibration gates, demo overload levels, and
+  per-level backlog/tail feedback.
+- Matched instructional popup dismissal to the design: any key or outside
+  click continues the pre-phase and debrief prompts.
 
 ## Remaining Work
 
-- Rebuild Phase 1 as short RPC single-server levels with seeded Poisson
-  arrivals and no mid-run drops.
 - Rebuild Phase 2 as a constant-rate RPC server-pool dispatch challenge.
 - Add the small TypeScript API planned for persisted run and task data.
 - Add managed Postgres schema and migrations for runs, tasks, events, and
@@ -36,6 +39,6 @@ feedback.
 
 ## Verification
 
-- `npm test`: passed, 120 tests
+- `npm test`: passed, 130 tests
 - `npm run lint`: passed
 - `npm run build`: passed with Vite's existing large chunk warning

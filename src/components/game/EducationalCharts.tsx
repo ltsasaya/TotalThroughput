@@ -20,7 +20,6 @@ const AXIS_TICK = { fill: '#6b7280', fontSize: 11 }
 export interface Phase1Props {
   measuredTasksPerSecond: number
   completedCount: number
-  droppedCount: number
   lambdaMax?: number
   arrivalRate?: number
   actualThroughput?: number
@@ -46,7 +45,7 @@ function ChartCaption({ children }: { children: React.ReactNode }) {
 
 export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
   const lambdaMax = phase1.lambdaMax ?? phase1.measuredTasksPerSecond
-  const playerLambda = phase1.arrivalRate ?? (phase1.completedCount + phase1.droppedCount) / 60
+  const playerLambda = phase1.arrivalRate ?? 0
   const playerX = phase1.actualThroughput ?? phase1.completedCount / 60
 
   const points = 60
@@ -87,7 +86,9 @@ export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
           />
         </LineChart>
       </ResponsiveContainer>
-      <ChartCaption>X = min(λ, λmax). Throughput saturates at λmax = 1/D. Above this, requests queue.</ChartCaption>
+      <ChartCaption>
+        X = min(λ, λmax) is the simple capacity intuition. The red point uses observed arrival-window λ and active-window completions.
+      </ChartCaption>
     </div>
   )
 }
@@ -147,7 +148,9 @@ export function ExpansionFactorChart({
           />
         </LineChart>
       </ResponsiveContainer>
-      <ChartCaption>R/D ~= 1/(1 - rho), where rho ~= λD/c. This is a per-worker reference, not an exact M/M/c result.</ChartCaption>
+      <ChartCaption>
+        R/D ~= 1/(1 - rho) is a simple stable single-server reference curve. It is not an exact M/M/c or finite-run result.
+      </ChartCaption>
     </div>
   )
 }
