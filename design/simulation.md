@@ -108,6 +108,19 @@ Convert the player's measured performance into mean service demand `D`. Use
 Each server worker automatically processes assigned work at the baseline speed
 derived from Phase 1.
 
+Phase 2 MVP builds one run from the selected difficulty and the Phase 1
+completed-sample service demand `D`. The configured arrival rate is:
+
+```
+lambda = targetPerWorkerLoad * workerCount / D
+```
+
+The browser pre-generates one seeded constant-rate Poisson schedule for the
+full 60-second Phase 2 arrival window. Beginner uses 4 workers at target
+per-worker load `0.50`, Standard uses 4 workers at `0.70`, Hard uses 6 workers
+at `0.85`, and Theory uses the Standard worker/load tuning with true service
+demand visible.
+
 Once a task is assigned to a core:
 * It begins service when the core becomes active on it.
 * It runs to completion.

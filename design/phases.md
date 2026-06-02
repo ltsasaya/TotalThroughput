@@ -107,21 +107,24 @@ shortens queues, and lowers response time. As per-worker load approaches 1,
 queue length and response time rise sharply again.
 
 The exact M/M/c mean response time formula is more complex than the classroom
-capacity approximation. Treat `R ~= D / (1 - lambda D / c)` as a simple
-single-server-style intuition curve unless the implementation adds an exact
-Erlang C or simulation-derived reference.
+capacity approximation. MVP Phase 2 reports `lambda_max ~= c / D`,
+`perWorkerLoad = lambda * D / c`, observed utilization, and observed response
+time. Any response curve is a simple single-server-style reference by
+per-worker load, not an exact M/M/c prediction, unless the implementation adds
+Erlang C or a simulation-derived reference.
 
 ### Default Worker Count
 
 Recommended starting value: 4 workers.
 
-### Progression
+### MVP Tuning
 
-| Difficulty | Workers |
-|---|---|
-| Early | 4 |
-| Medium | 6 |
-| Hard | 8 |
+| Difficulty | Workers | Target per-worker load |
+|---|---:|---:|
+| Beginner | 4 | 0.50 |
+| Standard | 4 | 0.70 |
+| Hard | 6 | 0.85 |
+| Theory | 4 | 0.70 |
 
 ### Flow
 

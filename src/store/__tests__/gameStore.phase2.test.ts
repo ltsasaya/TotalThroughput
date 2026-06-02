@@ -69,6 +69,23 @@ describe('startPhase2', () => {
     expect(getState().arrivalSchedule.length).toBeGreaterThan(0)
   })
 
+  it('derives Phase 2 lambda from measured Phase 1 service demand', () => {
+    setupPhase2('standard')
+    const { config } = getState()
+
+    expect(config.phase2Run.serviceDemandMs).toBe(VALID_PHASE1_RESULT.avgServiceTime)
+    expect(config.phase2Run.lambda).toBeCloseTo(0.70 * config.phase2CoreCount / 2)
+    expect(config.phase2Run.targetPerWorkerLoad).toBe(0.70)
+  })
+
+  it('uses difficulty-specific Phase 2 target loads', () => {
+    setupPhase2('beginner')
+    expect(getState().config.phase2Run.targetPerWorkerLoad).toBe(0.50)
+
+    setupPhase2('hard')
+    expect(getState().config.phase2Run.targetPerWorkerLoad).toBe(0.85)
+  })
+
   it('resets coreBusyMs to all-zeros with length = coreCount', () => {
     setupPhase2()
     const { coreBusyMs, config } = getState()

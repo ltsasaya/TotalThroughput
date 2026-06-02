@@ -1,9 +1,13 @@
+import type { TaskSize } from './task'
+
 export type GamePhase = 'idle' | 'phase1' | 'phase2' | 'postrun'
 
 export type DifficultyMode = 'beginner' | 'standard' | 'hard' | 'theory'
 
 // Observable load regimes during a run
 export type LoadRegime = 'low' | 'moderate' | 'high'
+
+export type Phase2LoadRegime = 'low' | 'moderate' | 'near-saturation'
 
 export type Phase1LoadRegime =
   | 'low'
@@ -12,12 +16,6 @@ export type Phase1LoadRegime =
   | 'near-saturation'
   | 'overload'
   | 'overload-plus'
-
-// Workload budgets (units, not task counts) for the four fixed time buckets of a phase.
-// Bucket A: 0-5s (intro), B: 5-20s (training), C: 20-40s (main body), D: 40-50s (peak).
-// Each task consumes workload = 1 (S), 2 (M), or 3 (L); a bucket keeps emitting tasks
-// until its cumulative workload meets or exceeds the budget. No tasks spawn in 50-60s.
-export type BucketBudgets = readonly [number, number, number, number]
 
 export interface Phase1LevelConfig {
   levelId: string
@@ -35,6 +33,23 @@ export interface Phase1LevelConfig {
   isDemo: boolean
 }
 
+export interface Phase2SizeWeight {
+  size: TaskSize
+  weight: number
+}
+
+export interface Phase2RunConfig {
+  label: string
+  regime: Phase2LoadRegime
+  seed: number
+  lambda: number              // requests/sec during the run's arrival window
+  targetPerWorkerLoad: number // reference load = lambda * D_player / workerCount
+  expectedArrivals: number
+  arrivalWindowMs: number
+  serviceDemandMs: number     // Phase 1 measured D used as each worker's baseline
+  sizeMix: readonly Phase2SizeWeight[]
+}
+
 export interface GameConfig {
   difficulty: DifficultyMode
   phase2CoreCount: number       // 4 | 6 | 8
@@ -46,6 +61,5 @@ export interface GameConfig {
   deadlineMultiplier: number    // scales task deadline windows (1.0 = standard)
   referenceWPM: number          // reference typing speed for size no-spawn zones (Phase 1)
   phase1Levels: readonly Phase1LevelConfig[]
-  phase1Buckets: BucketBudgets  // legacy bucket budget retained until Phase 2 overhaul
-  phase2Buckets: BucketBudgets  // workload budget per bucket in Phase 2
+  phase2Run: Phase2RunConfig
 }

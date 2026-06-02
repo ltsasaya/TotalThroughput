@@ -38,6 +38,11 @@ export function PostRunSummary() {
   }
 
   const {
+    arrivalRate,
+    arrivalCount,
+    expectedArrivals,
+    targetPerWorkerLoad,
+    unfinishedAtEndCount,
     completedTasks,
     droppedTasks,
     avgWaitingTime,
@@ -75,6 +80,11 @@ export function PostRunSummary() {
         />
 
         <MetricSections
+          arrivalRate={arrivalRate}
+          arrivalCount={arrivalCount}
+          expectedArrivals={expectedArrivals}
+          targetPerWorkerLoad={targetPerWorkerLoad}
+          unfinishedAtEndCount={unfinishedAtEndCount}
           completedTasks={completedTasks}
           droppedTasks={droppedTasks}
           actualThroughput={actualThroughput}
@@ -105,11 +115,14 @@ export function PostRunSummary() {
 
         <AnalysisSection
           failed={failed}
+          completedTasks={completedTasks}
           tpRatio={tpRatio}
           avgUtil={avgUtil}
           waitRatio={waitRatio}
           idleWasteMs={idleWasteMs}
           coreCount={config.phase2CoreCount}
+          arrivalRate={arrivalRate}
+          targetPerWorkerLoad={targetPerWorkerLoad}
           avgServiceTime={avgServiceTime}
           avgResponseTime={avgResponseTime}
         />

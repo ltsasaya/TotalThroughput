@@ -28,7 +28,7 @@ and teach backlog growth without blocking.
 * Reference WPM: **40**
 * Phase 1 reference loads: `0.55`, `0.75`, `0.90`
 * Phase 1 expected arrivals per level: 10-12
-* Phase 2 target per-worker loads: `0.50`, `0.70`
+* Phase 2 target per-worker load: `0.50`
 * Phase 2 workers: 4
 * Deadline multiplier: 1.25 (25% more time)
 * Phase 1 has no punitive drops; unfinished work is reported as still waiting
@@ -40,7 +40,7 @@ and teach backlog growth without blocking.
 * Reference WPM: **70**
 * Phase 1 reference loads: `0.40`, `0.55`, `0.75`, `0.90`, `1.05`
 * Phase 1 expected arrivals per level: 12-16
-* Phase 2 target per-worker loads: `0.50`, `0.70`, `0.85`
+* Phase 2 target per-worker load: `0.70`
 * Phase 2 workers: 4
 * Deadline multiplier: 1.0
 * Phase 1 has no punitive drops; unfinished work is reported as still waiting
@@ -51,7 +51,7 @@ and teach backlog growth without blocking.
 * Reference WPM: **100**
 * Phase 1 reference loads: `0.55`, `0.75`, `0.90`, `1.05`, `1.20`
 * Phase 1 expected arrivals per level: 16
-* Phase 2 target per-worker loads: `0.70`, `0.85`, `0.95`
+* Phase 2 target per-worker load: `0.85`
 * Phase 2 workers: 6
 * Deadline multiplier: 0.75 (tighter deadlines)
 * Phase 1 has no punitive drops; unfinished work is reported as still waiting

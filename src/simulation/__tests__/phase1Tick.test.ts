@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { computePhase1Tick, type Phase1TickInput } from '../phase1Tick'
 import { buildPhase1Levels, phase1LevelDurationMs } from '../phase1Levels'
+import { buildPhase2RunConfig } from '../phase2Runs'
 import type { GameConfig, Phase1LevelConfig } from '../../types/game'
 import type { LiveMetrics } from '../../types/metrics'
 import type { Task } from '../../types/task'
@@ -18,8 +19,7 @@ const BASE_CONFIG: GameConfig = {
   deadlineMultiplier: 1.0,
   referenceWPM: 70,
   phase1Levels: [LEVEL],
-  phase1Buckets: [1, 3, 4, 6],
-  phase2Buckets: [1, 6, 14, 15],
+  phase2Run: buildPhase2RunConfig('standard', 3_000),
 }
 
 const BASE_METRICS: LiveMetrics = {
@@ -33,6 +33,8 @@ const BASE_METRICS: LiveMetrics = {
   completedCount: 0,
   idealThroughput: 0,
   actualThroughput: 0,
+  arrivalRate: 0,
+  targetPerWorkerLoad: 0,
 }
 
 function minimalInput(level: Phase1LevelConfig = LEVEL): Phase1TickInput {

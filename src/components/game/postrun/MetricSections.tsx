@@ -40,6 +40,11 @@ function tpRatioColor(ratio: number): string {
 }
 
 interface MetricSectionsProps {
+  arrivalRate: number
+  arrivalCount: number
+  expectedArrivals: number
+  targetPerWorkerLoad: number
+  unfinishedAtEndCount: number
   completedTasks: number
   droppedTasks: number
   actualThroughput: number
@@ -56,6 +61,11 @@ interface MetricSectionsProps {
 }
 
 export function MetricSections({
+  arrivalRate,
+  arrivalCount,
+  expectedArrivals,
+  targetPerWorkerLoad,
+  unfinishedAtEndCount,
   completedTasks,
   droppedTasks,
   actualThroughput,
@@ -76,8 +86,16 @@ export function MetricSections({
       <div>
         <SectionLabel>Summary</SectionLabel>
         <MetricRow
+          left={<MetricItem label="Configured Arrival Rate" value={`${arrivalRate.toFixed(2)}/s`} />}
+          right={<MetricItem label="Target Load / Worker" value={`${(targetPerWorkerLoad * 100).toFixed(0)}%`} />}
+        />
+        <MetricRow
+          left={<MetricItem label="Arrivals Sampled" value={`${arrivalCount} / ${expectedArrivals} expected`} />}
+          right={<MetricItem label="Still Waiting At End" value={String(unfinishedAtEndCount)} valueClass={unfinishedAtEndCount > 0 ? 'text-amber-300' : 'text-white'} />}
+        />
+        <MetricRow
           left={<MetricItem label="Requests Completed" value={String(completedTasks)} />}
-          right={<MetricItem label="Dropped / Expired" value={String(droppedTasks)} valueClass={droppedTasks > 0 ? 'text-red-400' : 'text-white'} />}
+          right={<MetricItem label="Dropped / Unfinished" value={String(droppedTasks)} valueClass={droppedTasks > 0 ? 'text-red-400' : 'text-white'} />}
         />
         <MetricRow
           left={<MetricItem label="Average Throughput" value={`${actualThroughput.toFixed(2)}/s`} />}

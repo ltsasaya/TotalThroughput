@@ -100,7 +100,7 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
     phase1Result, coreBusyMs, throughputHistory, queueLengthHistory, lastHistoryTick, idleWasteMs,
   } = state
 
-  const avgSvcTime = phase1Result?.avgServiceTime ?? 3_000
+  const serviceDemandMs = config.phase2Run.serviceDemandMs || phase1Result?.avgServiceTime || 3_000
 
   // 1. Spawn arrivals
   let arrivalIdx = nextArrivalIndex
@@ -109,8 +109,8 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
 
   while (arrivalIdx < arrivalSchedule.length && arrivalSchedule[arrivalIdx].arrivalTime <= elapsed) {
     const arrival = arrivalSchedule[arrivalIdx]
-    const svcTime = avgSvcTime * SIZE_MULTIPLIER[arrival.size]
-    const task = generateTask(arrival.size, arrival.arrivalTime, svcTime)
+    const svcTime = serviceDemandMs * SIZE_MULTIPLIER[arrival.size]
+    const task = generateTask(arrival.size, arrival.arrivalTime, svcTime, config.deadlineMultiplier)
     newTasks[task.id] = task
     newQueue.push(task.id)
     arrivalIdx++
@@ -171,7 +171,7 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
     : 0
   const avgServiceTime = completedCount > 0
     ? completedArr.reduce((s, t) => s + (t.completionTime! - t.serviceStartTime!), 0) / completedCount
-    : avgSvcTime
+    : serviceDemandMs
 
   const perCoreUtilization = newCores.map((core, i) => {
     const ongoingMs = core.status === 'busy' && core.currentTaskId
@@ -180,20 +180,22 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
     return elapsed > 0 ? (newCoreBusyMs[i] + ongoingMs) / elapsed : 0
   })
 
-  const idealThroughput = newCores.length * 1000 / avgSvcTime
+  const idealThroughput = newCores.length * 1000 / serviceDemandMs
 
   const newMetrics: LiveMetrics = {
     ...liveMetrics,
     throughput,
     queueLength: filteredQueue.length,
     avgWaitingTime,
-    avgResponseTime: avgWaitingTime + avgServiceTime,
+    avgResponseTime: completedCount > 0 ? avgWaitingTime + avgServiceTime : 0,
     avgServiceTime,
     completedCount,
     droppedCount,
     perCoreUtilization,
     idealThroughput,
     actualThroughput: throughput,
+    arrivalRate: config.phase2Run.lambda,
+    targetPerWorkerLoad: config.phase2Run.targetPerWorkerLoad,
   }
 
   // 6. Record history every 1000ms
@@ -238,6 +240,10 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
     }
   })
 
+  const unfinishedAtEndCount = Object.values(newTasks).filter(
+    t => t.status === 'waiting' || t.status === 'assigned' || t.status === 'running',
+  ).length
+
   // Convert any task still unfinished (queued, assigned, running) to dropped so the
   // final summary accounts for every task that entered the run.
   for (const task of Object.values(newTasks)) {
@@ -257,7 +263,8 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
     : 0
   const finalAvgSvc = finalCompleted.length > 0
     ? finalCompleted.reduce((s, t) => s + (t.completionTime! - t.serviceStartTime!), 0) / finalCompleted.length
-    : avgSvcTime
+    : serviceDemandMs
+  const finalAvgResponse = finalCompleted.length > 0 ? finalAvgWaiting + finalAvgSvc : 0
   const maxResponse = finalCompleted.length > 0
     ? Math.max(...finalCompleted.map(t => t.completionTime! - t.arrivalTime))
     : 0
@@ -266,7 +273,7 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
   const avgUtil = finalPerCoreUtil.length > 0
     ? finalPerCoreUtil.reduce((s, u) => s + u, 0) / finalPerCoreUtil.length : 0
   const finalActualTP = elapsed > 0 ? finalCompleted.length / (elapsed / 1000) : 0
-  const finalIdealTP = newCores.length * 1000 / avgSvcTime
+  const finalIdealTP = newCores.length * 1000 / serviceDemandMs
 
   const baseScore = finalCompleted.length * 10
   const waitingPenalty = (finalAvgWaiting / 1000) * finalCompleted.length * 0.5
@@ -277,11 +284,17 @@ export function computePhase2Tick(state: Phase2TickInput, elapsed: number): Phas
   const tpRatio = finalIdealTP > 0 ? finalActualTP / finalIdealTP : 0
 
   const runSummary: RunSummary = {
+    arrivalRate: config.phase2Run.lambda,
+    arrivalCount: Object.keys(newTasks).length,
+    expectedArrivals: config.phase2Run.expectedArrivals,
+    targetPerWorkerLoad: config.phase2Run.targetPerWorkerLoad,
+    serviceDemandMs,
     completedTasks: finalCompleted.length,
     droppedTasks: finalDropped.length,
+    unfinishedAtEndCount,
     avgWaitingTime: finalAvgWaiting,
     maxWaitingTime: maxWaiting,
-    avgResponseTime: finalAvgWaiting + finalAvgSvc,
+    avgResponseTime: finalAvgResponse,
     maxResponseTime: maxResponse,
     avgServiceTime: finalAvgSvc,
     perCoreUtilization: finalPerCoreUtil,

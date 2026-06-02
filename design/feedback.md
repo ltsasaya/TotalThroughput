@@ -20,7 +20,8 @@ Popup content lives in `src/data/instructional.ts`. Component is `src/components
 Displayed during gameplay:
 * Queue length indicator
 * Current throughput
-* Arrival-window rate for the current level
+* Arrival-window rate for the current level or Phase 2 run
+* Target Phase 2 per-worker load when in the server-pool run
 * Active worker utilization
 * Number of dropped tasks
 * (Phase 1) Completed sample count and still-waiting work
@@ -51,7 +52,9 @@ R ~= D / (1 - rho)
 Explain the assumptions: stable load, FIFO, one service center, steady state,
 Poisson arrivals, and the simple M/M/1 response curve. For one short stochastic
 run, phrase comparisons as "reference model" or "back-of-napkin estimate"
-rather than exact prediction.
+rather than exact prediction. When a summary uses served-only response time,
+pair it with observed completion throughput `X` as `N_served ~= X R`; keep
+configured `lambda` for offered-load cards such as `lambda D / c`.
 
 ## Optional Theory Overlay
 

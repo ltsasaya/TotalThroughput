@@ -18,7 +18,7 @@ const DIFFICULTIES: {
     label: 'Beginner',
     selected: 'ring-2 ring-green-500 bg-green-950 text-green-300',
     phase1Desc: 'Fixed RPC rates - low and moderate gates',
-    phase2Desc: '4 workers · relaxed queue limit · FIFO dispatch',
+    phase2Desc: '4 workers - 50% target load - FIFO dispatch',
   },
   {
     key: 'standard',
@@ -26,7 +26,7 @@ const DIFFICULTIES: {
     label: 'Standard',
     selected: 'ring-2 ring-blue-500 bg-blue-950 text-blue-300',
     phase1Desc: 'Fixed RPC rates - stable gates plus demos',
-    phase2Desc: '4 workers · standard queue limit · FIFO dispatch',
+    phase2Desc: '4 workers - 70% target load - FIFO dispatch',
   },
   {
     key: 'hard',
@@ -34,7 +34,7 @@ const DIFFICULTIES: {
     label: 'Hard',
     selected: 'ring-2 ring-red-500 bg-red-950 text-red-300',
     phase1Desc: 'Fixed RPC rates - higher gate pressure',
-    phase2Desc: '6 workers · tight queue limit · fast dispatch',
+    phase2Desc: '6 workers - 85% target load - fast dispatch',
   },
 ]
 

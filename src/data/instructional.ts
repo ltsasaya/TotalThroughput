@@ -46,8 +46,8 @@ export const POPUP_CONTENT: Record<PopupId, PopupContent> = {
   postPhase2: {
     title: 'Run Complete',
     entries: [
-      { type: 'formula', formula: 'rho ≈ λD / c', caption: 'Average offered load per worker in the server pool.' },
-      { type: 'formula', formula: 'R ≈ D / (1 − ρ)', caption: 'Simple stable single-server reference curve: response time rises sharply near saturation.' },
+      { type: 'formula', formula: 'rho_core ~= lambda D / c', caption: 'Configured offered load per worker in the server pool.' },
+      { type: 'formula', formula: 'R ~= D / (1 - rho)', caption: 'Simple stable single-server reference curve, not an exact server-pool prediction.' },
       { type: 'formula', formula: 'N = λR  (Little\'s Law)', caption: 'Queue length is a function of arrival rate and response time.' },
       { type: 'text', text: 'The same client/RPC, queue, service, and response model generalizes to larger systems.' },
     ],

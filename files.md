@@ -23,7 +23,7 @@
 |---|---|
 | `src/types/task.ts` | `Task`, `TaskEvent`, `TaskSize`, `TaskStatus`, `TaskEventType` |
 | `src/types/core.ts` | `Core`, `CoreStatus` — internal worker/core model |
-| `src/types/game.ts` | `GamePhase`, `DifficultyMode`, `LoadRegime`, `Phase1LevelConfig`, `BucketBudgets`, `GameConfig` |
+| `src/types/game.ts` | `GamePhase`, `DifficultyMode`, `LoadRegime`, `Phase1LevelConfig`, `Phase2RunConfig`, `GameConfig` |
 | `src/types/metrics.ts` | `LiveMetrics`, `RunSummary`, `Phase1LevelResult`, `Phase1Result`, `GradeLevel`, `TimePoint` |
 
 ## Store
@@ -39,17 +39,17 @@
 | File | Description |
 |---|---|
 | `src/simulation/content.ts` | Task word pools (S/M/L), Phase 2 `generateTask(...)`, and Phase 1 two-word `generatePhase1Task(...)` |
-| `src/simulation/arrival.ts` | Arrival schedule generation — bucketed generator retained for Phase 2 plus seeded constant-rate Poisson generator for Phase 1 levels |
+| `src/simulation/arrival.ts` | Seeded constant-rate Poisson arrival schedule generator shared by phase run builders |
 | `src/simulation/phase1Levels.ts` | Phase 1 level table, fixed seeds, per-level durations, and Poisson schedule helper |
 | `src/simulation/phase1Results.ts` | Phase 1 per-level and aggregate calibration result builders, including active-window rate and backlog/tail metrics |
 | `src/simulation/phase1Tick.ts` | `computePhase1Tick` — pure no-drop Phase 1 tick: Poisson arrivals, activation, metrics, level-end flag |
+| `src/simulation/phase2Runs.ts` | Phase 2 server-pool run config builder — target per-worker load, measured-D lambda, seeds, size mix, and Poisson schedule helper |
 | `src/simulation/phase2Tick.ts` | `computePhase2Tick` — pure Phase 2 tick: arrivals, core progress, completion, idle waste, RunSummary + grade computation |
 | `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, Phase 1 two-word prompts, word count ranges per size, exact deadline values |
-| `src/simulation/__tests__/arrival.test.ts` | Unit tests — Phase 1 bucketed arrival schedule (per-bucket workload floor + overshoot bounds, no-spawn zones, size-mix skew) |
 | `src/simulation/__tests__/arrival.poisson.test.ts` | Unit tests — seeded Poisson arrival schedule determinism, bounds, expected count, S-only default, weighted mix, and invalid inputs |
-| `src/simulation/__tests__/arrival.phase2.test.ts` | Unit tests — Phase 2 bucketed arrival schedule (per-bucket workload floor + overshoot bounds, no-spawn zones at refWPM=100, difficulty skew) |
 | `src/simulation/__tests__/phase1Results.test.ts` | Unit tests — Phase 1 gate/demo result math and aggregate unlock rules |
 | `src/simulation/__tests__/phase1Tick.test.ts` | Unit tests — computePhase1Tick: no-drop level timing, Phase 1 prompt spawning, activation, live metrics |
+| `src/simulation/__tests__/phase2Runs.test.ts` | Unit tests — Phase 2 run config lambda math, worker counts, deterministic Poisson schedules, and S/M/L mix |
 | `src/simulation/__tests__/phase2Tick.test.ts` | Unit tests — computePhase2Tick: phase-end, score formula, grade thresholds, idle waste, task completion |
 
 ## Hooks

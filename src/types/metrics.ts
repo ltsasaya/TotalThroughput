@@ -13,6 +13,8 @@ export interface LiveMetrics {
   completedCount: number       // tasks fully completed so far
   idealThroughput: number      // tasks/sec if all cores stayed fully busy
   actualThroughput: number     // observed completed tasks/sec
+  arrivalRate: number          // configured arrivals/sec during the Phase 2 arrival window
+  targetPerWorkerLoad: number  // configured Phase 2 reference load lambda * D / c
   avgReactionSpeed?: number    // ms — avg from task activation to first keystroke (Phase 1 only)
   avgTypingSpeed?: number      // WPM — avg (chars/5) / typingMinutes per task (Phase 1 only)
 }
@@ -77,8 +79,14 @@ export interface TimePoint {
 
 // Full summary computed at run end
 export interface RunSummary {
+  arrivalRate: number
+  arrivalCount: number
+  expectedArrivals: number
+  targetPerWorkerLoad: number
+  serviceDemandMs: number
   completedTasks: number
   droppedTasks: number
+  unfinishedAtEndCount: number
   avgWaitingTime: number
   maxWaitingTime: number
   avgResponseTime: number
