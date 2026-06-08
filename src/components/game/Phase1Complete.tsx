@@ -22,8 +22,8 @@ export function Phase1Complete() {
   const lambdaMax = phase1Result.measuredTasksPerSecond
   const hasMeasuredService = phase1Result.completedCount > 0
   const statusMessage = phase1Result.passed
-    ? 'Your single-server service demand is calibrated. Phase 2 workers will process RPCs at this measured D.'
-    : 'Calibration needs a retry. Complete enough gated sample RPCs with stable served-client response time before Phase 2.'
+    ? 'Your single-server service demand is calibrated. Phase 2 workers will process requests at this measured D.'
+    : 'Calibration needs a retry. Complete enough gated sample requests with stable served-client response time before Phase 2.'
   const gatedCount = phase1Result.levelResults.filter(result => result.isGate).length
   const passedGates = phase1Result.levelResults.filter(result => result.isGate && result.passed).length
 
@@ -113,11 +113,11 @@ export function Phase1Complete() {
 
         {phase1Result.passed ? (
           <p className="tt-copy mb-8 text-sm">
-            D = {D.toFixed(2)}s carries into Phase 2. Each server worker uses that service demand while you manage the shared RPC queue.
+            D = {D.toFixed(2)}s carries into Phase 2. Each server worker uses that service demand while you manage the shared request queue.
           </p>
         ) : (
           <p className="tt-copy mb-8 text-sm">
-            Replay Phase 1 to gather a stable service demand. Phase 2 unlocks after all gated levels pass with at least eight completed sample RPCs.
+            Replay Phase 1 to gather a stable service demand. Phase 2 unlocks after all gated levels pass with at least eight completed sample requests.
           </p>
         )}
 

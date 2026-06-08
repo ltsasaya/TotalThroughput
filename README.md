@@ -1,12 +1,12 @@
 # Total Throughput
 
 Total Throughput is a typing-based browser game that teaches server
-performance first: clients send RPCs, requests arrive at a server, queued work
+performance first: clients send requests, work arrives at a server, queued work
 waits for service, and responses return. It then uses that server model to
 teach throughput, latency, utilization, overload, and systems performance more
 generally.
 
-Players build intuition before formulas. They first operate a single-server RPC
+Players build intuition before formulas. They first operate a single-server request
 queue, then use that measured service demand to dispatch work across multiple
 simulated server workers.
 
@@ -14,9 +14,9 @@ simulated server workers.
 
 ### Phase 1: Single-Server Calibration
 
-Tasks represent client RPCs to a server. The player completes each request by
+Tasks represent client requests to a server. The player completes each request by
 typing its words exactly. The run measures service demand: how long one server
-worker needs to process one RPC.
+worker needs to process one request.
 
 As arrival rate increases, queued tasks wait longer. If arrivals outpace
 service rate, backlog and response time grow.

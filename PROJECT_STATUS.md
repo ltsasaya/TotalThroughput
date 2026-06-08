@@ -6,12 +6,12 @@ Last updated: 2026-06-08
 
 Total Throughput is a browser-only Vite, React, and TypeScript instructional
 game focused on server performance first, introduced through clients sending
-RPCs to a queued server, then systems performance as the generalization. The
+requests to a queued server, then systems performance as the generalization. The
 playable flow includes Phase 1 single-server typing calibration, Phase 2
 server-pool dispatch, live metrics, post-run charts, and instructional
 feedback. The active visual direction is a semi-retro monochrome UI revamp
 using rectangular controls, sparse network motifs, and system monospace
-typography.
+typography. `Play` now opens a three-page Educational Manual before Phase 1.
 
 ## Recent Work
 
@@ -22,12 +22,12 @@ typography.
   status, and project direction.
 - Shifted product framing and visible instructional copy to server
   performance first, with broader systems concepts introduced from that model.
-- Added clients/RPCs as the concrete introductory story for arrivals, queues,
+- Added clients/requests as the concrete introductory story for arrivals, queues,
   service demand, and response time.
-- Rebuilt Phase 1 as fixed-rate seeded Poisson RPC levels with no punitive
+- Rebuilt Phase 1 as fixed-rate seeded Poisson request levels with no punitive
   drops, completed-sample calibration gates, demo overload levels, and
   per-level backlog/tail feedback.
-- Rebuilt Phase 2 as a fixed-rate seeded Poisson RPC server-pool dispatch run
+- Rebuilt Phase 2 as a fixed-rate seeded Poisson request server-pool dispatch run
   where arrival rate derives from Phase 1 service demand, worker count, and
   target per-worker load.
 - Updated Phase 2 metrics and feedback to distinguish configured load
@@ -48,9 +48,15 @@ typography.
   the `Play` button, satellite nodes avoid awkward border/line collisions, and
   no hub-to-hub links are shown.
 - Added the first Educational Manual page in the player workflow: `Play` now
-  opens a semi-retro manual screen with the persistent header, one-page
-  server/RPC explanation, simplified client/server sequence diagram, `1 / 1`
-  page count, and final `Close` handoff into Phase 1.
+  opens a semi-retro manual screen with the persistent header, server
+  request/response explanation, and simplified client/server sequence diagram.
+- Added the second Educational Manual page: incoming requests wait in a request
+  queue inside the server, the front request moves to a worker, and the server
+  sends a response back to the client.
+- Added the third Educational Manual page: typing-task objective, client
+  satisfaction, lowest Response Time (`R`) goal, and calibration level setup.
+- Removed player-facing RPC wording from the app and docs in favor of broader
+  request/response language.
 
 ## Remaining Work
 
@@ -69,5 +75,6 @@ typography.
 - `npm test`: passed, 125 tests
 - `npm run lint`: passed
 - `npm run build`: passed with Vite's existing large chunk warning
-- Browser QA: desktop/mobile start screen and first Educational Manual page
-  rendered correctly, with no console errors; `Close` enters Phase 1
+- Browser QA: desktop/mobile start screen and Educational Manual pages 1-3
+  rendered correctly, with no console errors; `Home` returns to start and
+  `Close` enters Phase 1

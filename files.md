@@ -65,9 +65,10 @@
 | `src/components/ui/primitives.tsx` | Shared visual-system primitives — panels, labels, metric items, buttons, badges, formula callouts, and `cx` helper |
 | `src/components/game/RetroHeader.tsx` | Shared semi-retro placeholder header used by the start screen and Educational Manual |
 | `src/components/game/StartScreen.tsx` | Idle phase — semi-retro monochrome start screen with placeholder nav/actions and `Play` handoff to the Educational Manual |
-| `src/components/game/EducationalManual.tsx` | Play-to-Phase-1 onboarding screen — one-page manual shell, page count, close handoff, and RPC client/server diagram |
+| `src/components/game/EducationalManual.tsx` | Play-to-Phase-1 onboarding screen — manual shell, page navigation, close/home handoff, and page-specific diagrams |
+| `src/components/game/EducationalManualDiagrams.tsx` | Semi-retro SVG diagrams for Educational Manual pages |
 | `src/components/game/TopBar.tsx` | Shared header — phase label, countdown timer, optional dropped counter, queue display, optional score |
-| `src/components/game/Phase1View.tsx` | Phase 1 typing interface — fixed-rate RPC level status, character-level word display, queue preview, live stats sidebar |
+| `src/components/game/Phase1View.tsx` | Phase 1 typing interface — fixed-rate request level status, character-level word display, queue preview, live stats sidebar |
 | `src/components/game/Phase1Complete.tsx` | Post-Phase-1 calibration results — gate/demo level summary, formulas, Phase 2 readiness |
 | `src/components/game/Phase2View.tsx` | Phase 2 server-pool layout — TopBar + QueuePanel + worker grid + StatsPanel |
 | `src/components/game/QueuePanel.tsx` | Scrollable list of waiting requests — NEXT marker, waiting time color coding |

@@ -2,7 +2,7 @@ import { FormulaCallout, Panel, SectionLabel } from '@/components/ui/primitives'
 
 export function LearnSection() {
   const flow = [
-    ['01', 'Client', 'Sends an RPC.'],
+    ['01', 'Client', 'Sends a request.'],
     ['02', 'Queue', 'Waits if every worker is busy.'],
     ['03', 'Worker', 'Spends service demand D.'],
     ['04', 'Response', 'Returns after waiting plus service.'],
@@ -13,9 +13,9 @@ export function LearnSection() {
       <section className="app-band">
         <div className="mx-auto max-w-4xl px-5 py-16 md:px-8">
           <SectionLabel>Clients and servers</SectionLabel>
-          <h2 className="mt-2 text-2xl font-bold">Clients send RPCs to servers</h2>
+          <h2 className="mt-2 text-2xl font-bold">Clients send requests to servers</h2>
           <p className="tt-copy mt-4">
-            A client asks a server to do work. That request is an RPC. When too many RPCs
+            A client asks a server to do work. When too many requests
             arrive at once, they wait in the server queue before workers can process them.
           </p>
 
@@ -31,7 +31,7 @@ export function LearnSection() {
 
           <FormulaCallout
             className="mt-6"
-            formula="Client -> RPC -> Queue -> Worker -> Response"
+            formula="Client -> Request -> Queue -> Worker -> Response"
             caption="The same shape appears in CPUs, disks, thread pools, and services."
           />
         </div>
@@ -49,7 +49,7 @@ export function LearnSection() {
             <div className="grid gap-4 p-4 md:grid-cols-[90px_minmax(0,1fr)]">
               <div className="font-mono text-lg font-bold text-[color:var(--tt-text)]">R</div>
               <p className="tt-copy text-sm">
-                Response time is the time from when a client RPC arrives to when the response is complete.
+                Response time is the time from when a client request arrives to when the response is complete.
               </p>
             </div>
             <div className="tt-divider" />
@@ -74,7 +74,7 @@ export function LearnSection() {
           </p>
           <FormulaCallout
             className="mt-6 inline-block"
-            formula="Client -> RPC -> Server -> Dependency RPC -> Response"
+            formula="Client -> Request -> Server -> Dependency -> Response"
             caption="Fan-out repeats the request, queue, service, response pattern."
           />
         </div>

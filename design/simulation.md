@@ -47,7 +47,7 @@ scenarios. Use random but replayable seeds for free play.
 ### Task size distribution
 
 Task sizes are sampled independently of arrival times. Current Phase 1 uses
-S-only two-word RPC prompts so enough arrivals fit in each short level. Phase 2
+S-only two-word request prompts so enough arrivals fit in each short level. Phase 2
 may use a wider S/M/L mix because automatic workers process assigned work.
 
 Phase 1 emits arrivals only during the level's arrival window, then adds a
@@ -81,7 +81,7 @@ Levels should teach these load regimes:
 
 For a single serial server, `rho ~= lambda * D`. For `c` parallel server
 workers, `perWorkerLoad = lambda * D / c`. In Phase 1, `D` is estimated from
-completed served RPCs, so `rho` is a reference-load estimate rather than an
+completed served requests, so `rho` is a reference-load estimate rather than an
 exact busy fraction.
 
 ## Phase 1 Service Model

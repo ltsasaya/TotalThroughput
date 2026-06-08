@@ -47,7 +47,7 @@ function generateProse(p: AnalysisProps): string {
     sentences.push(`Workers were substantially idle, leaving ${((1 - p.avgUtil) * 100).toFixed(0)}% of capacity unused.`)
   }
 
-  sentences.push(`This run was configured at ${p.arrivalRate.toFixed(2)} RPC/s, or about ${(p.targetPerWorkerLoad * 100).toFixed(0)}% reference load per worker.`)
+  sentences.push(`This run was configured at ${p.arrivalRate.toFixed(2)} req/s, or about ${(p.targetPerWorkerLoad * 100).toFixed(0)}% reference load per worker.`)
 
   return sentences.join(' ')
 }

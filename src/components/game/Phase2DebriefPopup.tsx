@@ -59,11 +59,11 @@ export default function Phase2DebriefPopup({ onDismiss }: Props) {
         <p className="tt-label mb-6 text-sm">Your measured server-pool performance on the reference curves.</p>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <FormulaCallout formula={`lambda = ${arrivalRate.toFixed(2)}/s`} caption="configured RPC arrival rate" />
+          <FormulaCallout formula={`lambda = ${arrivalRate.toFixed(2)}/s`} caption="configured request arrival rate" />
           <FormulaCallout formula={`lambda D/c = ${(targetPerWorkerLoad * 100).toFixed(0)}%`} caption="target load per worker" />
           <FormulaCallout
             formula={hasResponseSamples ? `R = ${D.toFixed(1)}s + ${W.toFixed(1)}s = ${R.toFixed(1)}s` : 'No completed R samples'}
-            caption="Response time uses served RPCs"
+            caption="Response time uses served requests"
           />
           <FormulaCallout
             formula={hasResponseSamples ? `R/D = ${rdExpansion.toFixed(2)}x` : 'R/D unavailable'}
@@ -73,7 +73,7 @@ export default function Phase2DebriefPopup({ onDismiss }: Props) {
 
         <div className="grid grid-cols-2 gap-3 mb-6">
           <FormulaCallout formula={`observed util = ${(avgUtil * 100).toFixed(0)}%`} caption="average worker busy fraction" />
-          <FormulaCallout formula={`N_served ~= X R = ${servedRequestsInSystem}`} caption="Completed-flow reference; excludes unfinished RPCs" />
+          <FormulaCallout formula={`N_served ~= X R = ${servedRequestsInSystem}`} caption="Completed-flow reference; excludes unfinished requests" />
         </div>
 
         {hasResponseSamples ? (
@@ -85,7 +85,7 @@ export default function Phase2DebriefPopup({ onDismiss }: Props) {
           />
         ) : (
           <p className="tt-copy text-sm">
-            No RPCs completed, so response-time expansion is unavailable for this run.
+            No requests completed, so response-time expansion is unavailable for this run.
           </p>
         )}
 

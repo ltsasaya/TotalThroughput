@@ -7,14 +7,29 @@ initial player workflow has set context.
 
 The start flow uses a dedicated Educational Manual screen after `Play` and
 before active Phase 1 play. This replaces the old `prePhase1` popup as the
-primary onboarding surface for the server/RPC premise.
+primary onboarding surface for the server request/response premise.
 
-The current manual slice is one page. It introduces the player as the server,
-introduces clients such as **Player Name**, explains RPC request/procedure /
-response flow, shows a simple client/server diagram, and then explains the
-client waiting consequence. The diagram follows BOSS's RPC sequence reference
-using a simplified client computer, simplified server, dashed lifelines,
-request/response arrows, and waiting/executing annotations.
+The manual starts with the player as the server, introduces clients such as
+**Player Name**, explains request/response flow, shows a simple client/server
+diagram, and then explains the client waiting consequence. The
+first diagram follows BOSS's request sequence reference using a simplified client
+computer, simplified server, dashed lifelines, request/response arrows, and
+waiting/executing annotations.
+
+The second page focuses only on queueing: the server contains a request queue
+and a worker; incoming requests wait in the request queue when the worker is busy;
+the queue shows three named waiting requests (`P1`, `P2`, `P3`) plus a
+partial fourth slot to imply more buildup; the front request moves to the
+worker when it is ready; and the server sends a response back to the client.
+The main arrows show the closed client/server request-response loop. Secondary
+arrows show other clients sending requests and receiving responses. The diagram
+intentionally avoids the API concept and avoids a work-list inside the
+server.
+
+The third page explains the player's immediate objective: complete typing tasks
+for **Player Name** and other clients, improve client satisfaction by completing
+work faster, minimize Response Time (`R`), and enter calibration so the game can
+determine the player's red-highlighted level.
 
 ## Instructional Popups
 
@@ -24,7 +39,7 @@ keypress or outside click (card click does not dismiss).
 | Popup | Trigger | Content |
 |---|---|---|
 | postPhase1 | Phase 1 ends | Throughput, completed-sample service demand, served-client response time, backlog/still-waiting work, Little's Law reference |
-| prePhase2 | Player clicks "Start Phase 2" | The RPC server now has a worker pool; idle workers = wasted capacity; FIFO dispatch |
+| prePhase2 | Player clicks "Start Phase 2" | The server now has a worker pool; idle workers = wasted capacity; FIFO dispatch |
 | postPhase2 | Phase 2 ends | Utilization, queueing delay (wait/service ratio), throughput ratio; how the server model generalizes to larger systems |
 
 Manual content lives in `src/data/educationalManual.ts` and renders through
@@ -53,8 +68,8 @@ The game generates text explanations tied to the player's actual performance.
 
 * "Your single-server service rate was high enough to keep the queue stable early in the run, but once sustained offered load approached capacity, waiting time increased rapidly."
 * "Some clients were still waiting when observation ended. That backlog is evidence of overload during the burst, not a dropped-request penalty."
-* "In Phase 2, ideal RPC throughput rose with the number of server workers, but actual throughput stayed lower because dispatch delay prevented full utilization."
-* "Your RPC queue remained nonempty while some workers were briefly idle, indicating a dispatcher bottleneck rather than a worker bottleneck."
+* "In Phase 2, ideal request throughput rose with the number of server workers, but actual throughput stayed lower because dispatch delay prevented full utilization."
+* "Your request queue remained nonempty while some workers were briefly idle, indicating a dispatcher bottleneck rather than a worker bottleneck."
 
 ### Back-of-napkin derivation
 
@@ -81,4 +96,4 @@ Toggleable explanations for:
 * Why response time includes waiting time
 * Why more workers do not automatically guarantee low latency
 * Why p95/max response time can be worse than the average
-* How client/RPC request-response maps to systems beyond one server
+* How client request-response maps to systems beyond one server

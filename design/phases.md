@@ -6,8 +6,8 @@ Phase 2 is locked until the player completes Phase 1 calibration.
 
 | Phase | Role | Status |
 |---|---|---|
-| Phase 1 | Single-server calibration: player types to complete client RPCs | MVP overhaul |
-| Phase 2 | Multi-server dispatch: player routes queued RPCs to automatic workers | MVP overhaul |
+| Phase 1 | Single-server calibration: player types to complete client requests | MVP overhaul |
+| Phase 2 | Multi-server dispatch: player routes queued requests to automatic workers | MVP overhaul |
 | Phase 3 | Workflow mode: task completions trigger downstream tasks | Planned, out of scope |
 
 ---
@@ -16,7 +16,7 @@ Phase 2 is locked until the player completes Phase 1 calibration.
 
 ### Purpose
 
-Introduce clients sending RPCs to one server, measure the player's baseline
+Introduce clients sending requests to one server, measure the player's baseline
 server service demand, and make response time intuitive:
 
 ```
@@ -30,11 +30,11 @@ responses, and possibly work still waiting when observation ends.
 
 ### Flow
 
-* Before Phase 1 begins, a modal popup explains that clients send RPCs to a
+* Before Phase 1 begins, a modal popup explains that clients send requests to a
   server and the player is the server worker. Dismissed by any key or outside
   click.
 * The player enters a sequence of short levels with fixed arrival rates.
-* The player completes client RPCs by typing short two-word strings.
+* The player completes client requests by typing short two-word strings.
 * Each level uses one constant Poisson arrival rate.
 * Later levels increase arrival rate to move from low load to near saturation
   and then overload.
@@ -88,7 +88,7 @@ levels may be framed as demonstrations rather than required first-play gates.
 * Single-worker capacity estimate `lambda_max = 1 / D`
 * Completed-sample average service demand
 * Per-level max queue length
-* Waiting time and response time summary for served RPCs
+* Waiting time and response time summary for served requests
 * Backlog at arrival-window end, tail completions, and still-waiting count
 * Reference-load comparison using `rho ~= lambda * D`
 * Optional simple M/M/1 reference curve `R ~= D / (1 - rho)`, labeled as
@@ -128,9 +128,9 @@ Recommended starting value: 4 workers.
 
 ### Flow
 
-* Before Phase 2 begins, a modal popup explains that the RPC server now has a
+* Before Phase 2 begins, a modal popup explains that the server now has a
   pool of workers. Dismissed by any key or outside click.
-* Player sees a queue of incoming RPCs; the first is labeled NEXT.
+* Player sees a queue of incoming requests; the first is labeled NEXT.
 * Requests are dispatched FIFO: clicking an idle worker assigns `queue[0]` to it.
 * Player must react quickly to click workers as they go idle.
 * Each run uses one constant Poisson arrival rate.

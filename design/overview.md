@@ -3,7 +3,7 @@
 ## Summary
 
 Total Throughput is a browser-based instructional game that teaches server
-performance through direct play. The introductory model is clients sending RPCs
+performance through direct play. The introductory model is clients sending requests
 to a server: requests arrive, wait in a queue when workers are busy, receive
 service, and return responses. The game then uses that server model to
 introduce systems performance more generally. The player first operates a
@@ -16,7 +16,7 @@ The project is primarily a teaching tool. It should be enjoyable enough to motiv
 
 * Teach server throughput, queue growth, waiting time, service time, response
   time, utilization, and overload through gameplay.
-* Introduce server queues through a client/RPC request-response model before
+* Introduce server queues through a client request/response model before
   showing formulas.
 * Show the difference between one-server capacity and multi-server capacity.
 * Demonstrate that more workers do not automatically produce proportional
@@ -64,7 +64,7 @@ Game-like teaching tool.
 After playing, a user should be able to understand:
 
 * Throughput as completed work per unit time.
-* A server as clients, RPC requests, queue, service, and response.
+* A server as clients, requests, queue, service, and response.
 * Service time as the time spent actually doing work.
 * Waiting time as the time spent in queue before service starts.
 * Response time as waiting time plus service time.

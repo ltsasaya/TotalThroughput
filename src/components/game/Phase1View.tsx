@@ -63,7 +63,7 @@ export function Phase1View() {
   return (
     <div className="app-shell flex h-screen flex-col">
       <TopBar
-        label={`Phase 1: RPC Level ${currentPhase1LevelIndex + 1}/${phase1Levels.length}`}
+        label={`Phase 1: Level ${currentPhase1LevelIndex + 1}/${phase1Levels.length}`}
         remaining={remaining}
         queueLength={liveMetrics.queueLength}
       />
@@ -114,7 +114,7 @@ export function Phase1View() {
             <div>
               <SectionLabel>Workbench</SectionLabel>
               <div className="mt-1 text-sm font-semibold text-[color:var(--tt-text)]">
-                {activeTask ? 'Service current RPC' : 'Awaiting next RPC'}
+                {activeTask ? 'Service current request' : 'Awaiting next request'}
               </div>
             </div>
             <StatusBadge tone={activeTask ? 'success' : 'neutral'}>

@@ -10,7 +10,7 @@ simulation behavior.
 Total Throughput should feel like a compact systems lab, not a marketing page or
 generic SaaS dashboard.
 
-- Use the concrete story: client request -> RPC queue -> worker service ->
+- Use the concrete story: client request -> request queue -> worker service ->
   response.
 - Favor operational hierarchy over decorative polish.
 - Make the active work area obvious before secondary explanation.
@@ -36,6 +36,8 @@ into the start-page -> Educational Manual -> play workflow.
 - Keep the semi-retro top header persistent across the start screen and the
   Educational Manual. Its labels are placeholders for now and may be renamed
   later.
+- The header includes a plain text `Home` control on the left. It returns the
+  player from manual pages to the start screen without a boxed button style.
 - Do not add fonts, image assets, icon libraries, animation packages, component
   kits, hosted services, or paid visual tooling for this revamp.
 - Later gameplay and results screens remain under the existing visual system
@@ -150,19 +152,31 @@ visual rules across multiple components.
   transition.
 - Keep the horizontal striped background visible behind a foreground vertical
   manual page with rounded corners.
-- The current manual slice is one page. It should use the header
-  `Educational Manual`, general body content, the RPC sequence diagram, the
-  client-waiting consequence copy, a current-page/last-page display centered
-  at the bottom, and a `Close` button at bottom right.
+- Keep the manual page frame fixed-size per viewport so the page top, header,
+  footer controls, and page count do not shift between manual pages. Sparse
+  pages may keep empty white space.
+- The manual now begins with the approved first page and can expand into
+  follow-up pages. It should use the header `Educational Manual`, general body
+  content, page-specific diagrams, a current-page/last-page display centered
+  at the bottom, and a `Close` button at bottom right on the final page.
 - If BOSS later expands the manual to multiple pages, use a `Next` button at
   bottom right, a `Close` button at bottom right on the final page, and a
   `Back` button at bottom left except on the first page.
-- The manual should introduce the game premise and server/RPC context before
-  mechanics. Initial BOSS-provided direction: the player had the misfortune of
-  being born as a server and must handle client requests using RPCs.
-- RPC explanations must stay consistent with the existing server-first design:
-  a client sends a request asking a server to run a procedure with parameters;
-  the server runs it and sends back a response.
+- The manual should introduce the game premise and server request/response
+  context before mechanics. Current BOSS-provided direction: the player had
+  the misfortune of being born as a server and must handle client requests.
+- Do not use protocol-specific wording in the player-facing manual, diagrams,
+  gameplay labels, or instructional copy. It is too distracting for this
+  learning flow.
+- The queueing page should stay visually simple: incoming requests enter a server
+  container, the server contains a request queue and worker, one named front
+  request moves to the worker, the queue can show `P1`, `P2`, `P3`, and a
+  partial fourth slot to imply stacking, and the server sends a response. Do
+  not introduce API wording or duplicate work-list labels in that diagram.
+  Show the main client request/response as a closed loop and use secondary
+  arrows for other clients' inbound requests and outbound responses.
+  Do not label the diagram arrows with protocol terms; the page should use
+  arrows to show requests and responses.
 
 ### Learning Sections
 

@@ -190,6 +190,7 @@ export function StartScreen() {
   if (showManual) {
     return (
       <EducationalManual
+        onHome={() => setShowManual(false)}
         onComplete={() => {
           setShowManual(false)
           startGame(DEFAULT_DIFFICULTY)
@@ -204,7 +205,7 @@ export function StartScreen() {
         <NetworkVisualization />
         <div className="retro-start-scanlines" aria-hidden="true" />
 
-        <RetroHeader />
+        <RetroHeader onHome={() => setShowManual(false)} />
 
         <main className="retro-start-main">
           <h1 className="retro-start-title">Total Throughput</h1>
