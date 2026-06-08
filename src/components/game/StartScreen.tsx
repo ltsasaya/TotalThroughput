@@ -17,24 +17,24 @@ const DIFFICULTIES: {
     step: 1,
     label: 'Beginner',
     selected: 'ring-2 ring-green-500 bg-green-950 text-green-300',
-    phase1Desc: 'Slow arrivals · 22s per task · Lose at 12 in queue',
-    phase2Desc: '4 cores · Relaxed queue limit · FIFO dispatch enforced',
+    phase1Desc: 'Fixed RPC rates - low and moderate gates',
+    phase2Desc: '4 workers - 50% target load - FIFO dispatch',
   },
   {
     key: 'standard',
     step: 2,
     label: 'Standard',
     selected: 'ring-2 ring-blue-500 bg-blue-950 text-blue-300',
-    phase1Desc: 'Moderate pace · 15s per task · Lose at 10 in queue',
-    phase2Desc: '4 cores · Standard queue limit · Free dispatch order',
+    phase1Desc: 'Fixed RPC rates - stable gates plus demos',
+    phase2Desc: '4 workers - 70% target load - FIFO dispatch',
   },
   {
     key: 'hard',
     step: 3,
     label: 'Hard',
     selected: 'ring-2 ring-red-500 bg-red-950 text-red-300',
-    phase1Desc: 'Fast bursts · 10s per task · Lose at 8 in queue',
-    phase2Desc: '6 cores · Tight queue limit · For fast typists',
+    phase1Desc: 'Fixed RPC rates - higher gate pressure',
+    phase2Desc: '6 workers - 85% target load - fast dispatch',
   },
 ]
 
@@ -56,7 +56,7 @@ export function StartScreen() {
       <div className="max-w-3xl w-full">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-white">Total Throughput</h1>
-          <p className="text-gray-400 mt-2">Learn system performance through scheduling</p>
+          <p className="text-gray-400 mt-2">Learn server performance through client RPC queues</p>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
@@ -67,7 +67,7 @@ export function StartScreen() {
             </div>
             <h2 className="text-lg font-bold text-white mb-1">Calibration</h2>
             <p className="text-sm text-gray-400 mb-6">
-              Type system-performance vocabulary to measure your processing rate.
+              Type queued RPCs to measure one server worker's service demand.
             </p>
 
             <p className="text-xs uppercase tracking-widest text-gray-500 mb-3">Difficulty</p>
@@ -97,14 +97,14 @@ export function StartScreen() {
           </div>
 
           {/* Phase 2 Box */}
-          {phase1Result === null || phase1Result.failed ? (
+          {phase1Result === null || !phase1Result.passed ? (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-7 opacity-40 pointer-events-none select-none">
               <div className="mb-1">
                 <span className="text-xs text-gray-500 uppercase tracking-widest">Phase 2</span>
               </div>
-              <h2 className="text-lg font-bold text-white mb-1">Scheduling</h2>
+              <h2 className="text-lg font-bold text-white mb-1">Server Pool</h2>
               <p className="text-sm text-gray-400 mb-6">
-                Dispatch tasks to cores before they expire. Minimize wait time and idle waste.
+                Dispatch queued RPCs to server workers. Minimize wait time and idle waste.
               </p>
               <div className="flex flex-col gap-3 mt-auto">
                 <div className="h-8 bg-gray-800 rounded-lg" />
@@ -113,7 +113,7 @@ export function StartScreen() {
                 <div className="h-8 bg-gray-800 rounded-lg" />
               </div>
               <p className="text-xs text-gray-500 mt-6 text-center">
-                {phase1Result?.failed ? 'Complete Phase 1 without failing to unlock' : 'Unlocks after Phase 1'}
+                {phase1Result === null ? 'Complete Phase 1 calibration first' : 'Retry Phase 1 calibration to unlock'}
               </p>
             </div>
           ) : phase1Result.completedCount === 0 ? (
@@ -121,14 +121,14 @@ export function StartScreen() {
               <div className="mb-1">
                 <span className="text-xs text-gray-500 uppercase tracking-widest">Phase 2</span>
               </div>
-              <h2 className="text-lg font-bold text-white mb-1">Scheduling</h2>
+              <h2 className="text-lg font-bold text-white mb-1">Server Pool</h2>
               <p className="text-sm text-gray-400 mb-6">
-                Dispatch tasks to cores before they expire. Minimize wait time and idle waste.
+                Dispatch queued RPCs to server workers. Minimize wait time and idle waste.
               </p>
               <div className="bg-amber-950 border border-amber-700 rounded-lg p-4 mb-6">
                 <p className="text-sm font-semibold text-amber-300 mb-1">Calibration insufficient</p>
                 <p className="text-xs text-amber-400">
-                  No tasks were completed in Phase 1. Play Phase 1 again to establish a valid service rate.
+                  No requests were completed in Phase 1. Play Phase 1 again to establish a valid service demand.
                 </p>
               </div>
               <button
@@ -143,16 +143,16 @@ export function StartScreen() {
               <div className="mb-1">
                 <span className="text-xs text-gray-500 uppercase tracking-widest">Phase 2</span>
               </div>
-              <h2 className="text-lg font-bold text-white mb-1">Scheduling</h2>
+              <h2 className="text-lg font-bold text-white mb-1">Server Pool</h2>
               <p className="text-sm text-gray-400 mb-3">
-                Dispatch tasks to cores before they expire. Minimize wait time and idle waste.
+                Dispatch queued RPCs to server workers. Minimize wait time and idle waste.
               </p>
 
               <div className="bg-gray-800 rounded-lg px-3 py-2 mb-4 flex items-center gap-3">
                 <div>
-                  <p className="text-xs text-gray-500">Calib. rate</p>
+                  <p className="text-xs text-gray-500">Worker cap.</p>
                   <p className="text-sm font-bold text-white">
-                    {phase1Result.measuredTasksPerSecond.toFixed(2)} tasks/s
+                    {phase1Result.measuredTasksPerSecond.toFixed(2)} req/s
                   </p>
                 </div>
                 <div className="border-l border-gray-700 pl-3">

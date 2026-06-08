@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { computePhase2Tick, type Phase2TickInput } from '../phase2Tick'
+import { buildPhase1Levels } from '../phase1Levels'
+import { buildPhase2RunConfig } from '../phase2Runs'
 import type { Task } from '../../types/task'
 import type { Core } from '../../types/core'
 
@@ -15,8 +17,8 @@ const BASE_CONFIG = {
   showTrueServiceDemand: false,
   deadlineMultiplier: 1.0,
   referenceWPM: 70,
-  phase1Buckets: [1, 3, 4, 6] as const,
-  phase2Buckets: [1, 6, 14, 15] as const,
+  phase1Levels: buildPhase1Levels('standard'),
+  phase2Run: buildPhase2RunConfig('standard', 2_000),
 }
 
 const BASE_METRICS = {
@@ -30,6 +32,8 @@ const BASE_METRICS = {
   completedCount: 0,
   idealThroughput: 0,
   actualThroughput: 0,
+  arrivalRate: 0,
+  targetPerWorkerLoad: 0,
 }
 
 const IDLE_CORE: Core = {
@@ -188,10 +192,34 @@ describe('computePhase2Tick — idle waste', () => {
   })
 })
 
+describe('computePhase2Tick — live model metrics', () => {
+  it('reports configured arrival rate and target per-worker load', () => {
+    const output = computePhase2Tick(minimalInput(), 1_000)
+
+    expect(output.liveMetrics.arrivalRate).toBe(BASE_CONFIG.phase2Run.lambda)
+    expect(output.liveMetrics.targetPerWorkerLoad).toBe(BASE_CONFIG.phase2Run.targetPerWorkerLoad)
+  })
+})
+
 describe('computePhase2Tick — runSummary new fields', () => {
+  it('copies configured Phase 2 arrival and load facts into runSummary', () => {
+    const output = computePhase2Tick(minimalInput(), PHASE2_DURATION)
+
+    expect(output.runSummary!.arrivalRate).toBe(BASE_CONFIG.phase2Run.lambda)
+    expect(output.runSummary!.targetPerWorkerLoad).toBe(BASE_CONFIG.phase2Run.targetPerWorkerLoad)
+    expect(output.runSummary!.expectedArrivals).toBe(BASE_CONFIG.phase2Run.expectedArrivals)
+    expect(output.runSummary!.serviceDemandMs).toBe(BASE_CONFIG.phase2Run.serviceDemandMs)
+  })
+
   it('failed is false when phase ends by timer', () => {
     const output = computePhase2Tick(minimalInput(), PHASE2_DURATION)
     expect(output.runSummary!.failed).toBe(false)
+  })
+
+  it('does not report fallback service demand as response time when no tasks completed', () => {
+    const output = computePhase2Tick(minimalInput(), PHASE2_DURATION)
+    expect(output.runSummary!.completedTasks).toBe(0)
+    expect(output.runSummary!.avgResponseTime).toBe(0)
   })
 
   it('failed is true when droppedCount exceeds dropLimit', () => {
@@ -266,6 +294,7 @@ describe('computePhase2Tick — end-of-phase drop accounting', () => {
     }
     const output = computePhase2Tick(input, PHASE2_DURATION)
     expect(output.runSummary!.droppedTasks).toBe(1)
+    expect(output.runSummary!.unfinishedAtEndCount).toBe(1)
     expect(output.tasks['w1'].status).toBe('dropped')
   })
 

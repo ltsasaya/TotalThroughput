@@ -19,12 +19,6 @@ function waitColor(ms: number): string {
   return 'text-red-400'
 }
 
-function deadlineClasses(timeLeftMs: number): string {
-  if (timeLeftMs < 5000) return 'bg-red-950 border-l-2 border-red-500'
-  if (timeLeftMs < 12000) return 'bg-amber-950 border-l-2 border-amber-500'
-  return 'bg-gray-800'
-}
-
 function StatBlock({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -37,14 +31,15 @@ function StatBlock({ label, value }: { label: string; value: string }) {
 export function Phase1View() {
   const config = useGameStore(s => s.config)
   const phaseElapsed = useGameStore(s => s.phaseElapsed)
+  const phase1Levels = useGameStore(s => s.phase1Levels)
+  const currentPhase1LevelIndex = useGameStore(s => s.currentPhase1LevelIndex)
   const activePhase1TaskId = useGameStore(s => s.activePhase1TaskId)
   const tasks = useGameStore(s => s.tasks)
   const queue = useGameStore(s => s.queue)
   const liveMetrics = useGameStore(s => s.liveMetrics)
   const typeChar = useGameStore(s => s.typeChar)
   const handleBackspace = useGameStore(s => s.handleBackspace)
-  const nextArrivalIndex = useGameStore(s => s.nextArrivalIndex)
-  const arrivalScheduleLength = useGameStore(s => s.arrivalSchedule.length)
+  const phase1MaxQueueLength = useGameStore(s => s.phase1MaxQueueLength)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -60,14 +55,8 @@ export function Phase1View() {
   const content = activeTask?.content ?? ''
   const typedContent = activeTask?.typedContent ?? ''
   const remaining = config.phase1Duration - phaseElapsed
-  const isFinalStretch =
-    arrivalScheduleLength > 0 &&
-    nextArrivalIndex >= arrivalScheduleLength &&
-    remaining > 0
-
-  // Arrival rate: total tasks spawned / elapsed seconds
-  const totalArrived = Object.keys(tasks).length
-  const arrivalRate = phaseElapsed > 0 ? totalArrived / (phaseElapsed / 1000) : 0
+  const currentLevel = phase1Levels[currentPhase1LevelIndex]
+  const completionTarget = currentLevel?.minCompletedSamples ?? 0
 
   // Count active errors for the badge
   const errorCount = [...typedContent].filter((c, i) => c !== content[i]).length
@@ -89,25 +78,38 @@ export function Phase1View() {
   return (
     <div className="flex flex-col h-screen bg-gray-950 relative">
       <TopBar
-        label="Phase 1: Calibration"
+        label={`Phase 1: RPC Level ${currentPhase1LevelIndex + 1}/${phase1Levels.length}`}
         remaining={remaining}
-        droppedCount={liveMetrics.droppedCount}
-        dropLimit={config.dropLimit}
         queueLength={liveMetrics.queueLength}
-        queueLimit={config.queueSizeLimit}
-        isFinalStretch={isFinalStretch}
       />
 
       <main className="flex flex-1 gap-4 p-4 overflow-hidden">
         <div className="bg-gray-900 rounded-xl p-4 flex flex-col gap-4 min-w-[180px] max-w-[200px] h-full">
-          <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Stats</div>
+          <div>
+            <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Stats</div>
+            {currentLevel && (
+              <div className="mt-1 text-xs text-blue-300 font-mono">
+                {currentLevel.label} - {currentLevel.isDemo ? 'demo' : 'gate'}
+              </div>
+            )}
+          </div>
           <div className="flex flex-col gap-4">
-            <StatBlock label="Completed" value={String(liveMetrics.completedCount)} />
-            <StatBlock label="Throughput X" value={`${liveMetrics.throughput.toFixed(2)}/s`} />
-            <StatBlock label="Arrival Rate λ" value={arrivalRate > 0 ? `${arrivalRate.toFixed(2)}/s` : '—'} />
+            <StatBlock
+              label="Completed Samples"
+              value={`${liveMetrics.completedCount}/${completionTarget || '—'}`}
+            />
+            <StatBlock label="Served Rate X" value={`${liveMetrics.throughput.toFixed(2)}/s`} />
+            <StatBlock
+              label="Burst λ"
+              value={currentLevel ? `${currentLevel.lambda.toFixed(2)}/s` : '—'}
+            />
+            <StatBlock
+              label="Ref Load ρ"
+              value={currentLevel ? `${Math.round(currentLevel.referenceLoad * 100)}%` : '—'}
+            />
             <StatBlock label="Avg Service D" value={`${(liveMetrics.avgServiceTime / 1000).toFixed(1)}s`} />
             <StatBlock
-              label="Response Time R"
+              label="Served Avg R"
               value={liveMetrics.avgResponseTime > 0
                 ? `${(liveMetrics.avgResponseTime / 1000).toFixed(1)}s`
                 : '—'}
@@ -118,12 +120,13 @@ export function Phase1View() {
                 ? `${Math.round(liveMetrics.avgTypingSpeed!)} WPM`
                 : '—'}
             />
+            <StatBlock label="Max Queue" value={String(phase1MaxQueueLength)} />
           </div>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center text-center relative">
           {!activeTask ? (
-            <p className="text-gray-500 text-xl">Waiting for tasks...</p>
+            <p className="text-gray-500 text-xl">Waiting for requests...</p>
           ) : (
             <>
               <div className="mb-4 flex items-center justify-center gap-3">
@@ -177,21 +180,16 @@ export function Phase1View() {
 
         </div>
 
-        <div className={`bg-gray-900 rounded-xl p-4 flex flex-col h-full min-w-[200px] max-w-[240px] ${isFinalStretch ? 'border border-red-500/60 ring-1 ring-red-500/30' : ''}`}>
+        <div className="bg-gray-900 rounded-xl p-4 flex flex-col h-full min-w-[200px] max-w-[240px]">
           <div className="flex items-center mb-3">
-            <span className={`text-sm font-semibold uppercase tracking-wider ${isFinalStretch ? 'text-red-400' : 'text-gray-400'}`}>Queue</span>
+            <span className="text-sm font-semibold uppercase tracking-wider text-gray-400">Queue</span>
             <span className="ml-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">
               {queue.length}
             </span>
           </div>
-          {isFinalStretch && (
-            <div className="mb-3 px-2 py-1.5 bg-red-950/60 border-l-2 border-red-500 rounded text-xs text-red-300 font-semibold">
-              No more tasks incoming — clear the queue
-            </div>
-          )}
-          {queue.length === 0 && !isFinalStretch ? (
+          {queue.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <span className="text-gray-600 text-sm">No tasks waiting</span>
+              <span className="text-gray-600 text-sm">No requests waiting</span>
             </div>
           ) : (
             <div className="overflow-y-auto flex-1 flex flex-col gap-1.5">
@@ -199,11 +197,10 @@ export function Phase1View() {
                 const t = tasks[id]
                 if (!t) return null
                 const waitMs = phaseElapsed - t.arrivalTime
-                const timeLeft = t.deadline != null ? t.deadline - phaseElapsed : Infinity
                 return (
                   <div
                     key={id}
-                    className={`flex items-center gap-2 p-2 rounded-lg ${deadlineClasses(timeLeft)}`}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-800"
                   >
                     <SizeBadge size={t.size} />
                     <span className="text-xs text-gray-300 font-mono flex-1 truncate">
@@ -219,10 +216,6 @@ export function Phase1View() {
           )}
         </div>
       </main>
-
-      {isFinalStretch && (
-        <div className="absolute inset-0 bg-red-950/10 pointer-events-none" />
-      )}
     </div>
   )
 }

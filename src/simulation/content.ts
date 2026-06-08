@@ -57,6 +57,14 @@ function pickWords(size: TaskSize): string {
   return words.join(' ')
 }
 
+function pickPhase1Words(contentSeed: number): string {
+  const pool = CONTENT_BY_SIZE.S
+  const firstIdx = Math.abs(contentSeed * 17 + 3) % pool.length
+  let secondIdx = Math.abs(contentSeed * 31 + 11) % pool.length
+  if (secondIdx === firstIdx) secondIdx = (secondIdx + 1) % pool.length
+  return `${pool[firstIdx]} ${pool[secondIdx]}`
+}
+
 // trueServiceDemand: pass calibrated ms value for Phase 2 cores; omit (0) for Phase 1.
 // deadlineMultiplier: scales the deadline window (1.0 = standard, >1 = more time, <1 = tighter).
 export function generateTask(size: TaskSize, arrivalTime: number, trueServiceDemand = 0, deadlineMultiplier = 1.0): Task {
@@ -69,6 +77,18 @@ export function generateTask(size: TaskSize, arrivalTime: number, trueServiceDem
     deadline: arrivalTime + Math.round(DEADLINE_MS[size] * deadlineMultiplier),
     status: 'waiting',
     content,
+    typedContent: '',
+  }
+}
+
+export function generatePhase1Task(arrivalTime: number, contentSeed: number): Task {
+  return {
+    id: crypto.randomUUID(),
+    arrivalTime,
+    size: 'S',
+    trueServiceDemand: 0,
+    status: 'waiting',
+    content: pickPhase1Words(contentSeed),
     typedContent: '',
   }
 }

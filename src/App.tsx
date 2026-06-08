@@ -7,6 +7,7 @@ import { Phase1Complete } from './components/game/Phase1Complete'
 import { Phase2View } from './components/game/Phase2View'
 import { PostRunSummary } from './components/game/PostRunSummary'
 import Phase2DebriefPopup from './components/game/Phase2DebriefPopup'
+import InstructionalPopup from './components/game/InstructionalPopup'
 
 function App() {
   useGameLoop()
@@ -14,9 +15,13 @@ function App() {
   const runSummary = useGameStore(s => s.runSummary)
 
   const [phase2PopupSeen, setPhase2PopupSeen] = useState(false)
+  const [phase1PopupSeen, setPhase1PopupSeen] = useState(false)
 
   useEffect(() => {
-    if (phase === 'idle') setPhase2PopupSeen(false)
+    if (phase === 'idle') {
+      setPhase1PopupSeen(false)
+      setPhase2PopupSeen(false)
+    }
   }, [phase])
 
   if (phase === 'idle') return <StartScreen />
@@ -24,7 +29,10 @@ function App() {
   if (phase === 'phase2') return <Phase2View />
 
   if (phase === 'postrun') {
-    if (runSummary === null) return <Phase1Complete />
+    if (runSummary === null) {
+      if (!phase1PopupSeen) return <InstructionalPopup id="postPhase1" onDismiss={() => setPhase1PopupSeen(true)} />
+      return <Phase1Complete />
+    }
     if (!phase2PopupSeen) return <Phase2DebriefPopup onDismiss={() => setPhase2PopupSeen(true)} />
     return <PostRunSummary />
   }

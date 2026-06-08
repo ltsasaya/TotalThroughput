@@ -1,11 +1,19 @@
 import { create } from 'zustand'
 import type { Task } from '../types/task'
 import type { Core } from '../types/core'
-import type { GamePhase, DifficultyMode, GameConfig } from '../types/game'
-import type { LiveMetrics, RunSummary, Phase1Result, TimePoint } from '../types/metrics'
-import { generateBucketedArrivalSchedule, PHASE2_REFERENCE_WPM, type ScheduledArrival } from '../simulation/arrival'
+import type { GamePhase, DifficultyMode, GameConfig, Phase1LevelConfig } from '../types/game'
+import type { LiveMetrics, RunSummary, Phase1Result, Phase1LevelResult, TimePoint } from '../types/metrics'
+import type { ScheduledArrival } from '../simulation/arrival'
 import { computePhase1Tick } from '../simulation/phase1Tick'
 import { computePhase2Tick } from '../simulation/phase2Tick'
+import { buildPhase1Levels, generatePhase1ArrivalSchedule, phase1LevelDurationMs } from '../simulation/phase1Levels'
+import { buildPhase1AggregateResult, buildPhase1LevelResult } from '../simulation/phase1Results'
+import {
+  buildPhase2RunConfig,
+  generatePhase2ArrivalSchedule,
+  phase2WorkerCount,
+  PHASE2_DURATION_MS,
+} from '../simulation/phase2Runs'
 
 // ---------------------------------------------------------------------------
 // Defaults
@@ -15,14 +23,14 @@ const DEFAULT_CONFIG: GameConfig = {
   difficulty: 'standard',
   phase2CoreCount: 4,
   phase1Duration: 60_000,
-  phase2Duration: 60_000,
+  phase2Duration: PHASE2_DURATION_MS,
   queueSizeLimit: 6,
   dropLimit: 5,
   showTrueServiceDemand: false,
   deadlineMultiplier: 1.0,
   referenceWPM: 70,
-  phase1Buckets: [1, 3, 4, 6],
-  phase2Buckets: [1, 6, 14, 15],
+  phase1Levels: buildPhase1Levels('standard'),
+  phase2Run: buildPhase2RunConfig('standard', 3_000),
 }
 
 const DEFAULT_METRICS: LiveMetrics = {
@@ -36,38 +44,59 @@ const DEFAULT_METRICS: LiveMetrics = {
   completedCount: 0,
   idealThroughput: 0,
   actualThroughput: 0,
+  arrivalRate: 0,
+  targetPerWorkerLoad: 0,
 }
 
-function buildConfig(difficulty: DifficultyMode): GameConfig {
+function buildConfig(difficulty: DifficultyMode, phase2ServiceDemandMs = 3_000): GameConfig {
+  const phase2CoreCount = phase2WorkerCount(difficulty)
+  const phase2Run = buildPhase2RunConfig(difficulty, phase2ServiceDemandMs)
   switch (difficulty) {
     case 'beginner':
       return {
         ...DEFAULT_CONFIG,
         difficulty,
-        phase2CoreCount: 4,
+        phase2CoreCount,
+        phase2Duration: phase2Run.arrivalWindowMs,
         queueSizeLimit: 6,
         dropLimit: 4,
         deadlineMultiplier: 1.25,
         referenceWPM: 40,
-        phase1Buckets: [1, 2, 4, 4],
-        phase2Buckets: [1, 3, 9, 8],
+        phase1Levels: buildPhase1Levels(difficulty),
+        phase2Run,
       }
     case 'hard':
       return {
         ...DEFAULT_CONFIG,
         difficulty,
-        phase2CoreCount: 6,
+        phase2CoreCount,
+        phase2Duration: phase2Run.arrivalWindowMs,
         queueSizeLimit: 5,
         dropLimit: 3,
         deadlineMultiplier: 0.75,
         referenceWPM: 100,
-        phase1Buckets: [3, 5, 5, 8],
-        phase2Buckets: [3, 8, 23, 25],
+        phase1Levels: buildPhase1Levels(difficulty),
+        phase2Run,
       }
     case 'theory':
-      return { ...DEFAULT_CONFIG, difficulty, showTrueServiceDemand: true }
+      return {
+        ...DEFAULT_CONFIG,
+        difficulty,
+        phase2CoreCount,
+        phase2Duration: phase2Run.arrivalWindowMs,
+        showTrueServiceDemand: true,
+        phase1Levels: buildPhase1Levels(difficulty),
+        phase2Run,
+      }
     default:
-      return { ...DEFAULT_CONFIG, difficulty }
+      return {
+        ...DEFAULT_CONFIG,
+        difficulty,
+        phase2CoreCount,
+        phase2Duration: phase2Run.arrivalWindowMs,
+        phase1Levels: buildPhase1Levels(difficulty),
+        phase2Run,
+      }
   }
 }
 
@@ -84,6 +113,10 @@ interface GameStore {
   arrivalSchedule: ScheduledArrival[]
   nextArrivalIndex: number
 
+  phase1Levels: Phase1LevelConfig[]
+  currentPhase1LevelIndex: number
+  phase1LevelResults: Phase1LevelResult[]
+  phase1MaxQueueLength: number
   phase1Result: Phase1Result | null
   activePhase1TaskId: string | null
 
@@ -126,6 +159,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   phaseElapsed: 0,
   arrivalSchedule: [],
   nextArrivalIndex: 0,
+  phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
+  currentPhase1LevelIndex: 0,
+  phase1LevelResults: [],
+  phase1MaxQueueLength: 0,
   phase1Result: null,
   activePhase1TaskId: null,
   tasks: {},
@@ -142,17 +179,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startGame: (difficulty) => {
     const config = buildConfig(difficulty)
+    const firstLevel = config.phase1Levels[0]
+    const phase1Config = { ...config, phase1Duration: phase1LevelDurationMs(firstLevel) }
     set({
       phase: 'phase1',
-      config,
+      config: phase1Config,
       gameStartTime: Date.now(),
       phaseElapsed: 0,
-      arrivalSchedule: generateBucketedArrivalSchedule(
-        config.phase1Duration,
-        config.phase1Buckets,
-        config.referenceWPM,
-      ),
+      arrivalSchedule: generatePhase1ArrivalSchedule(firstLevel),
       nextArrivalIndex: 0,
+      phase1Levels: [...config.phase1Levels],
+      currentPhase1LevelIndex: 0,
+      phase1LevelResults: [],
+      phase1MaxQueueLength: 0,
       phase1Result: null,
       activePhase1TaskId: null,
       tasks: {},
@@ -170,7 +209,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   startPhase2: (difficulty) => {
-    const phase2Config = buildConfig(difficulty)
+    const phase1Result = get().phase1Result
+    const phase2Config = buildConfig(difficulty, phase1Result?.avgServiceTime)
     const coreCount = phase2Config.phase2CoreCount
     const cores: Core[] = Array.from({ length: coreCount }, (_, i) => ({
       id: i,
@@ -184,12 +224,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       config: phase2Config,
       gameStartTime: Date.now(),
       phaseElapsed: 0,
-      arrivalSchedule: generateBucketedArrivalSchedule(
-        phase2Config.phase2Duration,
-        phase2Config.phase2Buckets,
-        PHASE2_REFERENCE_WPM,
-      ),
+      arrivalSchedule: generatePhase2ArrivalSchedule(phase2Config.phase2Run),
       nextArrivalIndex: 0,
+      currentPhase1LevelIndex: 0,
+      phase1LevelResults: [],
+      phase1MaxQueueLength: 0,
       tasks: {},
       queue: [],
       cores,
@@ -234,8 +273,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   typeChar: (char) => {
-    const { activePhase1TaskId, tasks, queue, gameStartTime } = get()
-    if (!activePhase1TaskId || gameStartTime === null) return
+    const { activePhase1TaskId, tasks, queue, phaseElapsed, gameStartTime } = get()
+    if (!activePhase1TaskId) return
 
     const task = tasks[activePhase1TaskId]
     if (!task || task.status !== 'active') return
@@ -246,7 +285,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Do not allow typing past end of content
     if (typed.length >= content.length) return
 
-    const nowMs = Date.now() - gameStartTime
+    const clockElapsed = gameStartTime === null ? phaseElapsed : Date.now() - gameStartTime
+    const nowMs = Math.max(phaseElapsed, clockElapsed)
     const firstKeystrokeTime = task.firstKeystrokeTime ?? nowMs
     const newTyped = typed + char
 
@@ -296,7 +336,50 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const elapsed = now - state.gameStartTime
 
     if (state.phase === 'phase1') {
-      set(computePhase1Tick(state, elapsed))
+      const currentLevel = state.phase1Levels[state.currentPhase1LevelIndex]
+      if (!currentLevel) return
+
+      const tickOutput = computePhase1Tick({ ...state, currentPhase1Level: currentLevel }, elapsed)
+      const { levelEnded, ...phase1State } = tickOutput
+      if (!levelEnded) {
+        set(phase1State)
+        return
+      }
+
+      const levelResult = buildPhase1LevelResult(
+        currentLevel,
+        tickOutput.tasks,
+        tickOutput.phase1MaxQueueLength,
+      )
+      const phase1LevelResults = [...state.phase1LevelResults, levelResult]
+      const nextLevelIndex = state.currentPhase1LevelIndex + 1
+      const shouldAdvance = levelResult.passed && nextLevelIndex < state.phase1Levels.length
+
+      if (shouldAdvance) {
+        const nextLevel = state.phase1Levels[nextLevelIndex]
+        set({
+          phaseElapsed: 0,
+          tasks: {},
+          queue: [],
+          activePhase1TaskId: null,
+          nextArrivalIndex: 0,
+          arrivalSchedule: generatePhase1ArrivalSchedule(nextLevel),
+          liveMetrics: { ...DEFAULT_METRICS },
+          phase1MaxQueueLength: 0,
+          phase1LevelResults,
+          currentPhase1LevelIndex: nextLevelIndex,
+          gameStartTime: now,
+          config: { ...state.config, phase1Duration: phase1LevelDurationMs(nextLevel) },
+        })
+        return
+      }
+
+      set({
+        ...phase1State,
+        phase: 'postrun',
+        phase1LevelResults,
+        phase1Result: buildPhase1AggregateResult(phase1LevelResults),
+      })
       return
     }
 
@@ -315,6 +398,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phaseElapsed: 0,
       arrivalSchedule: [],
       nextArrivalIndex: 0,
+      phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
+      currentPhase1LevelIndex: 0,
+      phase1LevelResults: [],
+      phase1MaxQueueLength: 0,
       phase1Result: null,
       activePhase1TaskId: null,
       tasks: {},
@@ -337,6 +424,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phaseElapsed: 0,
       arrivalSchedule: [],
       nextArrivalIndex: 0,
+      currentPhase1LevelIndex: 0,
+      phase1LevelResults: [],
+      phase1MaxQueueLength: 0,
       activePhase1TaskId: null,
       tasks: {},
       queue: [],

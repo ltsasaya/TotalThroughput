@@ -10,7 +10,7 @@ export default function InstructionalPopup({ id, onDismiss }: InstructionalPopup
   const content = POPUP_CONTENT[id]
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Enter') onDismiss() }
+    const handler = () => onDismiss()
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onDismiss])

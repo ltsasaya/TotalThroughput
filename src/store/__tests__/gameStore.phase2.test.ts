@@ -1,19 +1,38 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useGameStore } from '../gameStore'
+import type { Phase1Result } from '../../types/metrics'
 
 function getState() {
   return useGameStore.getState()
 }
 
-// Bootstrap through Phase 1 end to get a valid phase1Result, then start Phase 2.
+const VALID_PHASE1_RESULT: Phase1Result = {
+  measuredTasksPerSecond: 0.5,
+  avgServiceTime: 2000,
+  avgResponseTime: 2200,
+  arrivalRate: 0.35,
+  arrivalCount: 12,
+  completedCount: 12,
+  activeWindowCompletedCount: 10,
+  tailCompletedCount: 2,
+  activeWindowThroughput: 0.3,
+  droppedCount: 0,
+  unfinishedAtEndCount: 0,
+  servedShare: 1,
+  avgReactionSpeed: 100,
+  avgTypingSpeed: 80,
+  passed: true,
+  levelResults: [],
+  arrivalWindowMs: 34_000,
+  drainTailMs: 6_000,
+  durationMs: 40_000,
+  failed: false,
+}
+
+// Bootstrap a valid calibration result, then start Phase 2.
 function setupPhase2(difficulty: 'standard' | 'beginner' | 'hard' | 'theory' = 'standard') {
   getState().reset()
-  getState().startGame(difficulty)
-  const { gameStartTime, config } = getState()
-  // Skip to Phase 1 end
-  getState().tick(gameStartTime! + config.phase1Duration + 100)
-  expect(getState().phase).toBe('postrun')
-  expect(getState().phase1Result).not.toBeNull()
+  useGameStore.setState({ phase1Result: VALID_PHASE1_RESULT })
   getState().startPhase2(difficulty)
   expect(getState().phase).toBe('phase2')
 }
@@ -48,6 +67,23 @@ describe('startPhase2', () => {
   it('generates a Phase 2 arrival schedule', () => {
     setupPhase2()
     expect(getState().arrivalSchedule.length).toBeGreaterThan(0)
+  })
+
+  it('derives Phase 2 lambda from measured Phase 1 service demand', () => {
+    setupPhase2('standard')
+    const { config } = getState()
+
+    expect(config.phase2Run.serviceDemandMs).toBe(VALID_PHASE1_RESULT.avgServiceTime)
+    expect(config.phase2Run.lambda).toBeCloseTo(0.70 * config.phase2CoreCount / 2)
+    expect(config.phase2Run.targetPerWorkerLoad).toBe(0.70)
+  })
+
+  it('uses difficulty-specific Phase 2 target loads', () => {
+    setupPhase2('beginner')
+    expect(getState().config.phase2Run.targetPerWorkerLoad).toBe(0.50)
+
+    setupPhase2('hard')
+    expect(getState().config.phase2Run.targetPerWorkerLoad).toBe(0.85)
   })
 
   it('resets coreBusyMs to all-zeros with length = coreCount', () => {

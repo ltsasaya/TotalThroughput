@@ -1,25 +1,26 @@
 export function LearnSection() {
   return (
     <div>
-      {/* Section 1: Defining a System */}
+      {/* Section 1: Server as first system */}
       <section className="bg-gray-950 border-t border-gray-800">
         <div className="max-w-3xl mx-auto px-6 py-20">
-          <p className="text-xs uppercase tracking-widest text-gray-500">Defining a System</p>
+          <p className="text-xs uppercase tracking-widest text-gray-500">Clients and Servers</p>
           <h2 className="text-2xl font-bold text-white mt-2 mb-4">
-            What is a system?
+            Clients send RPCs to servers
           </h2>
           <p className="text-gray-400 leading-relaxed">
-            A system is anything that takes in work, processes it, and sends results back.
+            A client asks a server to do work. That request is an RPC. When too many RPCs
+            arrive at once, they wait in the server queue before workers can process them.
           </p>
 
           <div className="font-mono text-sm border border-gray-700 rounded p-4 mt-6 text-gray-400 inline-block">
-            Arrivals &rarr; [Queue] &rarr; Workers &rarr; Done
+            Clients &rarr; RPCs &rarr; [Queue] &rarr; Workers &rarr; Responses
           </div>
 
           <div className="mt-6 grid grid-cols-3 gap-4">
             <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-              <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Arrivals</p>
-              <p className="text-gray-400 text-sm">Work entering the system.</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">RPCs</p>
+              <p className="text-gray-400 text-sm">Client requests entering the server.</p>
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
               <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Queue</p>
@@ -27,35 +28,35 @@ export function LearnSection() {
             </div>
             <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
               <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Workers</p>
-              <p className="text-gray-400 text-sm">Cores, threads, or servers doing the processing.</p>
+              <p className="text-gray-400 text-sm">Cores, threads, or server processes doing the processing.</p>
             </div>
           </div>
 
           <p className="text-gray-400 leading-relaxed mt-6">
-            Web servers and CPUs share this shape. Requests arrive, get processed by workers,
-            and queue up when the workers are busy.
+            This one-server shape is the starting point. CPUs, disks, thread pools, and
+            service fleets all reuse the same request, queue, service, response pattern.
           </p>
         </div>
       </section>
 
-      {/* Section 2: What is System Performance? */}
+      {/* Section 2: What is Server Performance? */}
       <section className="bg-gray-900 border-t border-gray-800">
         <div className="max-w-3xl mx-auto px-6 py-20">
-          <p className="text-xs uppercase tracking-widest text-gray-500">System Performance</p>
+          <p className="text-xs uppercase tracking-widest text-gray-500">Server Performance</p>
           <h2 className="text-2xl font-bold text-white mt-2 mb-4">
-            How fast can a system do useful work?
+            How fast can a server respond under load?
           </h2>
           <p className="text-gray-400 leading-relaxed">
-            System performance is about two things: how quickly the system responds to each request
-            (response time) and how many requests it can handle per second (throughput). These two
-            measures tell you whether a system is fast enough and productive enough under load.
+            Server performance is about two things: how quickly the server responds to each
+            client RPC (response time) and how many requests it can complete per second
+            (throughput). These measures show whether the server is fast enough under load.
           </p>
           <div className="mt-6 grid grid-cols-2 gap-4">
             <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
               <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Response Time</p>
               <p className="text-white font-semibold">R</p>
               <p className="text-gray-400 text-sm mt-1">
-                Time from when a request arrives to when the response is complete.
+                Time from when a client RPC arrives to when the response is complete.
               </p>
             </div>
             <div className="bg-gray-950 border border-gray-800 rounded-lg p-4">
@@ -69,20 +70,21 @@ export function LearnSection() {
         </div>
       </section>
 
-      {/* Section 3: A system turns requests into responses */}
+      {/* Section 3: Systems generalize the server shape */}
       <section className="bg-gray-950 border-t border-gray-800">
         <div className="max-w-3xl mx-auto px-6 py-20">
           <p className="text-xs uppercase tracking-widest text-gray-500">Systems</p>
           <h2 className="text-2xl font-bold text-white mt-2 mb-4">
-            A system turns requests into responses
+            Systems are networks of server-like parts
           </h2>
           <p className="text-gray-400 leading-relaxed">
-            Every system has the same basic shape: a client sends a request, the server does work,
-            and a response comes back. When the server is busy, incoming requests wait in a queue.
-            The system's job is to drain that queue as fast as possible.
+            A larger system is built from resources that act like small servers: CPUs serve
+            runnable work, disks serve I/O, thread pools serve requests, and services call other
+            services. RPC fan-out turns one client request into many downstream requests. Each
+            part can queue, saturate, and add response time.
           </p>
           <div className="font-mono text-sm border border-gray-700 rounded p-4 mt-6 text-gray-400 inline-block">
-            Client &rarr; [Queue] &rarr; Server &rarr; Response
+            Client &rarr; RPC &rarr; Server &rarr; Dependency RPC &rarr; Response
           </div>
         </div>
       </section>
@@ -96,17 +98,17 @@ export function LearnSection() {
           </h2>
           <p className="text-gray-400 leading-relaxed">
             Utilization (U) is the fraction of time a server is busy. At low utilization, requests
-            flow through quickly. As U approaches 100%, the queue grows without bound and response
-            time explodes. The relationship is nonlinear: doubling load near capacity can multiply
-            response time many times over.
+            flow through quickly. As sustained offered load approaches capacity, queues become
+            sensitive to bursts and response time climbs sharply. The simple reference curve is
+            nonlinear: doubling load near capacity can multiply response time many times over.
           </p>
-          <p className="font-mono text-blue-400 text-lg mt-6">R = D / (1 &minus; U)</p>
+          <p className="font-mono text-blue-400 text-lg mt-6">R &asymp; D / (1 &minus; &rho;)</p>
 
           <div className="mt-6 bg-gray-950 border border-gray-800 rounded-lg p-5">
             <p className="text-xs uppercase tracking-widest text-gray-500 mb-3">What is D?</p>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Service demand (D) is how long a request occupies a service center — for example, a
-              CPU core — on average. For a single serial center, the peak throughput is
+              Service demand (D) is how long a request occupies a service center, for example a
+              CPU core, on average. For a single serial center, the peak throughput is
               X&nbsp;=&nbsp;1/D: a server that takes 250&nbsp;ms per request can handle at most
               4&nbsp;requests per second.
             </p>
@@ -119,7 +121,7 @@ export function LearnSection() {
             </p>
           </div>
           <p className="text-gray-500 text-sm mt-4">
-            U = utilization &nbsp;&middot;&nbsp; X = throughput &nbsp;&middot;&nbsp; Utilization Law: U = XD
+            For one service center: U = X&nbsp;&middot;&nbsp;D
           </p>
         </div>
       </section>

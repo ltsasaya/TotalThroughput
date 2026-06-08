@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
   ReferenceDot,
   ReferenceLine,
-  Legend,
 } from 'recharts'
 
 const TOOLTIP_STYLE = { background: '#1f2937', border: 'none', color: '#fff', fontSize: 11 }
@@ -21,7 +20,9 @@ const AXIS_TICK = { fill: '#6b7280', fontSize: 11 }
 export interface Phase1Props {
   measuredTasksPerSecond: number
   completedCount: number
-  droppedCount: number
+  lambdaMax?: number
+  arrivalRate?: number
+  actualThroughput?: number
 }
 
 interface EducationalChartsProps {
@@ -43,12 +44,12 @@ function ChartCaption({ children }: { children: React.ReactNode }) {
 }
 
 export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
-  const lambdaMax = phase1.measuredTasksPerSecond
-  const playerLambda = (phase1.completedCount + phase1.droppedCount) / 60
-  const playerX = phase1.completedCount / 60
+  const lambdaMax = phase1.lambdaMax ?? phase1.measuredTasksPerSecond
+  const playerLambda = phase1.arrivalRate ?? 0
+  const playerX = phase1.actualThroughput ?? phase1.completedCount / 60
 
   const points = 60
-  const xMax = lambdaMax * 1.5
+  const xMax = Math.max(lambdaMax * 1.5, 0.1)
   const curve = Array.from({ length: points }, (_, i) => {
     const lambda = (i / (points - 1)) * xMax
     return { lambda: +lambda.toFixed(3), x: +Math.min(lambda, lambdaMax).toFixed(3) }
@@ -56,7 +57,7 @@ export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
 
   return (
     <div>
-      <ChartTitle>Phase 1 — Saturation: Offered Load vs Throughput</ChartTitle>
+      <ChartTitle>Phase 1 - Single-Server Saturation</ChartTitle>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={curve} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
           <CartesianGrid {...GRID_STYLE} />
@@ -65,7 +66,7 @@ export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
             type="number"
             domain={[0, xMax]}
             tick={AXIS_TICK}
-            label={{ value: 'Arrival rate λ (tasks/s)', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Arrival rate λ (req/s)', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
           />
           <YAxis
             tick={AXIS_TICK}
@@ -85,7 +86,9 @@ export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
           />
         </LineChart>
       </ResponsiveContainer>
-      <ChartCaption>X = min(λ, λmax). Throughput saturates at λmax = 1/D — above this, tasks queue and drop.</ChartCaption>
+      <ChartCaption>
+        X = min(λ, λmax) is the simple capacity intuition. The red point uses observed arrival-window λ and active-window completions.
+      </ChartCaption>
     </div>
   )
 }
@@ -94,7 +97,7 @@ export function ExpansionFactorChart({
   avgUtil,
   avgResponseTime,
   avgServiceTime,
-  coreCount,
+  coreCount: _coreCount,
 }: {
   avgUtil: number
   avgResponseTime: number
@@ -103,31 +106,29 @@ export function ExpansionFactorChart({
 }) {
   const points = 50
   const curve = Array.from({ length: points }, (_, i) => {
-    const u = i / (points + 1)
+    const rho = i / (points + 1)
     return {
-      u: +u.toFixed(3),
-      c1: +(1 / (1 - u)).toFixed(3),
-      c2: +(1 / (1 - u / 2)).toFixed(3),
-      c4: +(1 / (1 - u / 4)).toFixed(3),
+      rho: +rho.toFixed(3),
+      expansion: +(1 / (1 - rho)).toFixed(3),
     }
   })
 
   const playerRD = avgServiceTime > 0 ? +(avgResponseTime / avgServiceTime).toFixed(2) : 1
-  const playerU = +Math.min(avgUtil, 0.97).toFixed(3)
+  const playerRho = +Math.min(avgUtil, 0.97).toFixed(3)
 
   return (
     <div>
-      <ChartTitle>Phase 2 — Response Time Expansion Factor (M/M/c)</ChartTitle>
+      <ChartTitle>Phase 2 - Per-Worker Response Reference</ChartTitle>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={curve} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
           <CartesianGrid {...GRID_STYLE} />
           <XAxis
-            dataKey="u"
+            dataKey="rho"
             type="number"
             domain={[0, 1]}
             tick={AXIS_TICK}
             tickFormatter={v => `${(v * 100).toFixed(0)}%`}
-            label={{ value: 'Utilization U', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Per-worker load rho', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
           />
           <YAxis
             domain={[1, 10]}
@@ -135,35 +136,34 @@ export function ExpansionFactorChart({
             label={{ value: 'R/D', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => v.toFixed(2)} />
-          <Legend wrapperStyle={{ fontSize: 11, color: '#9ca3af' }} />
-          <Line type="monotone" dataKey="c1" stroke="#3b82f6" strokeWidth={1.5} dot={false} name="c = 1" />
-          <Line type="monotone" dataKey="c2" stroke="#6366f1" strokeWidth={1.5} dot={false} name="c = 2" />
-          <Line type="monotone" dataKey="c4" stroke="#10b981" strokeWidth={1.5} dot={false} name="c = 4" />
+          <Line type="monotone" dataKey="expansion" stroke="#3b82f6" strokeWidth={1.5} dot={false} name="1 / (1 - rho)" />
           <ReferenceDot
-            x={playerU}
+            x={playerRho}
             y={Math.min(playerRD, 10)}
             r={5}
             fill="#ef4444"
             stroke="#fff"
             strokeWidth={1.5}
-            label={{ value: `You (c=${coreCount})`, fill: '#ef4444', fontSize: 10, position: 'top' }}
+            label={{ value: 'You', fill: '#ef4444', fontSize: 10, position: 'top' }}
           />
         </LineChart>
       </ResponsiveContainer>
-      <ChartCaption>R/D = 1/(1 − U/c). More cores shift the curve right, reducing response time at the same utilization.</ChartCaption>
+      <ChartCaption>
+        R/D ~= 1/(1 - rho) is a simple stable single-server reference curve. It is not an exact M/M/c or finite-run result.
+      </ChartCaption>
     </div>
   )
 }
 
 function CoreUtilizationChart({ perCoreUtilization, avgUtil }: { perCoreUtilization: number[]; avgUtil: number }) {
   const data = perCoreUtilization.map((u, i) => ({
-    core: `C${i + 1}`,
+    core: `W${i + 1}`,
     utilization: +(u * 100).toFixed(1),
   }))
 
   return (
     <div>
-      <ChartTitle>Phase 2 — Per-Core Utilization (Load Skew)</ChartTitle>
+      <ChartTitle>Phase 2 - Per-Worker Utilization</ChartTitle>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
           <CartesianGrid {...GRID_STYLE} />
@@ -184,7 +184,7 @@ function CoreUtilizationChart({ perCoreUtilization, avgUtil }: { perCoreUtilizat
           />
         </BarChart>
       </ResponsiveContainer>
-      <ChartCaption>Load skew: unequal utilization means some cores are bottlenecks. Balanced dispatch minimizes max R.</ChartCaption>
+      <ChartCaption>Load skew: unequal utilization means some workers are bottlenecks. Balanced dispatch lowers response time.</ChartCaption>
     </div>
   )
 }
@@ -200,7 +200,7 @@ function ParallelismChart({ avgServiceTime, coreCount }: { avgServiceTime: numbe
 
   return (
     <div>
-      <ChartTitle>Phase 2 — Parallelism Scaling (X = P/D)</ChartTitle>
+      <ChartTitle>Phase 2 - Ideal Server-Pool Capacity</ChartTitle>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
           <CartesianGrid {...GRID_STYLE} />
@@ -210,14 +210,14 @@ function ParallelismChart({ avgServiceTime, coreCount }: { avgServiceTime: numbe
             domain={[0, 17]}
             ticks={[1, 2, 4, 8, 16]}
             tick={AXIS_TICK}
-            label={{ value: 'Cores P', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Workers c', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
           />
           <YAxis
             tick={AXIS_TICK}
-            label={{ value: 'Peak λmax (tasks/s)', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Peak λmax (req/s)', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => v.toFixed(2)} />
-          <Line type="monotone" dataKey="lambdaMax" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} name="λmax = P/D" />
+          <Line type="monotone" dataKey="lambdaMax" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} name="λmax = c/D" />
           {playerPoint && (
             <ReferenceDot
               x={coreCount}
@@ -226,12 +226,12 @@ function ParallelismChart({ avgServiceTime, coreCount }: { avgServiceTime: numbe
               fill="#ef4444"
               stroke="#fff"
               strokeWidth={1.5}
-              label={{ value: `Phase 2 (P=${coreCount})`, fill: '#ef4444', fontSize: 10, position: 'top' }}
+              label={{ value: `Phase 2 (c=${coreCount})`, fill: '#ef4444', fontSize: 10, position: 'top' }}
             />
           )}
         </LineChart>
       </ResponsiveContainer>
-      <ChartCaption>X = P/D: doubling cores doubles peak throughput. Your Phase 2 run used P = {coreCount} cores.</ChartCaption>
+      <ChartCaption>λmax ~= c/D: doubling ideal workers doubles peak throughput before dispatch and coordination costs.</ChartCaption>
     </div>
   )
 }

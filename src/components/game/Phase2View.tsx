@@ -55,7 +55,7 @@ export function Phase2View() {
   return (
     <div className="flex flex-col h-screen bg-gray-950 relative">
       <TopBar
-        label="Phase 2: Scheduling"
+        label="Phase 2: Server Pool"
         remaining={remaining}
         droppedCount={liveMetrics.droppedCount}
         dropLimit={config.dropLimit}

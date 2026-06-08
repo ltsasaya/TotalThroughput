@@ -21,6 +21,8 @@ export function StatsPanel() {
     avgWaitingTime,
     completedCount,
     droppedCount,
+    arrivalRate,
+    targetPerWorkerLoad,
   } = liveMetrics
 
   const avgUtil =
@@ -47,10 +49,10 @@ export function StatsPanel() {
           <div className="flex flex-col gap-1">
             <div className="text-xs text-gray-500">Calib. service</div>
             <div className="text-base font-bold text-gray-300">
-              {(phase1Result.avgServiceTime / 1000).toFixed(1)}s / task
+              {(phase1Result.avgServiceTime / 1000).toFixed(1)}s / request
             </div>
             <div className="text-xs text-gray-500">
-              {phase1Result.measuredTasksPerSecond.toFixed(2)} tasks/s
+              {phase1Result.measuredTasksPerSecond.toFixed(2)} req/s
             </div>
           </div>
           <div className="border-t border-gray-800" />
@@ -59,16 +61,24 @@ export function StatsPanel() {
 
       <div className="flex flex-col gap-3">
         <div>
+          <div className="text-xs text-gray-500">Arrival Rate</div>
+          <div className="text-lg font-bold text-white">{arrivalRate.toFixed(2)} req/s</div>
+          <div className="text-sm text-gray-500">
+            target load {(targetPerWorkerLoad * 100).toFixed(0)}% / worker
+          </div>
+        </div>
+
+        <div>
           <div className="text-xs text-gray-500">Throughput</div>
-          <div className="text-lg font-bold text-white">{throughput.toFixed(2)} tasks/s</div>
-          <div className="text-sm text-gray-500">{idealThroughput.toFixed(2)} tasks/s ideal</div>
+          <div className="text-lg font-bold text-white">{throughput.toFixed(2)} req/s</div>
+          <div className="text-sm text-gray-500">{idealThroughput.toFixed(2)} req/s ideal c/D</div>
         </div>
 
         <div className="border-t border-gray-800" />
 
         <StatRow
           label="Queue"
-          value={`${queueLength} tasks`}
+          value={`${queueLength} req`}
           valueClass={queueClass}
         />
 

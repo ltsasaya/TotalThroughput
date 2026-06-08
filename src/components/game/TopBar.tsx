@@ -6,10 +6,10 @@ function fmtTimer(ms: number): string {
 interface TopBarProps {
   label: string
   remaining: number
-  droppedCount: number
-  dropLimit: number
-  queueLength: number
-  queueLimit: number
+  droppedCount?: number
+  dropLimit?: number
+  queueLength?: number
+  queueLimit?: number
   score?: number
   latencyWarning?: boolean
   isFinalStretch?: boolean
@@ -25,14 +25,19 @@ export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength,
         : 'text-white'
 
   const droppedColor =
-    droppedCount >= dropLimit
+    droppedCount !== undefined && dropLimit !== undefined && droppedCount >= dropLimit
       ? 'text-red-400'
-      : droppedCount >= dropLimit * 0.7
+      : droppedCount !== undefined && dropLimit !== undefined && droppedCount >= dropLimit * 0.7
         ? 'text-amber-400'
         : 'text-gray-400'
 
-  const showQueue = queueLength >= queueLimit * 0.7
-  const queueColor = queueLength >= queueLimit ? 'text-red-400' : 'text-amber-400'
+  const showDrops = droppedCount !== undefined && dropLimit !== undefined
+  const showQueue =
+    queueLength !== undefined &&
+    (queueLimit === undefined || queueLength >= queueLimit * 0.7)
+  const queueColor = queueLimit !== undefined && queueLength !== undefined && queueLength >= queueLimit
+    ? 'text-red-400'
+    : 'text-amber-400'
 
   return (
     <div className="w-full bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
@@ -41,13 +46,15 @@ export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength,
       <span className={`text-2xl font-mono font-bold ${timerColor}`}>{fmtTimer(remaining)}</span>
 
       <div className="flex gap-6 items-center">
-        <span className={`text-sm ${droppedColor}`}>
-          Dropped: {droppedCount}/{dropLimit}
-        </span>
+        {showDrops && (
+          <span className={`text-sm ${droppedColor}`}>
+            Dropped: {droppedCount}/{dropLimit}
+          </span>
+        )}
 
         {showQueue && (
           <span className={`text-sm ${queueColor}`}>
-            Queue: {queueLength}/{queueLimit}
+            Queue: {queueLimit === undefined ? queueLength : `${queueLength}/${queueLimit}`}
           </span>
         )}
 

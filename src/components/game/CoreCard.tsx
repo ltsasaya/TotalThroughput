@@ -47,7 +47,7 @@ export function CoreCard({ core, task, isFlashing, isFinalStretch, onDispatch }:
       onClick={onDispatch}
     >
       <div className="flex justify-between items-center">
-        <span className="text-sm font-semibold text-gray-300">Core {core.id + 1}</span>
+        <span className="text-sm font-semibold text-gray-300">Worker {core.id + 1}</span>
         {isBusy ? (
           <span className="bg-blue-900 text-blue-300 text-xs font-bold px-2 py-0.5 rounded">BUSY</span>
         ) : (

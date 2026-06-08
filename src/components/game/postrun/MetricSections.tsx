@@ -40,6 +40,11 @@ function tpRatioColor(ratio: number): string {
 }
 
 interface MetricSectionsProps {
+  arrivalRate: number
+  arrivalCount: number
+  expectedArrivals: number
+  targetPerWorkerLoad: number
+  unfinishedAtEndCount: number
   completedTasks: number
   droppedTasks: number
   actualThroughput: number
@@ -56,6 +61,11 @@ interface MetricSectionsProps {
 }
 
 export function MetricSections({
+  arrivalRate,
+  arrivalCount,
+  expectedArrivals,
+  targetPerWorkerLoad,
+  unfinishedAtEndCount,
   completedTasks,
   droppedTasks,
   actualThroughput,
@@ -76,8 +86,16 @@ export function MetricSections({
       <div>
         <SectionLabel>Summary</SectionLabel>
         <MetricRow
-          left={<MetricItem label="Tasks Completed" value={String(completedTasks)} />}
-          right={<MetricItem label="Dropped / Expired" value={String(droppedTasks)} valueClass={droppedTasks > 0 ? 'text-red-400' : 'text-white'} />}
+          left={<MetricItem label="Configured Arrival Rate" value={`${arrivalRate.toFixed(2)}/s`} />}
+          right={<MetricItem label="Target Load / Worker" value={`${(targetPerWorkerLoad * 100).toFixed(0)}%`} />}
+        />
+        <MetricRow
+          left={<MetricItem label="Arrivals Sampled" value={`${arrivalCount} / ${expectedArrivals} expected`} />}
+          right={<MetricItem label="Still Waiting At End" value={String(unfinishedAtEndCount)} valueClass={unfinishedAtEndCount > 0 ? 'text-amber-300' : 'text-white'} />}
+        />
+        <MetricRow
+          left={<MetricItem label="Requests Completed" value={String(completedTasks)} />}
+          right={<MetricItem label="Dropped / Unfinished" value={String(droppedTasks)} valueClass={droppedTasks > 0 ? 'text-red-400' : 'text-white'} />}
         />
         <MetricRow
           left={<MetricItem label="Average Throughput" value={`${actualThroughput.toFixed(2)}/s`} />}
@@ -110,13 +128,13 @@ export function MetricSections({
 
       {perCoreUtilization.length > 0 && (
         <div>
-          <SectionLabel>Core Utilization</SectionLabel>
+          <SectionLabel>Worker Utilization</SectionLabel>
           <div className="flex flex-col gap-2">
             {perCoreUtilization.map((util, i) => {
               const clamped = Math.min(Math.max(util, 0), 1)
               return (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400 w-12 shrink-0">Core {i + 1}</span>
+                  <span className="text-xs text-gray-400 w-12 shrink-0">W{i + 1}</span>
                   <div className="flex-1 bg-gray-700 rounded-full h-3 overflow-hidden">
                     <div
                       className={`h-full rounded-full ${coreBarColor(clamped)}`}
@@ -130,7 +148,7 @@ export function MetricSections({
               )
             })}
             <div className="text-xs text-gray-500 mt-1">
-              Aggregate Utilization: <span className="text-gray-300">{(avgUtil * 100).toFixed(1)}%</span>
+              Avg Worker Utilization: <span className="text-gray-300">{(avgUtil * 100).toFixed(1)}%</span>
             </div>
           </div>
         </div>

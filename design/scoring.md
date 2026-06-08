@@ -2,15 +2,15 @@
 
 ## Score Formula
 
-**Score = completed tasks − waiting-time penalty − idle-core penalty**
+**Score = completed requests - waiting-time penalty - idle-worker penalty**
 
 ## Design Intent
 
 | Term | Purpose |
 |---|---|
-| Completed tasks | Rewards productivity |
+| Completed requests | Rewards productivity |
 | Waiting-time penalty | Punishes queue buildup and latency inflation |
-| Idle-core penalty | Punishes poor dispatching when work exists |
+| Idle-worker penalty | Punishes poor dispatching when work exists |
 
 The waiting-time penalty should be the strongest term. Players should learn that blindly maximizing completions while allowing latency to explode is not good performance.
 

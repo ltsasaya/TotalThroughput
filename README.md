@@ -1,53 +1,98 @@
-# TotalThroughput
-Lucas Sasaya (lts28)
-Total Throughput: Learning System Performance by Typing
-(https://github.com/ltsasaya/TotalThroughput)
-Total Throughput is a typing-based browser game that teaches core ideas from system performance: throughput, latency, queueing, and scheduling. The idea being that students understand concepts before learning formulas and give students a way to build intuition for why queues form and why a busy system may have longer response times. 
+# Total Throughput
 
-Phase 1: Single-Core Calibration
-Phase 1 simulates tasks for a single-core worker. Tasks arrive on a bucket-based schedule, and the player completes each one by typing its words exactly. The typing speed becomes the system's service rate, how fast one worker processes one unit of work.
+Total Throughput is a typing-based browser game that teaches server
+performance first: clients send RPCs, requests arrive at a server, queued work
+waits for service, and responses return. It then uses that server model to
+teach throughput, latency, utilization, overload, and systems performance more
+generally.
 
-As arrivals rate increases, a queue forms. Tasks wait before the player gets to them. This influences response time. If the arrivals outpace the player’s service speed, time grows unbounded. 
+Players build intuition before formulas. They first operate a single-server RPC
+queue, then use that measured service demand to dispatch work across multiple
+simulated server workers.
 
-Phase 2: Multi-Core Scheduling
-Phase 2 gives the player the role of a scheduler. The player focuses on routing tasks from a shared queue to multiple auto-workers (cores). The cores process at the service rate Phase 1 measured.
+## Gameplay
 
-Through phase 2, the player learns about M/M/c queueing. With `c` cores at utilization `U`, mean response time follows `R = D / (1 − U/c)`. The same load that overwhelmed one core is more balanced at four, until utilization gets close to `c`. Then the expansion factor increases again and latency goes up. 
+### Phase 1: Single-Server Calibration
 
-How It Maps to Real Systems
-The game’s cores can represent threads, processes, servers, and other concurrently running systems. The scheduler represents real-world schedulers. The queue is a request backlog. 
+Tasks represent client RPCs to a server. The player completes each request by
+typing its words exactly. The run measures service demand: how long one server
+worker needs to process one RPC.
 
-What's Simplified
-The game trades realism for clarity. The game does not currently implement preemption, migration, context-switch costs, caches, out of order queues, and other real-world optimizations. Dispatch is FIFO only. Real schedulers use priority, shortest-job-first, or work-stealing. Service rate is deterministic, while real workloads are stochastic. Arrivals use a fixed four-bucket schedule rather than a Poisson process, so every run is comparable. There is no memory, cache, I/O, or network. The model is pure CPU service with one queue and one dispatcher.
+As arrival rate increases, queued tasks wait longer. If arrivals outpace
+service rate, backlog and response time grow.
 
-Future Considerations
-Planned modes add back the missing physics: preemption with switch overhead, migration penalties, and a memory-thrashing mode where too many active tasks collapse throughput. Phase 3 could introduce workflow that spawn extra tasks on the completion of a first task. Future considerations also include storing player data to create more sophisticated real-data graphs that model back-of-napkin approximations.
+### Phase 2: Multi-Server Dispatch
+
+The player becomes the dispatcher for a server pool. They route requests from
+a shared queue to multiple automatic workers. The workers process at the
+service demand measured in Phase 1.
+
+This phase teaches why parallel servers increase capacity, why latency rises
+near saturation, and why keeping every worker busy is not the same thing as
+keeping response time low.
+
+## Model
+
+The game maps directly to server-performance concepts, then generalizes them to
+larger systems:
+
+- Worker: core, thread, process, or server.
+- Queue: request backlog.
+- Dispatcher: policy for assigning queued requests to available workers.
+- Arrival rate: incoming work over time.
+- Service rate: completed work capacity over time.
+- Response time: waiting time plus service time.
+
+The model is intentionally simplified for teaching. It does not currently model
+preemption, migration, context-switch costs, caches, networking, I/O, or memory
+pressure. Dispatch is FIFO and service is deterministic in the current
+playable model.
+
+## Project Direction
+
+The current app is a browser-only Vite/React simulation. The planned deployed
+direction is a small TypeScript API plus managed Postgres for storing typing
+runs, server-generated tasks, task lifecycle events, and summary metrics.
+
+See [PROJECT_STATUS.md](PROJECT_STATUS.md) for current project state, recent
+work, remaining work, and verification.
 
 ## Installation
 
 ### Prerequisites
+
 - Node.js 18 or newer
-- npm 9 or newer (bundled with Node.js)
+- npm 9 or newer
 - Git
 
 ### Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/ltsasaya/TotalThroughput.git
-   cd TotalThroughput
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-   The app will be available at the local URL printed by Vite (typically http://localhost:5173).
 
-### Other Commands
-- `npm run build` — type-check and build the production bundle
-- `npm run preview` — preview the production build locally
-- `npm run lint` — run ESLint
-- `npm test` — run the unit and integration test suite
+```bash
+git clone https://github.com/ltsasaya/TotalThroughput.git
+cd TotalThroughput
+npm install
+npm run dev
+```
+
+The app will be available at the local URL printed by Vite, usually
+`http://localhost:5173`.
+
+## Commands
+
+```bash
+npm test
+npm run lint
+npm run build
+npm run preview
+```
+
+- `npm test`: run the unit and integration test suite.
+- `npm run lint`: run ESLint.
+- `npm run build`: type-check and build the production bundle.
+- `npm run preview`: preview the production build locally.
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. The short
+version: work on a feature branch, keep changes scoped, update tests and docs
+when behavior changes, and include verification results in the PR.

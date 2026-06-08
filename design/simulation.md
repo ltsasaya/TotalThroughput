@@ -2,7 +2,8 @@
 
 ## Task Model
 
-Each task represents a unit of service demand. Tasks have variable size to produce realistic scheduling tradeoffs.
+Each task represents a server request with a unit of service demand. Tasks have
+variable size to produce realistic dispatch tradeoffs.
 
 Each task has:
 * task ID
@@ -17,75 +18,108 @@ Each task has:
 
 ## Arrival Model
 
-Tasks arrive on a **stratified four-bucket schedule**, pre-generated when a phase starts. This replaces the earlier Poisson/exponential inter-arrival model to eliminate end-clustering and to guarantee a consistent task count per run.
+Tasks arrive from a **seeded constant-rate Poisson process**. Each playable
+trial has one fixed arrival rate `lambda`; difficulty and level progression
+change `lambda` between trials, not during a trial.
 
-### Fixed bucket boundaries (all phases are 60s)
+Inter-arrival times are sampled from an exponential distribution with mean
+`1 / lambda`. The full schedule is pre-generated from a replayable seed before
+the trial begins, sorted by arrival time, and stored with the run once
+persistence exists.
 
-| Bucket | Window | Role |
-|---|---|---|
-| A | 0-5s | intro — immediate engagement, no pressure |
-| B | 5-20s | training — player proves they understand the core action |
-| C | 20-40s | main body — real pressure begins |
-| D | 40-50s | peak intensity |
-| (tail) | 50-60s | final stretch — no new arrivals; in-flight work only |
+### Trial sizing
 
-Each difficulty declares a `BucketBudgets` tuple `[a, b, c, d]` for Phase 1 and Phase 2 (see `design/difficulty.md`). Buckets budget **workload units**, not task counts: each task contributes `S=1`, `M=2`, `L=3` units toward its bucket's budget, and the generator keeps emitting tasks until the bucket's cumulative workload meets or exceeds the budget. Within each bucket, each task's arrival time is sampled uniformly at random from that bucket's window. The full schedule is then sorted ascending.
+Poisson schedules should be tuned by expected arrivals:
 
-### Per-bucket size distribution
+```
+expectedArrivals = lambda * trialDuration
+trialDuration = expectedArrivals / lambda
+```
 
-Each bucket has its own size mix so task *difficulty* ramps in lockstep with volume — easy tasks dominate the intro, harder tasks concentrate at the peak:
+Minimum useful expected arrivals for teaching queue behavior is 12 per trial.
+Use 12-16 for Phase 1 and 16-24 for Phase 2 when task text is short enough.
+Below 12, Poisson count variance makes one run too noisy to interpret. Higher
+counts are better statistically but can make typing levels too long.
 
-| Bucket | S | M | L |
-|---|---|---|---|
-| A (intro) | 70% | 25% | 5% |
-| B (training) | 55% | 35% | 10% |
-| C (main body) | 40% | 40% | 20% |
-| D (peak) | 25% | 40% | 35% |
+Use fixed seeds for introductory/gated levels so students see comparable
+scenarios. Use random but replayable seeds for free play.
 
-Sizes are sampled from this mix, then filtered by the no-spawn zone below.
+### Task size distribution
 
-### Size-dependent no-spawn zones
+Task sizes are sampled independently of arrival times. Current Phase 1 uses
+S-only two-word RPC prompts so enough arrivals fit in each short level. Phase 2
+may use a wider S/M/L mix because automatic workers process assigned work.
 
-A task of size X can only be placed at time `t` if `t < phaseDuration - noSpawnZoneMs(X, referenceWPM)`. The no-spawn zone is `(avgChars[size] / (refWPM * 5/60)) * 1.5` — expected typing time at the reference WPM, times a 1.5 safety buffer. If the sampled size is invalid for the chosen placement time, the generator resamples. S tasks are always valid within the 50s spawn window, so resampling always terminates.
+Phase 1 emits arrivals only during the level's arrival window, then adds a
+drain tail. The tail is for observing leftover queue behavior created by the
+burst, not for deadline failure or score punishment. Arrival rate, offered
+load, and arrival-window busy fraction use the arrival window as their
+denominator; tail completions and still-waiting work are reported separately.
 
 ### Reference WPM
 
-| | Reference WPM |
+| Surface | Reference WPM |
 |---|---|
 | Phase 1 Beginner | 40 |
 | Phase 1 Standard | 70 |
 | Phase 1 Hard | 100 |
 | Phase 2 (all difficulties) | 100 (fixed) |
 
-Phase 1 scales the no-spawn zone to the expected player speed. Phase 2 uses a single universal reference so that faster typists naturally experience lower utilization (their cores drain the queue faster).
+Reference WPM converts typing text length into expected service demand for
+tuning. Actual player typing determines observed service demand.
 
 ### Observable load regimes
 
-The stratified ramp still produces three observable regimes over the course of a phase:
+Levels should teach these load regimes:
 
-| Regime | Window | Behavior |
+| Regime | Target load factor | Behavior |
 |---|---|---|
-| Low | 0-20s | Queue remains short, latency is stable |
-| Moderate | 20-40s | Queue begins to form, dispatch delay matters |
-| High | 40-50s | Queue grows rapidly, latency spikes, failures become likely |
+| Low | 0.35-0.55 | Queue remains short, latency is stable |
+| Moderate | 0.70-0.85 | Queue forms but often recovers |
+| Near saturation | 0.90-0.98 | Response time becomes sensitive to small bursts |
+| Overload | > 1.0 | Backlog at window end demonstrates capacity pressure |
+
+For a single serial server, `rho ~= lambda * D`. For `c` parallel server
+workers, `perWorkerLoad = lambda * D / c`. In Phase 1, `D` is estimated from
+completed served RPCs, so `rho` is a reference-load estimate rather than an
+exact busy fraction.
 
 ## Phase 1 Service Model
 
-The player processes tasks directly by typing. Performance is measured as a typing-based service rate.
+The player processes requests directly by typing. Performance is measured as a
+typing-based single-server service rate.
 
-### Possible calibration outputs
+### Calibration outputs
 
-* Tasks completed per second
-* Average effective service time per task type
-* Accuracy-adjusted throughput
+* Per-level arrival count, served completions, still-waiting work, response
+  time, service demand, and max queue
+* Backlog at arrival-window end and tail completions
+* Aggregate completed-sample average service demand `D`
+* Single-worker capacity estimate `lambda_max = 1 / D`
+* Gate status for stable levels; demo levels do not block Phase 2
 
 ### Recommended baseline
 
-Convert the player's measured performance into a per-task service rate. Use this rate as the processing speed of each automatic core in Phase 2.
+Convert the player's measured performance into mean service demand `D`. Use
+`D` as the processing time basis for each automatic server worker in Phase 2.
 
 ## Phase 2 Service Model
 
-Each core automatically processes assigned work at the baseline speed derived from Phase 1.
+Each server worker automatically processes assigned work at the baseline speed
+derived from Phase 1.
+
+Phase 2 MVP builds one run from the selected difficulty and the Phase 1
+completed-sample service demand `D`. The configured arrival rate is:
+
+```
+lambda = targetPerWorkerLoad * workerCount / D
+```
+
+The browser pre-generates one seeded constant-rate Poisson schedule for the
+full 60-second Phase 2 arrival window. Beginner uses 4 workers at target
+per-worker load `0.50`, Standard uses 4 workers at `0.70`, Hard uses 6 workers
+at `0.85`, and Theory uses the Standard worker/load tuning with true service
+demand visible.
 
 Once a task is assigned to a core:
 * It begins service when the core becomes active on it.
@@ -93,4 +127,23 @@ Once a task is assigned to a core:
 * It is not preempted.
 * It is not migrated.
 
-This produces a clean run-to-completion dispatch model.
+This produces a clean run-to-completion server-dispatch model.
+
+## Reference Theory
+
+The instructional reference model is intentionally back-of-napkin:
+
+```
+rho ~= lambda * D
+N = lambda * R
+R ~= D / (1 - rho)
+```
+
+The response curve above is simple stable M/M/1 intuition. Phase 1 itself is a
+finite-run approximation to an M/G/1 single-server queue with FCFS service:
+arrivals are Poisson, but player typing gives general, player-dependent service
+times. Gameplay summaries should present finite-window observations separately
+from steady-state reference intuition. Multi-worker summaries may use the rough
+capacity intuition `perWorkerLoad = lambda * D / c`, but exact M/M/c response
+time should not be claimed unless the implementation uses Erlang C or
+simulation-derived curves.

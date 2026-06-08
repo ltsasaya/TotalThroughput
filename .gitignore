@@ -4,6 +4,7 @@ node_modules
 # build
 dist
 dist-ssr
+.vite
 
 # env
 *.env
@@ -17,9 +18,11 @@ dist-ssr
 # vite
 *.tsbuildinfo
 
-claude
-claude_notes
-
-.claude/
-
-claude.md
+# local agent/Codex workspace
+AGENTS.md
+CODEX_*.md
+.codex/
+.agents/
+notes/
+TODOS.md
+.gstack/
