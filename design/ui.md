@@ -22,7 +22,8 @@ generic SaaS dashboard.
 
 BOSS approved a complete UI revamp using the attached sample UI as the visual
 reference. The active implementation sequence starts with only the start screen
-until the monochrome direction is tuned through screenshot feedback.
+until the monochrome direction is tuned through screenshot feedback, then moves
+into the start-page -> Educational Manual -> play workflow.
 
 - Use a white/off-white first viewport with black foreground elements.
 - Favor strong rectangular borders, minimal radius, and monospace-forward type.
@@ -32,10 +33,16 @@ until the monochrome direction is tuned through screenshot feedback.
   action.
 - Keep `Join Class`, `For Instructors`, and `Sign in` visible but
   nonfunctional until BOSS promotes real account or class behavior.
+- Keep the semi-retro top header persistent across the start screen and the
+  Educational Manual. Its labels are placeholders for now and may be renamed
+  later.
 - Do not add fonts, image assets, icon libraries, animation packages, component
   kits, hosted services, or paid visual tooling for this revamp.
 - Later gameplay and results screens remain under the existing visual system
   until BOSS approves each next slice.
+- The current approved workflow shows an Educational Manual after `Play` and
+  before active play begins. The manual becomes the primary educational
+  backbone for introducing the game context and purpose.
 
 ## Stack And Cost Rule
 
@@ -124,14 +131,38 @@ visual rules across multiple components.
   `text-7xl font-bold`, `3px` borders, `4px 4px 0` button shadow, `20rem`
   button stack width, white background, and `2px`/`2px` scanlines at `0.03`
   opacity.
-- `Play` opens the existing Phase 1 instructional popup and preserves the
-  current start-game flow using the Standard difficulty default.
+- In the current workflow slice, `Play` opens the Educational Manual. Closing
+  the final manual page starts Phase 1 with the Standard difficulty default.
 - Do not show difficulty, Phase 2 continuation, or other setup controls in the
   first viewport while matching the sample screenshot.
 - Keep the network responsive with square hub clusters and small satellite
   nodes. Hubs should not connect directly to other hubs; each hub may send one
   faint line toward the actual center of the `Play` button.
 - Keep the learning sections visually separated after the first viewport.
+
+### Educational Manual
+
+- The Educational Manual is the next approved player-workflow slice under the
+  semi-retro monochrome revamp.
+- After the player clicks `Play`, show a dedicated manual screen before active
+  play begins.
+- This manual replaces the old `prePhase1` popup for the first-play onboarding
+  transition.
+- Keep the horizontal striped background visible behind a foreground vertical
+  manual page with rounded corners.
+- The current manual slice is one page. It should use the header
+  `Educational Manual`, general body content, the RPC sequence diagram, the
+  client-waiting consequence copy, a current-page/last-page display centered
+  at the bottom, and a `Close` button at bottom right.
+- If BOSS later expands the manual to multiple pages, use a `Next` button at
+  bottom right, a `Close` button at bottom right on the final page, and a
+  `Back` button at bottom left except on the first page.
+- The manual should introduce the game premise and server/RPC context before
+  mechanics. Initial BOSS-provided direction: the player had the misfortune of
+  being born as a server and must handle client requests using RPCs.
+- RPC explanations must stay consistent with the existing server-first design:
+  a client sends a request asking a server to run a procedure with parameters;
+  the server runs it and sends back a response.
 
 ### Learning Sections
 

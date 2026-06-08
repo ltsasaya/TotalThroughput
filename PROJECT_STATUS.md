@@ -47,11 +47,16 @@ typography.
 - Tuned the start-screen network from BOSS's Figma code so hubs connect toward
   the `Play` button, satellite nodes avoid awkward border/line collisions, and
   no hub-to-hub links are shown.
+- Added the first Educational Manual page in the player workflow: `Play` now
+  opens a semi-retro manual screen with the persistent header, one-page
+  server/RPC explanation, simplified client/server sequence diagram, `1 / 1`
+  page count, and final `Close` handoff into Phase 1.
 
 ## Remaining Work
 
-- Continue feedback-driven visual tuning on the remaining gameplay and results
-  screens.
+- Continue the UI revamp with the next player-workflow manual/page slice.
+- Continue feedback-driven visual tuning on gameplay and results screens after
+  BOSS approves each slice.
 - Add the small TypeScript API planned for persisted run and task data.
 - Add managed Postgres schema and migrations for runs, tasks, events, and
   summary metrics.
@@ -64,5 +69,5 @@ typography.
 - `npm test`: passed, 125 tests
 - `npm run lint`: passed
 - `npm run build`: passed with Vite's existing large chunk warning
-- Browser QA: desktop/mobile start screen, Phase 1 instructional modal, and
-  desktop/mobile Phase 1 active workbench rendered correctly
+- Browser QA: desktop/mobile start screen and first Educational Manual page
+  rendered correctly, with no console errors; `Close` enters Phase 1

@@ -63,7 +63,9 @@
 | File | Description |
 |---|---|
 | `src/components/ui/primitives.tsx` | Shared visual-system primitives — panels, labels, metric items, buttons, badges, formula callouts, and `cx` helper |
-| `src/components/game/StartScreen.tsx` | Idle phase — server-first intro, difficulty selector (Beginner/Standard/Hard), Start button |
+| `src/components/game/RetroHeader.tsx` | Shared semi-retro placeholder header used by the start screen and Educational Manual |
+| `src/components/game/StartScreen.tsx` | Idle phase — semi-retro monochrome start screen with placeholder nav/actions and `Play` handoff to the Educational Manual |
+| `src/components/game/EducationalManual.tsx` | Play-to-Phase-1 onboarding screen — one-page manual shell, page count, close handoff, and RPC client/server diagram |
 | `src/components/game/TopBar.tsx` | Shared header — phase label, countdown timer, optional dropped counter, queue display, optional score |
 | `src/components/game/Phase1View.tsx` | Phase 1 typing interface — fixed-rate RPC level status, character-level word display, queue preview, live stats sidebar |
 | `src/components/game/Phase1Complete.tsx` | Post-Phase-1 calibration results — gate/demo level summary, formulas, Phase 2 readiness |
@@ -102,6 +104,8 @@
 | `design/interaction.md` | Player interaction model, dispatch mechanics |
 | `design/scoring.md` | Score formula and secondary performance grades |
 | `design/metrics.md` | Metric definitions (throughput, latency, utilization, etc.) |
+| `src/data/educationalManual.ts` | Educational Manual page content and text segment metadata |
+| `src/data/instructional.ts` | Later phase popup instructional content |
 | `src/data/glossary.ts` | `GlossaryEntry` type + `GLOSSARY` array — all metric symbols, formulas, definitions |
 | `design/tech.md` | Stack choices and game loop architecture |
 | `design/ui.md` | App-wide visual system — product feel, stack/cost rule, color tokens, typography, layout, primitives, and screen rules |
