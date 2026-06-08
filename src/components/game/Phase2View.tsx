@@ -53,7 +53,7 @@ export function Phase2View() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 relative">
+    <div className="app-shell relative flex h-screen flex-col">
       <TopBar
         label="Phase 2: Server Pool"
         remaining={remaining}
@@ -66,10 +66,10 @@ export function Phase2View() {
         isFinalStretch={isFinalStretch}
       />
 
-      <main className="flex flex-1 gap-4 p-4 overflow-hidden">
+      <main className="flex flex-1 gap-4 overflow-hidden p-4">
         <StatsPanel />
 
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex flex-1 flex-col gap-4">
           <div className={`grid ${gridClass} gap-4 flex-1`}>
             {cores.map(core => {
               const task = core.currentTaskId ? (tasks[core.currentTaskId] ?? null) : null
@@ -91,7 +91,7 @@ export function Phase2View() {
       </main>
 
       {isFinalStretch && (
-        <div className="absolute inset-0 bg-red-950/10 pointer-events-none" />
+        <div className="pointer-events-none absolute inset-0 bg-[color:var(--tt-danger-soft)]/20" />
       )}
     </div>
   )

@@ -1,3 +1,5 @@
+import { StatusBadge } from '@/components/ui/primitives'
+
 function fmtTimer(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -17,35 +19,35 @@ interface TopBarProps {
 
 export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength, queueLimit, score, latencyWarning, isFinalStretch }: TopBarProps) {
   const timerColor = isFinalStretch
-    ? 'text-red-500 animate-pulse'
+    ? 'text-[color:var(--tt-danger)] animate-pulse'
     : remaining < 10_000
-      ? 'text-red-400'
+      ? 'text-[color:var(--tt-danger)]'
       : remaining < 20_000
-        ? 'text-amber-400'
-        : 'text-white'
+        ? 'text-[color:var(--tt-warning)]'
+        : 'text-[color:var(--tt-text)]'
 
   const droppedColor =
     droppedCount !== undefined && dropLimit !== undefined && droppedCount >= dropLimit
-      ? 'text-red-400'
+      ? 'text-[color:var(--tt-danger)]'
       : droppedCount !== undefined && dropLimit !== undefined && droppedCount >= dropLimit * 0.7
-        ? 'text-amber-400'
-        : 'text-gray-400'
+        ? 'text-[color:var(--tt-warning)]'
+        : 'text-[color:var(--tt-text-muted)]'
 
   const showDrops = droppedCount !== undefined && dropLimit !== undefined
   const showQueue =
     queueLength !== undefined &&
     (queueLimit === undefined || queueLength >= queueLimit * 0.7)
   const queueColor = queueLimit !== undefined && queueLength !== undefined && queueLength >= queueLimit
-    ? 'text-red-400'
-    : 'text-amber-400'
+    ? 'text-[color:var(--tt-danger)]'
+    : 'text-[color:var(--tt-warning)]'
 
   return (
-    <div className="w-full bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
-      <span className="text-sm text-gray-400 font-medium">{label}</span>
+    <div className="flex w-full flex-wrap items-center justify-between gap-3 border-b border-[color:var(--tt-border)] bg-[color:var(--tt-surface)] px-6 py-3">
+      <span className="text-sm font-medium text-[color:var(--tt-text-muted)]">{label}</span>
 
       <span className={`text-2xl font-mono font-bold ${timerColor}`}>{fmtTimer(remaining)}</span>
 
-      <div className="flex gap-6 items-center">
+      <div className="flex flex-wrap items-center gap-3">
         {showDrops && (
           <span className={`text-sm ${droppedColor}`}>
             Dropped: {droppedCount}/{dropLimit}
@@ -59,13 +61,13 @@ export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength,
         )}
 
         {latencyWarning && (
-          <span className="text-sm font-semibold text-amber-400 animate-pulse">
+          <span className="animate-pulse text-sm font-semibold text-[color:var(--tt-warning)]">
             Latency!
           </span>
         )}
 
         {score !== undefined && (
-          <span className="text-sm text-blue-300 font-semibold">Score: {score}</span>
+          <StatusBadge tone="info">Score: {score}</StatusBadge>
         )}
       </div>
     </div>

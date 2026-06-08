@@ -1,3 +1,5 @@
+import { SectionLabel } from '@/components/ui/primitives'
+
 interface AnalysisProps {
   failed: boolean
   completedTasks: number
@@ -63,20 +65,20 @@ export function AnalysisSection(props: AnalysisProps) {
 
   return (
     <div className="mb-6">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Analysis</div>
-      <div className="border-t border-gray-800 mb-3" />
+      <SectionLabel className="mb-2">Analysis</SectionLabel>
+      <div className="tt-divider mb-3" />
 
-      <p className="text-sm text-gray-300 leading-relaxed mb-3">{generateProse(props)}</p>
+      <p className="tt-copy mb-3 text-sm">{generateProse(props)}</p>
 
       {avgServiceTime > 0 && (
-        <div className="font-mono text-sm text-blue-400 mb-3">
+        <div className="mb-3 font-mono text-sm text-[color:var(--tt-info)]">
           {completedTasks > 0 ? `Observed R/D: ${rdExpansion.toFixed(2)}x` : 'Observed R/D: unavailable'}{'   '}
           (target lambda D/c = {(targetPerWorkerLoad * 100).toFixed(1)}%, observed utilization = {(perWorkerLoad * 100).toFixed(1)}%)
         </div>
       )}
 
       {showBottleneckWarning(props) && (
-        <div className="bg-amber-950 border border-amber-700 rounded-lg px-4 py-3 text-sm text-amber-300">
+        <div className="rounded-lg border border-[color:var(--tt-warning)] bg-[color:var(--tt-warning-soft)] px-4 py-3 text-sm text-[color:var(--tt-warning)]">
           ! Dispatcher bottleneck detected: workers were available while requests waited. Earlier dispatch to idle workers would have reduced response time.
         </div>
       )}

@@ -12,6 +12,6 @@ Main entry point for all design specs. Read this first, then follow links to the
 | Metrics definitions | [metrics.md](metrics.md) | Throughput, service time, waiting time, response time, utilization, ideal vs actual |
 | Feedback & instructional layer | [feedback.md](feedback.md) | Live feedback, post-run summary, optional theory overlay |
 | Difficulty modes | [difficulty.md](difficulty.md) | Beginner, standard, hard, theory mode |
-| UI layout | [ui.md](ui.md) | Panel layout, top bar, queue, workers, live stats |
+| UI layout | [ui.md](ui.md) | App-wide visual system, tokens, typography, layout rules, primitives, and screen guidance |
 | Technical design | [tech.md](tech.md) | Platform, recommended stack, data tracking requirements |
 | Planned future features | [future.md](future.md) | Preemption, migration, memory thrashing, Phase 3 workflow mode |

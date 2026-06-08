@@ -12,10 +12,17 @@ import {
   ReferenceDot,
   ReferenceLine,
 } from 'recharts'
+import { SectionLabel } from '@/components/ui/primitives'
 
-const TOOLTIP_STYLE = { background: '#1f2937', border: 'none', color: '#fff', fontSize: 11 }
-const GRID_STYLE = { strokeDasharray: '3 3', stroke: '#374151' }
-const AXIS_TICK = { fill: '#6b7280', fontSize: 11 }
+const TOOLTIP_STYLE = {
+  background: 'var(--tt-surface-raised)',
+  border: '1px solid var(--tt-border)',
+  borderRadius: 8,
+  color: 'var(--tt-text)',
+  fontSize: 11,
+}
+const GRID_STYLE = { strokeDasharray: '3 3', stroke: 'var(--tt-chart-grid)' }
+const AXIS_TICK = { fill: 'var(--tt-text-subtle)', fontSize: 11 }
 
 export interface Phase1Props {
   measuredTasksPerSecond: number
@@ -36,11 +43,11 @@ interface EducationalChartsProps {
 }
 
 function ChartTitle({ children }: { children: string }) {
-  return <div className="text-sm font-semibold text-gray-400 mb-1">{children}</div>
+  return <SectionLabel className="mb-1 normal-case">{children}</SectionLabel>
 }
 
 function ChartCaption({ children }: { children: React.ReactNode }) {
-  return <div className="text-xs text-gray-600 mt-1">{children}</div>
+  return <div className="tt-muted mt-1 text-xs">{children}</div>
 }
 
 export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
@@ -66,23 +73,23 @@ export function SaturationChart({ phase1 }: { phase1: Phase1Props }) {
             type="number"
             domain={[0, xMax]}
             tick={AXIS_TICK}
-            label={{ value: 'Arrival rate λ (req/s)', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Arrival rate λ (req/s)', position: 'insideBottom', offset: -12, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <YAxis
             tick={AXIS_TICK}
-            label={{ value: 'Throughput X', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Throughput X', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => v.toFixed(2)} />
-          <Line type="monotone" dataKey="x" stroke="#3b82f6" strokeWidth={2} dot={false} name="X (throughput)" />
-          <ReferenceLine x={lambdaMax} stroke="#f59e0b" strokeDasharray="4 4" label={{ value: 'λmax = 1/D', fill: '#f59e0b', fontSize: 10, position: 'top' }} />
+          <Line type="monotone" dataKey="x" stroke="var(--tt-accent)" strokeWidth={2} dot={false} name="X (throughput)" />
+          <ReferenceLine x={lambdaMax} stroke="var(--tt-warning)" strokeDasharray="4 4" label={{ value: 'λmax = 1/D', fill: 'var(--tt-warning)', fontSize: 10, position: 'top' }} />
           <ReferenceDot
             x={+playerLambda.toFixed(3)}
             y={+playerX.toFixed(3)}
             r={5}
-            fill="#ef4444"
-            stroke="#fff"
+            fill="var(--tt-danger)"
+            stroke="var(--tt-text)"
             strokeWidth={1.5}
-            label={{ value: 'You', fill: '#ef4444', fontSize: 10, position: 'top' }}
+            label={{ value: 'You', fill: 'var(--tt-danger)', fontSize: 10, position: 'top' }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -128,23 +135,23 @@ export function ExpansionFactorChart({
             domain={[0, 1]}
             tick={AXIS_TICK}
             tickFormatter={v => `${(v * 100).toFixed(0)}%`}
-            label={{ value: 'Per-worker load rho', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Per-worker load rho', position: 'insideBottom', offset: -12, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <YAxis
             domain={[1, 10]}
             tick={AXIS_TICK}
-            label={{ value: 'R/D', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'R/D', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => v.toFixed(2)} />
-          <Line type="monotone" dataKey="expansion" stroke="#3b82f6" strokeWidth={1.5} dot={false} name="1 / (1 - rho)" />
+          <Line type="monotone" dataKey="expansion" stroke="var(--tt-accent)" strokeWidth={1.5} dot={false} name="1 / (1 - rho)" />
           <ReferenceDot
             x={playerRho}
             y={Math.min(playerRD, 10)}
             r={5}
-            fill="#ef4444"
-            stroke="#fff"
+            fill="var(--tt-danger)"
+            stroke="var(--tt-text)"
             strokeWidth={1.5}
-            label={{ value: 'You', fill: '#ef4444', fontSize: 10, position: 'top' }}
+            label={{ value: 'You', fill: 'var(--tt-danger)', fontSize: 10, position: 'top' }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -172,15 +179,15 @@ function CoreUtilizationChart({ perCoreUtilization, avgUtil }: { perCoreUtilizat
             domain={[0, 100]}
             tick={AXIS_TICK}
             tickFormatter={v => `${v}%`}
-            label={{ value: 'Utilization %', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Utilization %', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => `${v.toFixed(1)}%`} />
-          <Bar dataKey="utilization" fill="#6366f1" name="Utilization" />
+          <Bar dataKey="utilization" fill="var(--tt-accent)" name="Utilization" />
           <ReferenceLine
             y={+(avgUtil * 100).toFixed(1)}
-            stroke="#f59e0b"
+            stroke="var(--tt-warning)"
             strokeDasharray="4 4"
-            label={{ value: 'avg', fill: '#f59e0b', fontSize: 10, position: 'right' }}
+            label={{ value: 'avg', fill: 'var(--tt-warning)', fontSize: 10, position: 'right' }}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -210,23 +217,23 @@ function ParallelismChart({ avgServiceTime, coreCount }: { avgServiceTime: numbe
             domain={[0, 17]}
             ticks={[1, 2, 4, 8, 16]}
             tick={AXIS_TICK}
-            label={{ value: 'Workers c', position: 'insideBottom', offset: -12, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Workers c', position: 'insideBottom', offset: -12, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <YAxis
             tick={AXIS_TICK}
-            label={{ value: 'Peak λmax (req/s)', angle: -90, position: 'insideLeft', offset: 10, fill: '#6b7280', fontSize: 11 }}
+            label={{ value: 'Peak λmax (req/s)', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => v.toFixed(2)} />
-          <Line type="monotone" dataKey="lambdaMax" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981' }} name="λmax = c/D" />
+          <Line type="monotone" dataKey="lambdaMax" stroke="var(--tt-success)" strokeWidth={2} dot={{ r: 3, fill: 'var(--tt-success)' }} name="λmax = c/D" />
           {playerPoint && (
             <ReferenceDot
               x={coreCount}
               y={playerPoint.lambdaMax}
               r={5}
-              fill="#ef4444"
-              stroke="#fff"
+              fill="var(--tt-danger)"
+              stroke="var(--tt-text)"
               strokeWidth={1.5}
-              label={{ value: `Phase 2 (c=${coreCount})`, fill: '#ef4444', fontSize: 10, position: 'top' }}
+              label={{ value: `Phase 2 (c=${coreCount})`, fill: 'var(--tt-danger)', fontSize: 10, position: 'top' }}
             />
           )}
         </LineChart>

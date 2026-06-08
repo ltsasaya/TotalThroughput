@@ -4,6 +4,26 @@
 
 Browser game. No persistent accounts or cloud backend in MVP. Deployed as a static bundle — shareable via a single URL.
 
+## Stack And Cost Discipline
+
+The stack should stay divided into the fewest practical parts. Every new
+dependency, hosted service, database, external API, queue, worker, framework,
+build tool, or paid tier is a deliberate expansion and must be justified before
+implementation.
+
+Before adding stack surface, document:
+
+* Why the existing stack cannot cover the need.
+* Whether the new part adds direct cost, usage-based cost, vendor lock-in, or
+  operational maintenance.
+* How it runs locally for development.
+* How it is configured, deployed, backed up, and replaced.
+* What simpler or no-cost alternatives were rejected.
+
+Default posture: prefer boring TypeScript, one app process, same-origin API
+routes, explicit SQL, one managed Postgres database when persistence is needed,
+and no extra services until the requirement proves they are necessary.
+
 ## MVP Stack
 
 | Piece | Choice | Reason |

@@ -1,4 +1,5 @@
 import { useGameStore } from '@/store/gameStore'
+import { AppButton, Panel, SectionLabel } from '@/components/ui/primitives'
 import { PostRunCharts } from './PostRunCharts'
 import { SummaryHeader } from './postrun/SummaryHeader'
 import { MetricSections } from './postrun/MetricSections'
@@ -9,16 +10,16 @@ function WaitServiceBar({ waitResponseRatio }: { waitResponseRatio: number }) {
   const servicePct = ((1 - waitResponseRatio) * 100).toFixed(0)
   return (
     <div className="mb-6">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Response Time Breakdown</div>
-      <div className="border-t border-gray-800 mb-3" />
-      <div className="flex h-4 rounded-full overflow-hidden w-full bg-gray-700 mb-2">
-        <div className="bg-amber-500 h-full" style={{ width: `${waitResponseRatio * 100}%` }} />
-        <div className="bg-blue-500 h-full flex-1" />
+      <SectionLabel className="mb-2">Response Time Breakdown</SectionLabel>
+      <div className="tt-divider mb-3" />
+      <div className="mb-2 flex h-4 w-full overflow-hidden rounded-full bg-[color:var(--tt-surface-muted)]">
+        <div className="h-full bg-[color:var(--tt-warning)]" style={{ width: `${waitResponseRatio * 100}%` }} />
+        <div className="h-full flex-1 bg-[color:var(--tt-accent)]" />
       </div>
-      <div className="text-xs text-gray-400">
-        <span className="text-amber-400">{waitPct}% waiting</span>
+      <div className="text-xs text-[color:var(--tt-text-muted)]">
+        <span className="text-[color:var(--tt-warning)]">{waitPct}% waiting</span>
         {' / '}
-        <span className="text-blue-400">{servicePct}% service</span>
+        <span className="text-[color:var(--tt-accent)]">{servicePct}% service</span>
       </div>
     </div>
   )
@@ -31,8 +32,8 @@ export function PostRunSummary() {
 
   if (!runSummary) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-gray-500">No run data available.</p>
+      <div className="app-shell flex min-h-screen items-center justify-center">
+        <p className="tt-muted">No run data available.</p>
       </div>
     )
   }
@@ -68,8 +69,8 @@ export function PostRunSummary() {
   const waitResponseRatio = avgResponseTime > 0 ? avgWaitingTime / avgResponseTime : 0
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-start justify-center p-8 overflow-y-auto">
-      <div className="bg-gray-900 rounded-2xl p-8 max-w-2xl w-full">
+    <div className="app-shell flex min-h-screen items-start justify-center overflow-y-auto p-8">
+      <Panel variant="modal" className="w-full max-w-2xl p-8">
 
         <SummaryHeader
           failed={failed}
@@ -101,8 +102,8 @@ export function PostRunSummary() {
         />
 
         <div className="mb-6">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Charts</div>
-          <div className="border-t border-gray-800 mb-3" />
+          <SectionLabel className="mb-2">Charts</SectionLabel>
+          <div className="tt-divider mb-3" />
           <PostRunCharts
             throughputHistory={throughputHistory}
             queueLengthHistory={queueLengthHistory}
@@ -128,15 +129,16 @@ export function PostRunSummary() {
         />
 
         <div className="flex justify-center mt-4">
-          <button
+          <AppButton
             onClick={returnToMenu}
-            className="px-8 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-xl cursor-pointer"
+            variant="secondary"
+            className="px-8"
           >
             Back to Menu
-          </button>
+          </AppButton>
         </div>
 
-      </div>
+      </Panel>
     </div>
   )
 }

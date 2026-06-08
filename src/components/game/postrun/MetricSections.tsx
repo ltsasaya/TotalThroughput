@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
+import { MetricItem as SharedMetricItem, SectionLabel as SharedSectionLabel } from '@/components/ui/primitives'
 
 function SectionLabel({ children }: { children: string }) {
   return (
     <div className="mb-3">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">{children}</div>
-      <div className="border-t border-gray-800" />
+      <SharedSectionLabel className="mb-2">{children}</SharedSectionLabel>
+      <div className="tt-divider" />
     </div>
   )
 }
@@ -19,24 +20,19 @@ function MetricRow({ left, right }: { left: ReactNode; right?: ReactNode }) {
 }
 
 function MetricItem({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
-  return (
-    <div>
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className={`text-base font-bold ${valueClass ?? 'text-white'}`}>{value}</div>
-    </div>
-  )
+  return <SharedMetricItem label={label} value={value} valueClass={`text-base ${valueClass ?? ''}`} />
 }
 
 function coreBarColor(util: number): string {
-  if (util >= 0.85) return 'bg-amber-500'
-  if (util < 0.35) return 'bg-gray-500'
-  return 'bg-blue-500'
+  if (util >= 0.85) return 'bg-[color:var(--tt-warning)]'
+  if (util < 0.35) return 'bg-[color:var(--tt-surface-muted)]'
+  return 'bg-[color:var(--tt-accent)]'
 }
 
 function tpRatioColor(ratio: number): string {
-  if (ratio >= 0.80) return 'text-green-400'
-  if (ratio >= 0.65) return 'text-yellow-400'
-  return 'text-red-400'
+  if (ratio >= 0.80) return 'text-[color:var(--tt-success)]'
+  if (ratio >= 0.65) return 'text-[color:var(--tt-warning)]'
+  return 'text-[color:var(--tt-danger)]'
 }
 
 interface MetricSectionsProps {
@@ -91,11 +87,11 @@ export function MetricSections({
         />
         <MetricRow
           left={<MetricItem label="Arrivals Sampled" value={`${arrivalCount} / ${expectedArrivals} expected`} />}
-          right={<MetricItem label="Still Waiting At End" value={String(unfinishedAtEndCount)} valueClass={unfinishedAtEndCount > 0 ? 'text-amber-300' : 'text-white'} />}
+          right={<MetricItem label="Still Waiting At End" value={String(unfinishedAtEndCount)} valueClass={unfinishedAtEndCount > 0 ? 'text-[color:var(--tt-warning)]' : 'text-[color:var(--tt-text)]'} />}
         />
         <MetricRow
           left={<MetricItem label="Requests Completed" value={String(completedTasks)} />}
-          right={<MetricItem label="Dropped / Unfinished" value={String(droppedTasks)} valueClass={droppedTasks > 0 ? 'text-red-400' : 'text-white'} />}
+          right={<MetricItem label="Dropped / Unfinished" value={String(droppedTasks)} valueClass={droppedTasks > 0 ? 'text-[color:var(--tt-danger)]' : 'text-[color:var(--tt-text)]'} />}
         />
         <MetricRow
           left={<MetricItem label="Average Throughput" value={`${actualThroughput.toFixed(2)}/s`} />}
@@ -134,21 +130,21 @@ export function MetricSections({
               const clamped = Math.min(Math.max(util, 0), 1)
               return (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-400 w-12 shrink-0">W{i + 1}</span>
-                  <div className="flex-1 bg-gray-700 rounded-full h-3 overflow-hidden">
+                  <span className="w-12 shrink-0 text-xs text-[color:var(--tt-text-muted)]">W{i + 1}</span>
+                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-[color:var(--tt-surface-muted)]">
                     <div
                       className={`h-full rounded-full ${coreBarColor(clamped)}`}
                       style={{ width: `${clamped * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-gray-300 w-10 text-right shrink-0">
+                  <span className="w-10 shrink-0 text-right text-xs text-[color:var(--tt-text-muted)]">
                     {(clamped * 100).toFixed(0)}%
                   </span>
                 </div>
               )
             })}
-            <div className="text-xs text-gray-500 mt-1">
-              Avg Worker Utilization: <span className="text-gray-300">{(avgUtil * 100).toFixed(1)}%</span>
+            <div className="tt-label mt-1">
+              Avg Worker Utilization: <span className="text-[color:var(--tt-text-muted)]">{(avgUtil * 100).toFixed(1)}%</span>
             </div>
           </div>
         </div>

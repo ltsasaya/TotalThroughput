@@ -14,7 +14,7 @@
 |---|---|
 | `src/main.tsx` | React 19 entry point — mounts `<App>` into DOM root |
 | `src/App.tsx` | Root component — mounts `useGameLoop`, routes to phase-specific views and debrief popups |
-| `src/index.css` | Global styles — Tailwind v4 import |
+| `src/index.css` | Global styles — Tailwind v4 import plus Total Throughput visual tokens, panels, buttons, badges, formula callouts, and scrollbar helpers |
 | `src/vite-env.d.ts` | Vite client type declarations |
 
 ## Types
@@ -62,6 +62,7 @@
 
 | File | Description |
 |---|---|
+| `src/components/ui/primitives.tsx` | Shared visual-system primitives — panels, labels, metric items, buttons, badges, formula callouts, and `cx` helper |
 | `src/components/game/StartScreen.tsx` | Idle phase — server-first intro, difficulty selector (Beginner/Standard/Hard), Start button |
 | `src/components/game/TopBar.tsx` | Shared header — phase label, countdown timer, optional dropped counter, queue display, optional score |
 | `src/components/game/Phase1View.tsx` | Phase 1 typing interface — fixed-rate RPC level status, character-level word display, queue preview, live stats sidebar |
@@ -103,6 +104,6 @@
 | `design/metrics.md` | Metric definitions (throughput, latency, utilization, etc.) |
 | `src/data/glossary.ts` | `GlossaryEntry` type + `GLOSSARY` array — all metric symbols, formulas, definitions |
 | `design/tech.md` | Stack choices and game loop architecture |
-| `design/ui.md` | UI panel layout specification |
+| `design/ui.md` | App-wide visual system — product feel, stack/cost rule, color tokens, typography, layout, primitives, and screen rules |
 | `design/difficulty.md` | Beginner / standard / hard / theory mode differences |
 | `design/future.md` | Planned future features (Phase 3, preemption, migration) |
