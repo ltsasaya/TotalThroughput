@@ -16,8 +16,7 @@ function StatBlock({ label, value }: { label: string; value: string }) {
 export function Phase1View() {
   const config = useGameStore(s => s.config)
   const phaseElapsed = useGameStore(s => s.phaseElapsed)
-  const phase1Levels = useGameStore(s => s.phase1Levels)
-  const currentPhase1LevelIndex = useGameStore(s => s.currentPhase1LevelIndex)
+  const phase1RunConfig = useGameStore(s => s.phase1RunConfig)
   const activePhase1TaskId = useGameStore(s => s.activePhase1TaskId)
   const tasks = useGameStore(s => s.tasks)
   const queue = useGameStore(s => s.queue)
@@ -40,8 +39,8 @@ export function Phase1View() {
   const content = activeTask?.content ?? ''
   const typedContent = activeTask?.typedContent ?? ''
   const remaining = config.phase1Duration - phaseElapsed
-  const currentLevel = phase1Levels[currentPhase1LevelIndex]
-  const completionTarget = currentLevel?.minCompletedSamples ?? 0
+  const activeCount = activeTask ? 1 : 0
+  const stillWaiting = queue.length + activeCount
 
   // Count active errors for the badge
   const errorCount = [...typedContent].filter((c, i) => c !== content[i]).length
@@ -63,7 +62,9 @@ export function Phase1View() {
   return (
     <div className="app-shell flex h-screen flex-col">
       <TopBar
-        label={`Phase 1: Level ${currentPhase1LevelIndex + 1}/${phase1Levels.length}`}
+        label={phase1RunConfig
+          ? `${phase1RunConfig.difficulty.label}: ${phase1RunConfig.difficulty.range.label} WPM`
+          : 'Phase 1 Run'}
         remaining={remaining}
         queueLength={liveMetrics.queueLength}
       />
@@ -72,25 +73,23 @@ export function Phase1View() {
         <Panel className="order-2 flex flex-col gap-4 p-4 lg:order-1 lg:h-full lg:overflow-hidden">
           <div>
             <SectionLabel>Stats</SectionLabel>
-            {currentLevel && (
-              <div className="mt-2 font-mono text-xs text-[color:var(--tt-info)]">
-                {currentLevel.label} - {currentLevel.isDemo ? 'demo' : 'gate'}
-              </div>
-            )}
+            <div className="mt-2 font-mono text-xs text-[color:var(--tt-info)]">
+              One server worker - finite 60s observation
+            </div>
           </div>
           <div className="tt-scrollbar grid grid-cols-2 gap-4 lg:grid-cols-1 lg:overflow-y-auto">
             <StatBlock
-              label="Completed Samples"
-              value={`${liveMetrics.completedCount}/${completionTarget || '—'}`}
+              label="Completed"
+              value={String(liveMetrics.completedCount)}
             />
             <StatBlock label="Served Rate X" value={`${liveMetrics.throughput.toFixed(2)}/s`} />
             <StatBlock
-              label="Burst λ"
-              value={currentLevel ? `${currentLevel.lambda.toFixed(2)}/s` : '—'}
+              label="Arrival λ"
+              value={phase1RunConfig ? `${phase1RunConfig.lambda.toFixed(2)}/s` : '—'}
             />
             <StatBlock
               label="Ref Load ρ"
-              value={currentLevel ? `${Math.round(currentLevel.referenceLoad * 100)}%` : '—'}
+              value={phase1RunConfig ? `${Math.round(phase1RunConfig.targetLoad * 100)}%` : '—'}
             />
             <StatBlock label="Avg Service D" value={`${(liveMetrics.avgServiceTime / 1000).toFixed(1)}s`} />
             <StatBlock
@@ -100,12 +99,25 @@ export function Phase1View() {
                 : '—'}
             />
             <StatBlock
+              label="Reaction"
+              value={(liveMetrics.avgReactionSpeed ?? 0) > 0
+                ? `${((liveMetrics.avgReactionSpeed ?? 0) / 1000).toFixed(2)}s`
+                : '—'}
+            />
+            <StatBlock
               label="Typing Speed"
               value={(liveMetrics.avgTypingSpeed ?? 0) > 0
                 ? `${Math.round(liveMetrics.avgTypingSpeed!)} WPM`
                 : '—'}
             />
+            <StatBlock
+              label="Utilization"
+              value={liveMetrics.perCoreUtilization[0] !== undefined
+                ? `${Math.round(liveMetrics.perCoreUtilization[0] * 100)}%`
+                : '—'}
+            />
             <StatBlock label="Max Queue" value={String(phase1MaxQueueLength)} />
+            <StatBlock label="Still Waiting" value={String(stillWaiting)} />
           </div>
         </Panel>
 
@@ -167,9 +179,9 @@ export function Phase1View() {
                   })}
                 </div>
 
-                <div className="mt-5 h-1.5 w-full rounded-full bg-[color:var(--tt-surface-raised)]">
+                <div className="mt-5 h-3 w-full border-[3px] border-black bg-white">
                   <div
-                    className="h-1.5 rounded-full bg-[color:var(--tt-success)] transition-all"
+                    className="h-full bg-[color:var(--tt-success)] transition-all"
                     style={{ width: content.length > 0 ? `${(typedContent.length / content.length) * 100}%` : '0%' }}
                   />
                 </div>
@@ -196,7 +208,7 @@ export function Phase1View() {
                 return (
                   <div
                     key={id}
-                    className="flex items-center gap-2 rounded-lg bg-[color:var(--tt-surface-raised)] p-2"
+                    className="flex items-center gap-2 border-[2px] border-black bg-[color:var(--tt-surface-raised)] p-2"
                   >
                     <SizeBadge size={t.size} />
                     <span className="flex-1 truncate font-mono text-xs text-[color:var(--tt-text-muted)]">

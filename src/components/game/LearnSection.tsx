@@ -19,9 +19,9 @@ export function LearnSection() {
             arrive at once, they wait in the server queue before workers can process them.
           </p>
 
-          <div className="mt-7 grid gap-2 md:grid-cols-4">
+          <div className="mt-7 grid gap-3 md:grid-cols-4">
             {flow.map(([number, label, copy]) => (
-              <div key={label} className="rounded-lg border border-[color:var(--tt-border)] bg-[color:var(--tt-surface)] p-4">
+              <div key={label} className="border-[3px] border-black bg-white p-4 shadow-[4px_4px_0_#000]">
                 <div className="tt-muted font-mono text-xs">{number}</div>
                 <div className="mt-2 font-semibold text-[color:var(--tt-text)]">{label}</div>
                 <p className="tt-copy mt-1 text-xs">{copy}</p>
@@ -37,7 +37,7 @@ export function LearnSection() {
         </div>
       </section>
 
-      <section className="bg-[color:var(--tt-bg)]">
+      <section className="bg-white">
         <div className="mx-auto max-w-3xl px-5 py-16 md:px-8">
           <SectionLabel>Server performance</SectionLabel>
           <h2 className="mt-2 text-2xl font-bold">How fast can a server respond under load?</h2>
@@ -45,7 +45,7 @@ export function LearnSection() {
             Server performance is about response time and throughput. These measures show
             whether the server is fast enough under the current arrival rate.
           </p>
-          <div className="mt-6 rounded-lg border border-[color:var(--tt-border)]">
+          <div className="mt-6 border-[3px] border-black bg-white">
             <div className="grid gap-4 p-4 md:grid-cols-[90px_minmax(0,1fr)]">
               <div className="font-mono text-lg font-bold text-[color:var(--tt-text)]">R</div>
               <p className="tt-copy text-sm">
@@ -80,7 +80,7 @@ export function LearnSection() {
         </div>
       </section>
 
-      <section className="bg-[color:var(--tt-bg)]">
+      <section className="bg-white">
         <div className="mx-auto max-w-3xl px-5 py-16 md:px-8">
           <SectionLabel>Utilization</SectionLabel>
           <h2 className="mt-2 text-2xl font-bold">As load climbs, response time grows fast</h2>

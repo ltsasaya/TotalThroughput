@@ -9,10 +9,10 @@ function waitColor(ms: number): string {
 }
 
 function itemClasses(timeLeftMs: number, isNext: boolean): string {
-  if (isNext) return 'border border-[color:var(--tt-accent)] bg-[color:var(--tt-accent-soft)]'
-  if (timeLeftMs < 5000) return 'border-l-2 border-[color:var(--tt-danger)] bg-[color:var(--tt-danger-soft)]'
-  if (timeLeftMs < 12000) return 'border-l-2 border-[color:var(--tt-warning)] bg-[color:var(--tt-warning-soft)]'
-  return 'bg-[color:var(--tt-surface-raised)]'
+  if (isNext) return 'border-[3px] border-[color:var(--tt-accent)] bg-[color:var(--tt-accent-soft)]'
+  if (timeLeftMs < 5000) return 'border-[3px] border-[color:var(--tt-danger)] bg-[color:var(--tt-danger-soft)]'
+  if (timeLeftMs < 12000) return 'border-[3px] border-[color:var(--tt-warning)] bg-[color:var(--tt-warning-soft)]'
+  return 'border-[2px] border-black bg-[color:var(--tt-surface-raised)]'
 }
 
 interface QueuePanelProps {
@@ -28,14 +28,14 @@ export function QueuePanel({ isFinalStretch }: QueuePanelProps) {
   const containerBorder = isFinalStretch ? 'border-[color:var(--tt-danger)] ring-1 ring-[color:var(--tt-danger)]' : ''
 
   return (
-    <Panel className={cx('flex h-full min-w-[200px] max-w-[250px] flex-col p-4', containerBorder)}>
+    <Panel className={cx('flex min-h-[220px] w-full flex-col p-4 lg:h-full lg:min-w-[200px] lg:max-w-[250px]', containerBorder)}>
       <div className="mb-3 flex items-center">
         <SectionLabel className={isFinalStretch ? 'text-[color:var(--tt-danger)]' : undefined}>Queue</SectionLabel>
         <StatusBadge className="ml-2">{queue.length}</StatusBadge>
       </div>
 
       {isFinalStretch && (
-        <div className="mb-3 rounded border-l-2 border-[color:var(--tt-danger)] bg-[color:var(--tt-danger-soft)] px-2 py-1.5 text-xs font-semibold text-[color:var(--tt-danger)]">
+        <div className="mb-3 border-[3px] border-[color:var(--tt-danger)] bg-[color:var(--tt-danger-soft)] px-2 py-1.5 text-xs font-semibold text-[color:var(--tt-danger)]">
           No more requests incoming - clear the queue
         </div>
       )}
@@ -54,7 +54,7 @@ export function QueuePanel({ isFinalStretch }: QueuePanelProps) {
             return (
               <div
                 key={id}
-                className={`flex items-center gap-3 rounded-lg p-2.5 ${itemClasses(timeLeft, isNext)}`}
+                className={`flex items-center gap-3 p-2.5 ${itemClasses(timeLeft, isNext)}`}
               >
                 {isNext && (
                   <StatusBadge tone="info" className="shrink-0">NEXT</StatusBadge>

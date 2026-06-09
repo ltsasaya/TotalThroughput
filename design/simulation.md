@@ -41,8 +41,8 @@ Use 12-16 for Phase 1 and 16-24 for Phase 2 when task text is short enough.
 Below 12, Poisson count variance makes one run too noisy to interpret. Higher
 counts are better statistically but can make typing levels too long.
 
-Use fixed seeds for introductory/gated levels so students see comparable
-scenarios. Use random but replayable seeds for free play.
+Use fixed seeds for introductory/comparable runs where useful. Use random but
+replayable seeds for free play.
 
 ### Task size distribution
 
@@ -50,23 +50,32 @@ Task sizes are sampled independently of arrival times. Current Phase 1 uses
 S-only two-word request prompts so enough arrivals fit in each short level. Phase 2
 may use a wider S/M/L mix because automatic workers process assigned work.
 
-Phase 1 emits arrivals only during the level's arrival window, then adds a
-drain tail. The tail is for observing leftover queue behavior created by the
-burst, not for deadline failure or score punishment. Arrival rate, offered
-load, and arrival-window busy fraction use the arrival window as their
-denominator; tail completions and still-waiting work are reported separately.
+Phase 1 calibrated difficulty runs use a 60-second observation window. Work
+unfinished at the end is reported as still waiting rather than drained or
+dropped. Arrival rate, offered load, observed throughput, and busy fraction use
+the 60-second run as their denominator.
 
-### Reference WPM
+### Calibration WPM bins
 
-| Surface | Reference WPM |
-|---|---|
-| Phase 1 Beginner | 40 |
-| Phase 1 Standard | 70 |
-| Phase 1 Hard | 100 |
-| Phase 2 (all difficulties) | 100 (fixed) |
+Phase 1 calibration produces a WPM baseline and assigns it to one fixed bin:
 
-Reference WPM converts typing text length into expected service demand for
-tuning. Actual player typing determines observed service demand.
+| Bin | WPM range |
+|---:|---|
+| 0 | 30-40 |
+| 1 | 40-50 |
+| 2 | 50-60 |
+| 3 | 60-75 |
+| 4 | 75-90 |
+| 5 | 90-105 |
+| 6 | 105-120 |
+| 7 | 120-140 |
+| 8 | 140-160 |
+| 9 | 160-180 |
+| 10 | 180-200 |
+
+The WPM bin drives displayed difficulty ranges. Actual player typing determines
+observed service demand `D`, which tunes the request arrival rate for a
+selected run.
 
 ### Observable load regimes
 
@@ -91,17 +100,31 @@ typing-based single-server service rate.
 
 ### Calibration outputs
 
-* Per-level arrival count, served completions, still-waiting work, response
-  time, service demand, and max queue
-* Backlog at arrival-window end and tail completions
-* Aggregate completed-sample average service demand `D`
-* Single-worker capacity estimate `lambda_max = 1 / D`
-* Gate status for stable levels; demo levels do not block Phase 2
+* Calibration WPM
+* Calibrated WPM bin
+* Estimated typing service demand `D`
+* Reaction speed from first key timing, where measurable
+
+### Difficulty-run outputs
+
+* Arrival count, served completions, still-waiting work, response time, service
+  demand, utilization, average typing speed, reaction speed, and max queue
+* Single-worker reference capacity estimate `lambda_max = 1 / D`
+* Configured reference load `rho ~= lambda * D`
+* Observed finite-run metrics, kept separate from the reference response-time
+  curve
 
 ### Recommended baseline
 
-Convert the player's measured performance into mean service demand `D`. Use
-`D` as the processing time basis for each automatic server worker in Phase 2.
+Convert the player's measured calibration performance into mean service demand
+`D`. For a one-worker Phase 1 run, tune the selected difficulty as:
+
+```
+lambda = targetLoad / D
+```
+
+Use `D` later as the processing-time basis for each automatic server worker if
+Phase 2 is reconnected to the calibrated flow.
 
 ## Phase 2 Service Model
 

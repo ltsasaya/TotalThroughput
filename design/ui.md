@@ -31,17 +31,24 @@ into the start-page -> Educational Manual -> play workflow.
   motif on the start screen.
 - Keep `Play` as the primary action and `Join Class` as the secondary visual
   action.
-- Keep `Join Class`, `For Instructors`, and `Sign in` visible but
+- Keep `Join Class`, `For Instructors`, and `Sign In` visible but
   nonfunctional until BOSS promotes real account or class behavior.
-- Keep the semi-retro top header persistent across the start screen and the
-  Educational Manual. Its labels are placeholders for now and may be renamed
-  later.
-- The header includes a plain text `Home` control on the left. It returns the
-  player from manual pages to the start screen without a boxed button style.
+- Keep the semi-retro top navigation persistent across the start screen,
+  Educational Manual, Game Menu, and calibration flow. Active gameplay uses the
+  same plain navigation controls inside `TopBar`.
+- The left side includes plain text `Home` and `Game Menu` controls. `Home`
+  returns to the start screen; `Game Menu` returns to the recurring difficulty
+  hub. If a calibration or run is active, navigation goes anyway and shows a
+  system notification that the current calibration/run was not saved.
+- Header/navigation text follows the local rulebook typography convention:
+  Title Case labels with the same font, size, weight, and letter spacing.
+  `Sign In` may differ by boxed container treatment only. Persistent header
+  labels share the same source typography class so `Home`, `Game Menu`,
+  `For Instructors`, and `Sign In` cannot drift apart.
 - Do not add fonts, image assets, icon libraries, animation packages, component
   kits, hosted services, or paid visual tooling for this revamp.
-- Later gameplay and results screens remain under the existing visual system
-  until BOSS approves each next slice.
+- Gameplay and results screens should use the same monochrome lab language.
+  Phase 2 remains style-compatibility only until BOSS approves gameplay changes.
 - The current approved workflow shows an Educational Manual after `Play` and
   before active play begins. The manual becomes the primary educational
   backbone for introducing the game context and purpose.
@@ -61,11 +68,12 @@ plain CSS tokens in `src/index.css`.
 
 ## Color Rules
 
-The app uses a warm charcoal operational palette with semantic accents.
+The app uses a semi-retro monochrome operational palette with semantic accents
+only where state needs to be distinguished.
 
 | Role | Token | Use |
 | --- | --- | --- |
-| App background | `--tt-bg` | Full app shell and dark empty space |
+| App background | `--tt-bg` | Full app shell and white/off-white empty space |
 | Band background | `--tt-bg-band` | Alternating educational sections |
 | Surface | `--tt-surface` | Primary panels and modals |
 | Raised surface | `--tt-surface-raised` | Active rows, nested controls, progress tracks |
@@ -86,9 +94,9 @@ one-hue palette. Color should explain system state.
 
 ## Typography
 
-- Use the system sans-serif stack already defined in `src/index.css`.
-- Use monospace only for formulas, request ids/content, rates, timings, and
-  typed work.
+- Use the system monospace stack defined in `src/index.css`.
+- Use monospace consistently for headings, formulas, request ids/content, rates,
+  timings, and typed work.
 - Labels use `.tt-section-label` or `.tt-label`; values use `.tt-value`.
 - Do not use viewport-scaled font sizes or negative letter spacing.
 - Hero-scale type is reserved for the start screen product name only. Panels,
@@ -96,7 +104,8 @@ one-hue palette. Color should explain system state.
 
 ## Shape And Spacing
 
-- Use 8px radius for panels, modals, controls, rows, and progress tracks.
+- Use 0-8px radius for panels, modals, controls, rows, and progress tracks.
+  Rectangular controls and hard black shadows are preferred for primary frames.
 - Use full-width app bands for educational sections.
 - Use cards only for real units of work: panels, modals, repeated queue rows,
   worker cards, and result containers.
@@ -133,8 +142,9 @@ visual rules across multiple components.
   `text-7xl font-bold`, `3px` borders, `4px 4px 0` button shadow, `20rem`
   button stack width, white background, and `2px`/`2px` scanlines at `0.03`
   opacity.
-- In the current workflow slice, `Play` opens the Educational Manual. Closing
-  the final manual page starts Phase 1 with the Standard difficulty default.
+- In the current workflow, `Play` opens the Game Menu first. On the first
+  uncalibrated visit, the Game Menu is greyed and inactive except for a
+  highlighted manual icon.
 - Do not show difficulty, Phase 2 continuation, or other setup controls in the
   first viewport while matching the sample screenshot.
 - Keep the network responsive with square hub clusters and small satellite
@@ -146,12 +156,13 @@ visual rules across multiple components.
 
 - The Educational Manual is the next approved player-workflow slice under the
   semi-retro monochrome revamp.
-- After the player clicks `Play`, show a dedicated manual screen before active
-  play begins.
+- After the player clicks the highlighted manual icon, show the manual over the
+  Game Menu before the player calibrates or starts a run.
 - This manual replaces the old `prePhase1` popup for the first-play onboarding
   transition.
-- Keep the horizontal striped background visible behind a foreground vertical
-  manual page with rounded corners.
+- Keep the horizontal striped Game Menu background visible behind the greyed
+  discovery state, then behind a darkened modal backdrop and a foreground
+  vertical manual page with rounded corners after the manual icon is clicked.
 - Keep the manual page frame fixed-size per viewport so the page top, header,
   footer controls, and page count do not shift between manual pages. Sparse
   pages may keep empty white space.
@@ -177,22 +188,66 @@ visual rules across multiple components.
   arrows for other clients' inbound requests and outbound responses.
   Do not label the diagram arrows with protocol terms; the page should use
   arrows to show requests and responses.
+- The third manual page may include a nonfunctional typing-run preview image
+  that foreshadows the real play surface: a request queue, one active typing
+  task, and compact live stats.
+
+### Game Menu
+
+- The Game Menu is the recurring hub after `Play`, after calibration, and after
+  each run summary.
+- On the first uncalibrated visit from `Play`, grey the entire Game Menu and
+  leave only the manual icon visually active and clickable. This teaches players
+  where to find the manual without opening it automatically.
+- Store whether the manual icon has been clicked. Once clicked, do not show the
+  highlighted/manual-discovery lock again in the same app session, even if the
+  player later returns through `Game Menu`, `Home`, or `Play`.
+- Persistent `Home` and `Game Menu` navigation stays above the discovery scrim;
+  the manual modal stays above both the navigation and the greyed menu.
+- Before a valid calibration exists, show the difficulty cards in a disabled
+  state and mark the calibration button with a red required indicator.
+- Show a named `Baseline` panel in the menu header. Inside it, use plain stat
+  labels: `WPM` and `Display bin`.
+- Keep the calibration/recalibration action inside the Baseline panel as the
+  panel action row. Before valid calibration exists, mark that action with a
+  red required indicator.
+- After calibration, enable the difficulty cards themselves as full-card
+  controls rather than nesting separate `Start` buttons inside each card.
+  Use subdued retro game colors for their load accents: green for Easy, yellow
+  for Medium, orange for Hard, and red for Impossible, while preserving the
+  hard black borders and shadows.
+- Include a compact icon-only manual control in the Game Menu intro area so
+  players can reopen the Educational Manual without putting Manual inside the
+  Baseline panel.
 
 ### Learning Sections
 
 - Use the request-flow metaphor before formulas.
 - Keep formulas visually distinct and label caveats plainly.
 - Do not present `R ~= D / (1 - rho)` as an exact Phase 1 result.
-- Prefer one useful flow row or compact note over multiple equal-weight
-  explainer cards.
+- Prefer compact bordered rows and formula callouts over dark cards.
 
 ### Phase 1 Play
 
+- Phase 1 now starts with a 30-second calibration screen. Keep it visually
+  close to a compact typing tool: fixed five-row generated-word row area,
+  bottom start prompt overlay, countdown, live WPM, live accuracy, and no
+  explanatory feature callouts.
+- After calibration ends, show a small completion card using the same
+  semi-retro panel and button treatment. It should show WPM, accuracy, display
+  bin, plus `Recalibrate` and `Game Menu` actions.
+- After calibration, show four calibrated choices: Easy, Medium, Hard, and
+  Impossible. Each choice should show the derived WPM range and target load
+  without implying the range is an exact pass/fail requirement.
+- After each 60-second run, show a compact run summary and return controls:
+  continue to difficulty selection or recalibrate.
 - The active request sits in a bounded workbench panel.
 - Typing text is the dominant element in the center.
 - Stats and queue collapse into stacked panels on smaller screens.
 - Show queue age, task size, current progress, and typing error state without
   moving the layout.
+- Use rectangular progress tracks and bounded queue rows. Preserve the existing
+  keyboard and queue mechanics.
 
 ### Phase 2 Play
 

@@ -33,7 +33,7 @@ export function StatsPanel() {
   const waitClass = waitSec > 6 ? 'text-[color:var(--tt-danger)]' : waitSec > 3 ? 'text-[color:var(--tt-warning)]' : 'text-[color:var(--tt-text)]'
 
   return (
-    <Panel className="flex h-full min-w-[180px] max-w-[210px] flex-col gap-4 p-4">
+    <Panel className="flex w-full flex-col gap-4 p-4 lg:h-full lg:min-w-[180px] lg:max-w-[210px]">
       <div>
         <SectionLabel>Live Stats</SectionLabel>
       </div>

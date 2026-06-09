@@ -38,7 +38,7 @@ export function Phase1Complete() {
             <h2 className="mt-3 text-3xl font-bold text-[color:var(--tt-text)]">Phase 1 complete</h2>
             <p className="tt-copy mt-2">{statusMessage}</p>
           </div>
-          <div className="rounded-lg border border-[color:var(--tt-border)] bg-[color:var(--tt-surface-raised)] p-4">
+          <div className="border-[3px] border-black bg-white p-4">
             <SectionLabel>Primary measure</SectionLabel>
             <div className="mt-2 font-mono text-3xl font-bold text-[color:var(--tt-accent)]">
               {hasMeasuredService ? `${D.toFixed(2)}s` : '-'}
@@ -47,7 +47,7 @@ export function Phase1Complete() {
           </div>
         </div>
 
-        <div className="mb-6 rounded-lg border border-[color:var(--tt-border)]">
+        <div className="mb-6 border-[3px] border-black">
           <div className="grid grid-cols-2 md:grid-cols-3">
             <MetricCell label="Worker Capacity" value={hasMeasuredService ? `${lambdaMax.toFixed(2)} req/s` : '-'} />
             <MetricCell label="Served Avg R" value={R > 0 ? `${R.toFixed(2)}s` : '-'} />
@@ -79,7 +79,7 @@ export function Phase1Complete() {
               const status = result.isDemo ? 'Demo' : result.passed ? 'Pass' : 'Retry'
               const statusTone = result.isDemo ? 'info' : result.passed ? 'success' : 'warning'
               return (
-                <div key={result.levelId} className="grid gap-2 rounded-lg bg-[color:var(--tt-surface-raised)] px-3 py-2 md:grid-cols-[1fr_auto_auto_auto] md:items-center md:gap-3">
+                <div key={result.levelId} className="grid gap-2 border-[2px] border-black bg-[color:var(--tt-surface-raised)] px-3 py-2 md:grid-cols-[1fr_auto_auto_auto] md:items-center md:gap-3">
                   <div>
                     <div className="text-sm font-semibold text-[color:var(--tt-text)]">{result.label}</div>
                     <div className="tt-label">

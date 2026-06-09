@@ -17,7 +17,7 @@ export default function InstructionalPopup({ id, onDismiss }: InstructionalPopup
   }, [onDismiss])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onDismiss}>
+    <div className="retro-modal-backdrop fixed inset-0 z-50 flex items-center justify-center" onClick={onDismiss}>
       <Panel variant="modal" className="mx-6 w-full max-w-lg p-8" onClick={e => e.stopPropagation()}>
         <h2 className="mb-6 text-xl font-bold text-[color:var(--tt-text)]">{content.title}</h2>
         <div className="space-y-4">

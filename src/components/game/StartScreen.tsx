@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import type { DifficultyMode } from '@/types/game'
-import { EducationalManual } from './EducationalManual'
 import { LearnSection } from './LearnSection'
 import { RetroHeader } from './RetroHeader'
-
-const DEFAULT_DIFFICULTY: DifficultyMode = 'standard'
 
 interface NetworkNode {
   x: number
@@ -185,19 +181,6 @@ function NetworkVisualization() {
 
 export function StartScreen() {
   const startGame = useGameStore(s => s.startGame)
-  const [showManual, setShowManual] = useState(false)
-
-  if (showManual) {
-    return (
-      <EducationalManual
-        onHome={() => setShowManual(false)}
-        onComplete={() => {
-          setShowManual(false)
-          startGame(DEFAULT_DIFFICULTY)
-        }}
-      />
-    )
-  }
 
   return (
     <div className="app-shell">
@@ -205,7 +188,7 @@ export function StartScreen() {
         <NetworkVisualization />
         <div className="retro-start-scanlines" aria-hidden="true" />
 
-        <RetroHeader onHome={() => setShowManual(false)} />
+        <RetroHeader />
 
         <main className="retro-start-main">
           <h1 className="retro-start-title">Total Throughput</h1>
@@ -215,7 +198,7 @@ export function StartScreen() {
               type="button"
               id="play-button"
               className="retro-start-button retro-start-button-primary"
-              onClick={() => setShowManual(true)}
+              onClick={() => startGame()}
             >
               Play
             </button>

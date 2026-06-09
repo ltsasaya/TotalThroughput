@@ -21,6 +21,8 @@ const CONTENT_BY_SIZE: Record<TaskSize, string[]> = {
   ],
 }
 
+const PHASE1_PROMPT_WORDS = 2
+
 // Word count ranges per size: [min, max]
 const WORD_COUNT_RANGE: Record<TaskSize, [number, number]> = {
   S: [2, 3],
@@ -63,6 +65,12 @@ function pickPhase1Words(contentSeed: number): string {
   let secondIdx = Math.abs(contentSeed * 31 + 11) % pool.length
   if (secondIdx === firstIdx) secondIdx = (secondIdx + 1) % pool.length
   return `${pool[firstIdx]} ${pool[secondIdx]}`
+}
+
+export function estimatePhase1PromptLength(): number {
+  const totalChars = CONTENT_BY_SIZE.S.reduce((sum, word) => sum + word.length, 0)
+  const avgWordLength = totalChars / CONTENT_BY_SIZE.S.length
+  return Math.round((avgWordLength * PHASE1_PROMPT_WORDS) + (PHASE1_PROMPT_WORDS - 1))
 }
 
 // trueServiceDemand: pass calibrated ms value for Phase 2 cores; omit (0) for Phase 1.

@@ -78,7 +78,7 @@ export function AnalysisSection(props: AnalysisProps) {
       )}
 
       {showBottleneckWarning(props) && (
-        <div className="rounded-lg border border-[color:var(--tt-warning)] bg-[color:var(--tt-warning-soft)] px-4 py-3 text-sm text-[color:var(--tt-warning)]">
+        <div className="border-[3px] border-[color:var(--tt-warning)] bg-[color:var(--tt-warning-soft)] px-4 py-3 text-sm font-semibold text-[color:var(--tt-warning)]">
           ! Dispatcher bottleneck detected: workers were available while requests waited. Earlier dispatch to idle workers would have reduced response time.
         </div>
       )}

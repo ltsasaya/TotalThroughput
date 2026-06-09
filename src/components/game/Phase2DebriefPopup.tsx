@@ -47,7 +47,7 @@ export default function Phase2DebriefPopup({ onDismiss }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 py-8"
+      className="retro-modal-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-8"
       onClick={onDismiss}
     >
       <Panel

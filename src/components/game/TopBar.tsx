@@ -1,4 +1,5 @@
 import { StatusBadge } from '@/components/ui/primitives'
+import { useGameStore } from '@/store/gameStore'
 
 function fmtTimer(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000))
@@ -18,6 +19,8 @@ interface TopBarProps {
 }
 
 export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength, queueLimit, score, latencyWarning, isFinalStretch }: TopBarProps) {
+  const goHome = useGameStore(s => s.goHome)
+  const goGameMenu = useGameStore(s => s.goGameMenu)
   const timerColor = isFinalStretch
     ? 'text-[color:var(--tt-danger)] animate-pulse'
     : remaining < 10_000
@@ -42,8 +45,14 @@ export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength,
     : 'text-[color:var(--tt-warning)]'
 
   return (
-    <div className="flex w-full flex-wrap items-center justify-between gap-3 border-b border-[color:var(--tt-border)] bg-[color:var(--tt-surface)] px-6 py-3">
-      <span className="text-sm font-medium text-[color:var(--tt-text-muted)]">{label}</span>
+    <div className="retro-game-topbar">
+      <div className="retro-game-topbar-left">
+        <nav className="retro-game-nav" aria-label="Game navigation">
+          <button type="button" className="retro-header-text retro-app-home" onClick={goHome}>Home</button>
+          <button type="button" className="retro-header-text retro-app-home" onClick={goGameMenu}>Game Menu</button>
+        </nav>
+        <span className="text-sm font-bold text-[color:var(--tt-text-muted)]">{label}</span>
+      </div>
 
       <span className={`text-2xl font-mono font-bold ${timerColor}`}>{fmtTimer(remaining)}</span>
 

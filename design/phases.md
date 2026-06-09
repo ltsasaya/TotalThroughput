@@ -6,7 +6,7 @@ Phase 2 is locked until the player completes Phase 1 calibration.
 
 | Phase | Role | Status |
 |---|---|---|
-| Phase 1 | Single-server calibration: player types to complete client requests | MVP overhaul |
+| Phase 1 | Single-server calibration plus calibrated one-minute difficulty runs | MVP overhaul |
 | Phase 2 | Multi-server dispatch: player routes queued requests to automatic workers | MVP overhaul |
 | Phase 3 | Workflow mode: task completions trigger downstream tasks | Planned, out of scope |
 
@@ -17,7 +17,7 @@ Phase 2 is locked until the player completes Phase 1 calibration.
 ### Purpose
 
 Introduce clients sending requests to one server, measure the player's baseline
-server service demand, and make response time intuitive:
+typing capacity, and make response time intuitive:
 
 ```
 response time = waiting time + service time
@@ -25,71 +25,83 @@ response time = waiting time + service time
 
 Phase 1 should show that queues form when arrivals approach service capacity,
 and that sustained overload can make response time grow rapidly. In a finite
-level, overload appears as backlog at the arrival-window end, long tail
-responses, and possibly work still waiting when observation ends.
+one-minute run, overload appears as rising queue length, longer response times,
+and work still waiting when observation ends.
 
 ### Flow
 
-* Before Phase 1 begins, a modal popup explains that clients send requests to a
-  server and the player is the server worker. Dismissed by any key or outside
-  click.
-* The player enters a sequence of short levels with fixed arrival rates.
-* The player completes client requests by typing short two-word strings.
-* Each level uses one constant Poisson arrival rate.
-* Later levels increase arrival rate to move from low load to near saturation
-  and then overload.
-* The system computes baseline capacity from completed typing work.
-* After Phase 1 ends, a post-phase popup explains the metrics seen and connects
-  them to real system concepts before the calibration results screen is shown.
+* Before Phase 1 begins, the Educational Manual explains the client request,
+  request queue, worker service, and response loop.
+* The player starts with a 30-second calibration typing test.
+* Calibration uses generated random-word rows: the visible five-row window
+  advances one whole row at a time as the player types.
+* Calibration computes a WPM baseline, a fixed WPM bin, and a service-demand
+  estimate that can tune request arrivals.
+* When calibration ends, a compact completion card shows WPM, accuracy, and
+  display bin. The player can recalibrate or continue to the Game Menu.
+* The player then sees four one-minute difficulty choices: Easy, Medium, Hard,
+  and Impossible. Their displayed WPM ranges are derived from the fixed WPM bin
+  table in `difficulty.md`.
+* Selecting a difficulty starts a 60-second single-server request run with one
+  constant Poisson arrival rate.
+* After a run, the player sees recorded metrics and returns to the difficulty
+  page. The player can try another difficulty or recalibrate.
 
 ### Typing Mechanic (monkeytype-style)
 
-* Each task is a multi-word string of server-performance vocabulary.
+* Calibration text is generated from random server-performance words and split
+  into display rows. As the cursor advances, earlier rows leave the window and
+  later rows enter; individual words should not slide upward independently.
+* Run requests are short typing tasks using server-performance vocabulary.
 * The player types character by character including spaces between words.
 * Incorrect characters are appended and shown in red.
 * Backspace removes the last typed character.
 * A task only completes when `typedContent.length === content.length` and every
   character matches.
-* Phase 1 should use S-heavy prompts so enough arrivals fit in each short
-  level.
+* Run requests should stay short enough that enough arrivals fit in each
+  one-minute run.
 
 ### Deadline Windows
 
 Phase 1 has no punitive drops or expirations. Tasks may remain queued when a
-trial ends; those tasks are reported as still waiting when observation ended,
-not as failed or dropped requests. Level success is based on enough completed
-samples and completed-sample response time, not clearing every arrival.
+run ends; those tasks are reported as still waiting when observation ended, not
+as failed or dropped requests.
 
 ### Duration
 
-Each level derives its arrival window from expected arrivals, then adds a drain
-tail. The drain tail is a tail-observation period for work created during the
-burst, not penalty time:
+Calibration lasts 30 seconds. Each calibrated difficulty run lasts 60 seconds.
+The run duration is the observation window: unfinished work at the end is
+reported as still waiting rather than drained or dropped.
 
 ```
-arrivalWindow = expectedArrivals / lambda
-levelDuration = arrivalWindow + drainTail
+calibrationDuration = 30s
+runDuration = 60s
 ```
 
-Target 12-16 expected arrivals per Phase 1 level. Keep most levels around
-35-60 seconds by using short S-only typing prompts.
+Target enough expected arrivals per one-minute run to show queue behavior
+without overwhelming the player:
+
+```
+expectedArrivals = lambda * 60s
+```
 
 ### Success Condition
 
-A Phase 1 level passes when:
-* enough tasks complete to estimate service demand
-* completed-sample average response time stays under the level threshold
-
-The player does not fail from drops or leftover backlog in Phase 1. Overload
-levels may be framed as demonstrations rather than required first-play gates.
+Calibration completes when the 30-second timer ends. A one-minute difficulty
+run completes when its timer ends. The player does not fail from drops or
+leftover backlog in Phase 1; overload is framed as observable capacity pressure.
 
 ### Output
 
-* Single-worker capacity estimate `lambda_max = 1 / D`
-* Completed-sample average service demand
-* Per-level max queue length
-* Waiting time and response time summary for served requests
-* Backlog at arrival-window end, tail completions, and still-waiting count
+* Calibration WPM, calibrated WPM bin, and service-demand estimate `D`
+* Average response time
+* Average service demand
+* Total throughput, as completed requests during the run
+* Average typing speed
+* Reaction speed
+* Observed utilization percent
+* Max queue length
+* Still-waiting count at the end of the observation window
 * Reference-load comparison using `rho ~= lambda * D`
 * Optional simple M/M/1 reference curve `R ~= D / (1 - rho)`, labeled as
   steady-state intuition rather than the finite-run response model

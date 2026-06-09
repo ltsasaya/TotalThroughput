@@ -64,9 +64,9 @@ export function CoreCard({ core, task, isFlashing, isFinalStretch, onDispatch }:
             <span className="truncate font-mono text-sm text-[color:var(--tt-text)]">{task.content ?? task.id}</span>
           </div>
 
-          <div className="h-2 w-full rounded-full bg-[color:var(--tt-surface-muted)]">
+          <div className="h-3 w-full border-[2px] border-black bg-white">
             <div
-              className="h-2 rounded-full bg-[color:var(--tt-accent)] transition-all duration-100"
+              className="h-full bg-[color:var(--tt-accent)] transition-all duration-100"
               style={{ width: `${core.progress * 100}%` }}
             />
           </div>

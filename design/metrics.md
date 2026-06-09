@@ -18,6 +18,19 @@ throughout the codebase.
 | **Actual Throughput** | Observed completed work under the player's real dispatch decisions |
 | **Still Waiting** | Admitted work that remains unfinished when the observation window ends |
 
+## WPM Convention
+
+WPM always means standard typing-test WPM, matching tools such as Monkeytype:
+
+```
+WPM = (characters / 5) / minutes
+```
+
+For calibration, use correct characters divided by five over the 30-second
+window. For completed request typing speed, use the completed prompt character
+count divided by five over active typing minutes. Do not calculate WPM by
+counting actual space-delimited words.
+
 ## Response Time Formula
 
 ```
@@ -53,3 +66,28 @@ The system must record event timestamps for:
 * Arrival-window end and observation-window end
 
 Without these timestamps the game cannot compute instructional metrics correctly.
+
+## Browser-Only Phase 1 Run Record
+
+Until API/database work resumes, each one-minute Phase 1 difficulty run should
+produce a frontend-owned record with these fields:
+
+| Field | Meaning |
+|---|---|
+| **Average response time** | Mean `completionTime - arrivalTime` for completed requests |
+| **Average service demand** | Mean active typing service time for completed requests, written as `D` |
+| **Total Throughput** | Count of completed requests during the 60-second run |
+| **Average typing speed** | Mean WPM while actively typing completed requests |
+| **Reaction speed** | Mean time from request activation to first keystroke |
+| **Utilization %** | Observed busy typing time divided by the 60-second run window |
+| **Max queue length** | Highest waiting queue length reached during the run |
+
+The browser record should also keep the calibrated WPM/bin, selected difficulty
+range, configured `lambda`, target load, arrival count, still-waiting count,
+seed, and any reference response-time value shown to the player. These fields
+are not persistence work yet; they keep the frontend record shape ready for the
+later server-owned model.
+
+Persisted playerbase dataset work is deferred. The browser record shape should
+be stable enough to migrate later, but no API or database call is part of the
+browser-only slice.

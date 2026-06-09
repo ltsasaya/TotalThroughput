@@ -131,9 +131,9 @@ export function MetricSections({
               return (
                 <div key={i} className="flex items-center gap-3">
                   <span className="w-12 shrink-0 text-xs text-[color:var(--tt-text-muted)]">W{i + 1}</span>
-                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-[color:var(--tt-surface-muted)]">
+                  <div className="h-4 flex-1 overflow-hidden border-[2px] border-black bg-white">
                     <div
-                      className={`h-full rounded-full ${coreBarColor(clamped)}`}
+                      className={`h-full ${coreBarColor(clamped)}`}
                       style={{ width: `${clamped * 100}%` }}
                     />
                   </div>

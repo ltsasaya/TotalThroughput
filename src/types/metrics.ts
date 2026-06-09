@@ -71,6 +71,34 @@ export interface Phase1Result {
   failed?: boolean                // legacy compatibility; Phase 1 no longer drops or overflows
 }
 
+export interface Phase1RunRecord {
+  id: string
+  difficultyKey: string
+  difficultyLabel: string
+  difficultyRangeLabel: string
+  calibrationWpm: number
+  calibrationRangeLabel: string
+  calibrationBinIndex: number
+  targetLoad: number
+  arrivalRate: number
+  expectedArrivals: number
+  arrivalCount: number
+  completedCount: number
+  totalThroughput: number
+  actualThroughput: number
+  averageResponseTime: number
+  averageServiceDemand: number
+  averageTypingSpeed: number
+  reactionSpeed: number
+  utilizationPercent: number
+  maxQueueLength: number
+  stillWaitingCount: number
+  durationMs: number
+  serviceDemandEstimateMs: number
+  referenceResponseTimeMs: number | null
+  seed: number
+}
+
 // Time-series data point (used in post-run graphs)
 export interface TimePoint {
   time: number    // ms since run start

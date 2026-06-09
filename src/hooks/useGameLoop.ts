@@ -12,7 +12,7 @@ export function useGameLoop(): void {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    const isRunning = phase === 'phase1' || phase === 'phase2'
+    const isRunning = phase === 'calibration' || phase === 'phase1' || phase === 'phase2'
 
     if (!isRunning) {
       if (intervalRef.current !== null) {

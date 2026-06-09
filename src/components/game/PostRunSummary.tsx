@@ -12,7 +12,7 @@ function WaitServiceBar({ waitResponseRatio }: { waitResponseRatio: number }) {
     <div className="mb-6">
       <SectionLabel className="mb-2">Response Time Breakdown</SectionLabel>
       <div className="tt-divider mb-3" />
-      <div className="mb-2 flex h-4 w-full overflow-hidden rounded-full bg-[color:var(--tt-surface-muted)]">
+      <div className="mb-2 flex h-5 w-full overflow-hidden border-[3px] border-black bg-white">
         <div className="h-full bg-[color:var(--tt-warning)]" style={{ width: `${waitResponseRatio * 100}%` }} />
         <div className="h-full flex-1 bg-[color:var(--tt-accent)]" />
       </div>

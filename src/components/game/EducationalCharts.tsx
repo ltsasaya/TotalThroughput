@@ -16,12 +16,12 @@ import { SectionLabel } from '@/components/ui/primitives'
 
 const TOOLTIP_STYLE = {
   background: 'var(--tt-surface-raised)',
-  border: '1px solid var(--tt-border)',
-  borderRadius: 8,
+  border: '3px solid var(--tt-border)',
+  borderRadius: 4,
   color: 'var(--tt-text)',
   fontSize: 11,
 }
-const GRID_STYLE = { strokeDasharray: '3 3', stroke: 'var(--tt-chart-grid)' }
+const GRID_STYLE = { strokeDasharray: '4 4', stroke: 'var(--tt-chart-grid)' }
 const AXIS_TICK = { fill: 'var(--tt-text-subtle)', fontSize: 11 }
 
 export interface Phase1Props {

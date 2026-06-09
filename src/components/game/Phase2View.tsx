@@ -39,7 +39,7 @@ export function Phase2View() {
     liveMetrics.avgServiceTime > 0 &&
     liveMetrics.avgWaitingTime / liveMetrics.avgServiceTime > 2.0
 
-  const gridClass = config.phase2CoreCount <= 4 ? 'grid-cols-2' : 'grid-cols-3'
+  const gridClass = config.phase2CoreCount <= 4 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'
 
   function handleCoreClick(coreId: number, isBusy: boolean) {
     if (isBusy) {
@@ -66,11 +66,11 @@ export function Phase2View() {
         isFinalStretch={isFinalStretch}
       />
 
-      <main className="flex flex-1 gap-4 overflow-hidden p-4">
+      <main className="grid flex-1 gap-4 overflow-y-auto p-3 lg:grid-cols-[210px_minmax(0,1fr)_230px] lg:overflow-hidden lg:p-4">
         <StatsPanel />
 
-        <div className="flex flex-1 flex-col gap-4">
-          <div className={`grid ${gridClass} gap-4 flex-1`}>
+        <div className="flex min-h-[560px] flex-col gap-4 lg:min-h-0">
+          <div className={`grid grid-cols-1 ${gridClass} gap-4 flex-1`}>
             {cores.map(core => {
               const task = core.currentTaskId ? (tasks[core.currentTaskId] ?? null) : null
               return (

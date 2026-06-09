@@ -1,8 +1,17 @@
 import type { TaskSize } from './task'
 
-export type GamePhase = 'idle' | 'phase1' | 'phase2' | 'postrun'
+export type GamePhase =
+  | 'idle'
+  | 'calibration'
+  | 'calibrationSummary'
+  | 'difficultySelect'
+  | 'phase1'
+  | 'phase1Summary'
+  | 'phase2'
+  | 'postrun'
 
 export type DifficultyMode = 'beginner' | 'standard' | 'hard' | 'theory'
+export type Phase1DifficultyKey = 'easy' | 'medium' | 'hard' | 'impossible'
 
 // Observable load regimes during a run
 export type LoadRegime = 'low' | 'moderate' | 'high'
@@ -31,6 +40,46 @@ export interface Phase1LevelConfig {
   responseThresholdMultiplier: number
   isGate: boolean
   isDemo: boolean
+}
+
+export interface WpmRange {
+  min: number
+  max: number
+  label: string
+}
+
+export interface CalibrationResult {
+  rawWpm: number
+  effectiveWpm: number
+  binIndex: number
+  wpmRange: WpmRange
+  correctChars: number
+  typedChars: number
+  accuracy: number
+  estimatedServiceDemandMs: number
+  reactionSpeedMs: number
+  durationMs: number
+}
+
+export interface Phase1DifficultyOption {
+  key: Phase1DifficultyKey
+  label: string
+  range: WpmRange
+  targetLoad: number
+  regime: 'low' | 'moderate' | 'near-saturation' | 'overload'
+  seed: number
+}
+
+export interface Phase1RunConfig {
+  difficulty: Phase1DifficultyOption
+  seed: number
+  lambda: number
+  targetLoad: number
+  expectedArrivals: number
+  arrivalWindowMs: number
+  serviceDemandMs: number
+  calibrationWpm: number
+  calibrationBinIndex: number
 }
 
 export interface Phase2SizeWeight {
