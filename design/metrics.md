@@ -16,7 +16,7 @@ throughout the codebase.
 | **Offered Load / Load Factor** | For one server, `rho ~= lambda * D`; for `c` workers, `lambda * D / c` |
 | **Ideal Throughput** | Expected throughput if all workers stayed fully busy with zero coordination cost |
 | **Actual Throughput** | Observed completed work under the player's real dispatch decisions |
-| **Still Waiting** | Admitted work that remains unfinished when the observation window ends |
+| **Unfinished Work** | Admitted work that remains incomplete when the observation window ends; excluded from completed throughput and completed-request averages |
 
 ## WPM Convention
 
@@ -80,13 +80,16 @@ produce a frontend-owned record with these fields:
 | **Average typing speed** | Mean WPM while actively typing completed requests |
 | **Reaction speed** | Mean time from request activation to first keystroke |
 | **Utilization %** | Observed busy typing time divided by the 60-second run window |
-| **Max queue length** | Highest waiting queue length reached during the run |
+| **Average queue length** | Time-average waiting queue length over the 60-second run window |
+| **Max queue length** | Highest waiting queue length reached during the run; retained as a diagnostic, not the primary teaching metric |
 
 The browser record should also keep the calibrated WPM/bin, selected difficulty
 range, configured `lambda`, target load, arrival count, still-waiting count,
-seed, and any reference response-time value shown to the player. These fields
-are not persistence work yet; they keep the frontend record shape ready for the
-later server-owned model.
+seed, and any reference response-time value shown to the player. The
+still-waiting or unfinished count is diagnostic only and must not be added to
+completed throughput, response time, service demand, typing speed, or reaction
+speed. These fields are not persistence work yet; they keep the frontend record
+shape ready for the later server-owned model.
 
 Persisted playerbase dataset work is deferred. The browser record shape should
 be stable enough to migrate later, but no API or database call is part of the

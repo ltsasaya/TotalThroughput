@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { CalibrationResult, Phase1DifficultyOption } from '../../types/game'
 import type { Task } from '../../types/task'
 import {
+  averageQueueLengthWithinWindow,
   buildPhase1RunConfig,
   buildPhase1RunRecord,
   busyTimeWithinWindow,
@@ -60,6 +61,7 @@ describe('buildPhase1RunConfig', () => {
     const second = generatePhase1RunArrivalSchedule(config)
     expect(first).toEqual(second)
     expect(first.every(arrival => arrival.arrivalTime < PHASE1_RUN_DURATION_MS)).toBe(true)
+    expect(first.every(arrival => arrival.size === 'M')).toBe(true)
   })
 })
 
@@ -106,6 +108,8 @@ describe('buildPhase1RunRecord', () => {
     expect(record.averageResponseTime).toBe(4_000)
     expect(record.reactionSpeed).toBe(100)
     expect(record.utilizationPercent).toBeCloseTo((busyTimeWithinWindow(tasks, 60_000) / 60_000) * 100)
+    expect(record.averageQueueLength).toBeCloseTo(1.05)
+    expect(record.averageQueueLength).toBeCloseTo(averageQueueLengthWithinWindow(tasks, 60_000))
     expect(record.maxQueueLength).toBe(2)
   })
 })

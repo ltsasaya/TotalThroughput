@@ -11,14 +11,12 @@ interface TopBarProps {
   remaining: number
   droppedCount?: number
   dropLimit?: number
-  queueLength?: number
-  queueLimit?: number
   score?: number
   latencyWarning?: boolean
   isFinalStretch?: boolean
 }
 
-export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength, queueLimit, score, latencyWarning, isFinalStretch }: TopBarProps) {
+export function TopBar({ label, remaining, droppedCount, dropLimit, score, latencyWarning, isFinalStretch }: TopBarProps) {
   const goHome = useGameStore(s => s.goHome)
   const goGameMenu = useGameStore(s => s.goGameMenu)
   const timerColor = isFinalStretch
@@ -37,12 +35,6 @@ export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength,
         : 'text-[color:var(--tt-text-muted)]'
 
   const showDrops = droppedCount !== undefined && dropLimit !== undefined
-  const showQueue =
-    queueLength !== undefined &&
-    (queueLimit === undefined || queueLength >= queueLimit * 0.7)
-  const queueColor = queueLimit !== undefined && queueLength !== undefined && queueLength >= queueLimit
-    ? 'text-[color:var(--tt-danger)]'
-    : 'text-[color:var(--tt-warning)]'
 
   return (
     <div className="retro-game-topbar">
@@ -60,12 +52,6 @@ export function TopBar({ label, remaining, droppedCount, dropLimit, queueLength,
         {showDrops && (
           <span className={`text-sm ${droppedColor}`}>
             Dropped: {droppedCount}/{dropLimit}
-          </span>
-        )}
-
-        {showQueue && (
-          <span className={`text-sm ${queueColor}`}>
-            Queue: {queueLimit === undefined ? queueLength : `${queueLength}/${queueLimit}`}
           </span>
         )}
 

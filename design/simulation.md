@@ -2,13 +2,14 @@
 
 ## Task Model
 
-Each task represents a server request with a unit of service demand. Tasks have
-variable size to produce realistic dispatch tradeoffs.
+Each task represents a server request with a unit of service demand. Current
+Phase 1 tasks are medium-length typing prompts and are not presented to players
+as size buckets.
 
 Each task has:
 * task ID
 * arrival time
-* estimated size bucket or type
+* optional legacy/future estimated size bucket or request type
 * true service demand
 * optional deadline or expiration time
 * assigned core ID
@@ -18,14 +19,20 @@ Each task has:
 
 ## Arrival Model
 
-Tasks arrive from a **seeded constant-rate Poisson process**. Each playable
-trial has one fixed arrival rate `lambda`; difficulty and level progression
-change `lambda` between trials, not during a trial.
+Current Phase 1 runs generate tasks from a seeded constant-rate Poisson
+process. Each playable trial has one fixed arrival rate `lambda`; difficulty
+changes `lambda` between trials, not during a trial.
 
 Inter-arrival times are sampled from an exponential distribution with mean
 `1 / lambda`. The full schedule is pre-generated from a replayable seed before
-the trial begins, sorted by arrival time, and stored with the run once
-persistence exists.
+the trial begins and sorted by arrival time.
+
+TODO-006 keeps the arrival and seed strategy under review. Poisson arrivals are
+useful because independent random arrivals approximate request traffic, but a
+proof-of-concept dataset should not rely on one narrow deterministic seed path.
+Collected runs should record seeds, and future data-collection work should
+consider more diverse seeds and multiple-run aggregation before making claims
+from the data.
 
 ### Trial sizing
 
@@ -37,23 +44,28 @@ trialDuration = expectedArrivals / lambda
 ```
 
 Minimum useful expected arrivals for teaching queue behavior is 12 per trial.
-Use 12-16 for Phase 1 and 16-24 for Phase 2 when task text is short enough.
-Below 12, Poisson count variance makes one run too noisy to interpret. Higher
-counts are better statistically but can make typing levels too long.
+Use 12-16 for Phase 1 when task text is short enough. Medium-length prompts
+produce a larger service-demand estimate and therefore lower arrival rates at
+the same target load. Below 12, Poisson count variance makes one run too noisy
+to interpret. Higher counts are better statistically but can make typing levels
+too long.
 
 Use fixed seeds for introductory/comparable runs where useful. Use random but
-replayable seeds for free play.
+replayable seeds, or another BOSS-approved diverse seed strategy, when the goal
+is data collection rather than a single comparable lesson.
 
 ### Task size distribution
 
-Task sizes are sampled independently of arrival times. Current Phase 1 uses
-S-only two-word request prompts so enough arrivals fit in each short level. Phase 2
-may use a wider S/M/L mix because automatic workers process assigned work.
+Current Phase 1 uses deterministic medium-length request prompts. The medium
+prompt length drives the calibration-derived service-demand estimate `D`, so
+the configured arrival rate recalculates through `lambda = targetLoad / D`.
+Do not present those requests to the player as `S`/`M`/`L` sizes. Any future
+request size or type model depends on a BOSS-approved plan.
 
 Phase 1 calibrated difficulty runs use a 60-second observation window. Work
-unfinished at the end is reported as still waiting rather than drained or
-dropped. Arrival rate, offered load, observed throughput, and busy fraction use
-the 60-second run as their denominator.
+unfinished at the end is tracked for diagnostics but excluded from completed
+throughput and completed-request averages. Arrival rate, offered load, observed
+throughput, and busy fraction use the 60-second run as their denominator.
 
 ### Calibration WPM bins
 
@@ -88,10 +100,9 @@ Levels should teach these load regimes:
 | Near saturation | 0.90-0.98 | Response time becomes sensitive to small bursts |
 | Overload | > 1.0 | Backlog at window end demonstrates capacity pressure |
 
-For a single serial server, `rho ~= lambda * D`. For `c` parallel server
-workers, `perWorkerLoad = lambda * D / c`. In Phase 1, `D` is estimated from
-completed served requests, so `rho` is a reference-load estimate rather than an
-exact busy fraction.
+For a single serial server, `rho ~= lambda * D`. In Phase 1, `D` is estimated
+from completed served requests, so `rho` is a reference-load estimate rather
+than an exact busy fraction.
 
 ## Phase 1 Service Model
 
@@ -107,8 +118,8 @@ typing-based single-server service rate.
 
 ### Difficulty-run outputs
 
-* Arrival count, served completions, still-waiting work, response time, service
-  demand, utilization, average typing speed, reaction speed, and max queue
+* Arrival count, served completions, unfinished work, response time, service
+  demand, utilization, average typing speed, reaction speed, and average queue
 * Single-worker reference capacity estimate `lambda_max = 1 / D`
 * Configured reference load `rho ~= lambda * D`
 * Observed finite-run metrics, kept separate from the reference response-time
@@ -123,34 +134,17 @@ Convert the player's measured calibration performance into mean service demand
 lambda = targetLoad / D
 ```
 
-Use `D` later as the processing-time basis for each automatic server worker if
-Phase 2 is reconnected to the calibrated flow.
+Do not use this `D` as a Phase 2 contract until BOSS defines the future Phase 2
+concept.
 
-## Phase 2 Service Model
+## Future Phase 2 Service Model
 
-Each server worker automatically processes assigned work at the baseline speed
-derived from Phase 1.
+The original Phase 2 server-pool service model is out of current scope. Treat
+existing Phase 2 implementation and notes as historical context only unless
+BOSS explicitly reuses them in a future Phase 2 plan.
 
-Phase 2 MVP builds one run from the selected difficulty and the Phase 1
-completed-sample service demand `D`. The configured arrival rate is:
-
-```
-lambda = targetPerWorkerLoad * workerCount / D
-```
-
-The browser pre-generates one seeded constant-rate Poisson schedule for the
-full 60-second Phase 2 arrival window. Beginner uses 4 workers at target
-per-worker load `0.50`, Standard uses 4 workers at `0.70`, Hard uses 6 workers
-at `0.85`, and Theory uses the Standard worker/load tuning with true service
-demand visible.
-
-Once a task is assigned to a core:
-* It begins service when the core becomes active on it.
-* It runs to completion.
-* It is not preempted.
-* It is not migrated.
-
-This produces a clean run-to-completion server-dispatch model.
+When Phase 2 resumes, define its arrival model, service model, metrics, and
+data-collection requirements from the new BOSS-approved concept.
 
 ## Reference Theory
 
@@ -166,7 +160,6 @@ The response curve above is simple stable M/M/1 intuition. Phase 1 itself is a
 finite-run approximation to an M/G/1 single-server queue with FCFS service:
 arrivals are Poisson, but player typing gives general, player-dependent service
 times. Gameplay summaries should present finite-window observations separately
-from steady-state reference intuition. Multi-worker summaries may use the rough
-capacity intuition `perWorkerLoad = lambda * D / c`, but exact M/M/c response
-time should not be claimed unless the implementation uses Erlang C or
-simulation-derived curves.
+from steady-state reference intuition. Future multi-worker or multi-resource
+summaries must define their own assumptions before using capacity or response
+time formulas.

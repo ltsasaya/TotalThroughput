@@ -33,14 +33,17 @@ determine the player's red-highlighted level.
 
 ## Instructional Popups
 
-Remaining modal popups gate later phase transitions. Each is dismissed by any
-keypress or outside click (card click does not dismiss).
+Remaining modal popups are legacy content unless the current player flow uses
+them. Each is dismissed by any keypress or outside click (card click does not
+dismiss).
 
 | Popup | Trigger | Content |
 |---|---|---|
-| postPhase1 | Phase 1 ends | Throughput, completed-sample service demand, served-client response time, backlog/still-waiting work, Little's Law reference |
-| prePhase2 | Player clicks "Start Phase 2" | The server now has a worker pool; idle workers = wasted capacity; FIFO dispatch |
-| postPhase2 | Phase 2 ends | Utilization, queueing delay (wait/service ratio), throughput ratio; how the server model generalizes to larger systems |
+| postPhase1 | Legacy Phase 1 completion | Throughput, completed-sample service demand, served-client response time, unfinished work, Little's Law reference |
+
+The original Phase 2 instructional popups are out of current scope. Do not use
+them as active product requirements unless BOSS reuses them in the future Phase
+2 concept.
 
 Manual content lives in `src/data/educationalManual.ts` and renders through
 `src/components/game/EducationalManual.tsx`. Popup content lives in
@@ -52,13 +55,14 @@ Manual content lives in `src/data/educationalManual.ts` and renders through
 Displayed during gameplay:
 * Queue length indicator
 * Current throughput
-* Arrival-window rate for the current level or Phase 2 run
-* Target Phase 2 per-worker load when in the server-pool run
-* Active worker utilization
-* Number of dropped tasks
-* (Phase 1) Completed sample count and still-waiting work
+* Arrival-window rate for the current run
+* Observed utilization
+* Completed sample count and unfinished work, if unfinished work remains shown
 * Latency warning when waiting time begins to spike
-* (Phase 1) Error count badge — number of incorrect characters in current task
+* (Phase 1) Character-level typing state: incorrect characters turn red, receive
+  a red underline, and the whole incorrect word receives a light red highlight.
+  The red underline makes incorrectly typed spaces visible. Do not show a
+  separate shifting error-count badge during the current run.
 
 ## Post-Run Summary
 
@@ -67,9 +71,7 @@ The game generates text explanations tied to the player's actual performance.
 ### Example explanations
 
 * "Your single-server service rate was high enough to keep the queue stable early in the run, but once sustained offered load approached capacity, waiting time increased rapidly."
-* "Some clients were still waiting when observation ended. That backlog is evidence of overload during the burst, not a dropped-request penalty."
-* "In Phase 2, ideal request throughput rose with the number of server workers, but actual throughput stayed lower because dispatch delay prevented full utilization."
-* "Your request queue remained nonempty while some workers were briefly idle, indicating a dispatcher bottleneck rather than a worker bottleneck."
+* "Some clients were unfinished when observation ended. Those requests are not counted in completed throughput or completed-request latency."
 
 ### Back-of-napkin derivation
 
@@ -86,7 +88,7 @@ Poisson arrivals, and the simple M/M/1 response curve. For one short stochastic
 run, phrase comparisons as "reference model" or "back-of-napkin estimate"
 rather than exact prediction. When a summary uses served-only response time,
 pair it with observed completion throughput `X` as `N_served ~= X R`; keep
-configured `lambda` for offered-load cards such as `lambda D / c`.
+configured `lambda` for offered-load cards such as `lambda D`.
 
 ## Optional Theory Overlay
 
@@ -94,6 +96,7 @@ Toggleable explanations for:
 * Arrival rate vs service rate
 * Why queue length matters
 * Why response time includes waiting time
-* Why more workers do not automatically guarantee low latency
+* Why added capacity does not automatically guarantee low latency, once a
+  future multi-resource or multi-worker phase is defined
 * Why p95/max response time can be worse than the average
 * How client request-response maps to systems beyond one server

@@ -27,6 +27,19 @@ function difficultyDescription(regime: Phase1DifficultyOption['regime']) {
   return 'Do you dare.'
 }
 
+function RunRecordMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="min-w-0">
+      <div className="tt-label">{label}</div>
+      <div className="truncate font-mono text-sm font-bold text-[color:var(--tt-text)]">{value}</div>
+    </div>
+  )
+}
+
+function queueLength(value: number | undefined): string {
+  return value !== undefined && Number.isFinite(value) ? value.toFixed(1) : '-'
+}
+
 function ManualIcon() {
   return (
     <svg
@@ -85,7 +98,7 @@ export function DifficultySelectView() {
                 <SectionLabel>Game menu</SectionLabel>
                 <h1 className="mt-2 text-3xl font-bold text-[color:var(--tt-text)]">Calibrate and Play</h1>
                 <p className="tt-copy mt-2 max-w-2xl">
-                  Your typing baseline sets your level availability. The following one-minute runs have different request arrival rates. Please try your best, you wouldn't want to leave your clients dissatisfied...
+                  Your typing baseline sets your level availability. The following one-minute runs have different request arrival rates, each designed to have an expected <span className="text-[color:var(--tt-danger)]">Utilization (U) percentage</span>.
                 </p>
               </div>
               <button
@@ -174,18 +187,20 @@ export function DifficultySelectView() {
           <Panel className="p-4">
             <SectionLabel className="mb-3">Browser-session run records</SectionLabel>
             <div className="grid gap-2">
-              {phase1RunRecords.slice(-4).map(record => (
+              {phase1RunRecords.slice(-4).reverse().map(record => (
                 <div
                   key={record.id}
-                  className="grid gap-2 border-[2px] border-black bg-white px-3 py-2 md:grid-cols-[1fr_auto_auto_auto] md:items-center"
+                  className="grid gap-4 border-[2px] border-black bg-white px-4 py-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] lg:items-center"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-bold text-[color:var(--tt-text)]">{record.difficultyLabel}</div>
-                    <div className="tt-label">{record.difficultyRangeLabel} WPM - load {Math.round(record.targetLoad * 100)}%</div>
+                    <div className="tt-label">{record.difficultyRangeLabel} WPM - configured load {Math.round(record.targetLoad * 100)}%</div>
                   </div>
-                  <span className="font-mono text-sm">{record.completedCount} done</span>
-                  <span className="font-mono text-sm">R {(record.averageResponseTime / 1000).toFixed(2)}s</span>
-                  <span className="font-mono text-sm">Q max {record.maxQueueLength}</span>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <RunRecordMetric label="Total Throughput" value={record.totalThroughput} />
+                    <RunRecordMetric label="Avg Response Time (R)" value={`${(record.averageResponseTime / 1000).toFixed(2)}s`} />
+                    <RunRecordMetric label="Avg Queue Length" value={queueLength(record.averageQueueLength)} />
+                  </div>
                 </div>
               ))}
             </div>

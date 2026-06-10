@@ -38,7 +38,7 @@
 
 | File | Description |
 |---|---|
-| `src/simulation/content.ts` | Task word pools (S/M/L), Phase 2 `generateTask(...)`, and Phase 1 two-word `generatePhase1Task(...)` |
+| `src/simulation/content.ts` | Task word pools (S/M/L), Phase 2 `generateTask(...)`, and Phase 1 medium-length `generatePhase1Task(...)` |
 | `src/simulation/arrival.ts` | Seeded constant-rate Poisson arrival schedule generator shared by phase run builders |
 | `src/simulation/calibration.ts` | Calibration random-word text, generated display rows, WPM bins, WPM calculation, and calibrated difficulty option derivation |
 | `src/simulation/phase1Levels.ts` | Phase 1 level table, fixed seeds, per-level durations, and Poisson schedule helper |
@@ -47,8 +47,8 @@
 | `src/simulation/phase1Tick.ts` | `computePhase1RunTick` — pure no-drop calibrated Phase 1 tick: Poisson arrivals, activation, live metrics, 60-second run-end flag |
 | `src/simulation/phase2Runs.ts` | Phase 2 server-pool run config builder — target per-worker load, measured-D lambda, seeds, size mix, and Poisson schedule helper |
 | `src/simulation/phase2Tick.ts` | `computePhase2Tick` — pure Phase 2 tick: arrivals, core progress, completion, idle waste, RunSummary + grade computation |
-| `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, Phase 1 two-word prompts, word count ranges per size, exact deadline values |
-| `src/simulation/__tests__/arrival.poisson.test.ts` | Unit tests — seeded Poisson arrival schedule determinism, bounds, expected count, S-only default, weighted mix, and invalid inputs |
+| `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, Phase 1 medium prompts, word count ranges per size, exact deadline values |
+| `src/simulation/__tests__/arrival.poisson.test.ts` | Unit tests — seeded Poisson arrival schedule determinism, bounds, expected count, default size bucket, weighted mix, and invalid inputs |
 | `src/simulation/__tests__/calibration.test.ts` | Unit tests — calibration WPM/binning, clamping, difficulty derivation, and row-window movement |
 | `src/simulation/__tests__/phase1Results.test.ts` | Unit tests — Phase 1 gate/demo result math and aggregate unlock rules |
 | `src/simulation/__tests__/phase1Runs.test.ts` | Unit tests — calibrated run lambda, deterministic run schedule, browser-only run record metrics |
@@ -108,8 +108,8 @@
 |---|---|
 | `design/design.md` | Design index — links to all spec files |
 | `design/overview.md` | Project overview, goals, MVP scope, success criteria |
-| `design/phases.md` | Phase 1 (calibration) and Phase 2 (scheduling) details |
-| `design/simulation.md` | Task model, arrival model, Phase 1 and 2 service models |
+| `design/phases.md` | Phase 1 calibration/runs and future Phase 2 scope boundary |
+| `design/simulation.md` | Task model, Phase 1 arrival/service model, and future Phase 2 boundary |
 | `design/interaction.md` | Player interaction model, dispatch mechanics |
 | `design/scoring.md` | Score formula and secondary performance grades |
 | `design/metrics.md` | Metric definitions (throughput, latency, utilization, etc.) |
@@ -118,5 +118,5 @@
 | `src/data/glossary.ts` | `GlossaryEntry` type + `GLOSSARY` array — all metric symbols, formulas, definitions |
 | `design/tech.md` | Stack choices and game loop architecture |
 | `design/ui.md` | App-wide visual system — product feel, stack/cost rule, color tokens, typography, layout, primitives, and screen rules |
-| `design/difficulty.md` | Beginner / standard / hard / theory mode differences |
+| `design/difficulty.md` | Calibrated Phase 1 difficulty bins, provisional offsets, and target loads |
 | `design/future.md` | Planned future features (Phase 3, preemption, migration) |

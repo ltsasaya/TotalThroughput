@@ -44,20 +44,56 @@ describe('initial state', () => {
 })
 
 describe('calibration flow', () => {
-  it('startGame opens the pre-calibration game menu', () => {
+  it('startGame opens the game menu with a temporary 100 WPM testing calibration', () => {
     getState().startGame('standard')
     expect(getState().phase).toBe('difficultySelect')
     expect(getState().gameStartTime).toBeNull()
     expect(getState().phaseElapsed).toBe(0)
-    expect(getState().calibrationResult).toBeNull()
-    expect(getState().phase1DifficultyOptions).toHaveLength(0)
+    expect(getState().calibrationResult?.rawWpm).toBe(100)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual([
+      'easy',
+      'medium',
+      'hard',
+      'impossible',
+    ])
+  })
+
+  it('goGameMenu opens the game menu with the same temporary testing calibration when no baseline exists', () => {
+    getState().goGameMenu()
+
+    expect(getState().phase).toBe('difficultySelect')
+    expect(getState().gameStartTime).toBeNull()
+    expect(getState().phaseElapsed).toBe(0)
+    expect(getState().calibrationResult?.rawWpm).toBe(100)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual([
+      'easy',
+      'medium',
+      'hard',
+      'impossible',
+    ])
+  })
+
+  it('startGame reuses an existing completed calibration and run records', () => {
+    completeCalibration()
+    const calibration = getState().calibrationResult
+    const options = getState().phase1DifficultyOptions.map(option => option.key)
+    getState().startCalibratedRun('medium')
+    getState().tick(getState().gameStartTime! + PHASE1_RUN_DURATION_MS)
+    expect(getState().phase1RunRecords).toHaveLength(1)
+
+    getState().goHome()
+    getState().startGame()
+
+    expect(getState().phase).toBe('difficultySelect')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual(options)
+    expect(getState().phase1RunRecords).toHaveLength(1)
   })
 
   it('does not start a calibrated run before calibration exists', () => {
-    getState().startGame('standard')
     getState().startCalibratedRun('easy')
 
-    expect(getState().phase).toBe('difficultySelect')
+    expect(getState().phase).toBe('idle')
     expect(getState().phase1RunConfig).toBeNull()
   })
 
@@ -287,6 +323,8 @@ describe('persistent navigation', () => {
 
   it('routes an active run to the game menu without recording the unfinished run', () => {
     startMediumRun()
+    const calibration = getState().calibrationResult
+    const options = getState().phase1DifficultyOptions.map(option => option.key)
     const runStart = getState().gameStartTime!
     const firstArrival = getState().arrivalSchedule[0]
     getState().tick(runStart + firstArrival.arrivalTime + 1)
@@ -294,21 +332,68 @@ describe('persistent navigation', () => {
     getState().goGameMenu()
 
     expect(getState().phase).toBe('difficultySelect')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual(options)
     expect(getState().phase1RunRecords).toHaveLength(0)
     expect(getState().phase1RunConfig).toBeNull()
     expect(getState().tasks).toEqual({})
     expect(getState().systemNotification).toBe("Current run wasn't saved.")
   })
 
-  it('routes an active run home and clears browser-session progress', () => {
+  it('routes an active run home while preserving completed calibration', () => {
     startMediumRun()
+    const calibration = getState().calibrationResult
+    const options = getState().phase1DifficultyOptions.map(option => option.key)
 
     getState().goHome()
 
     expect(getState().phase).toBe('idle')
-    expect(getState().calibrationResult).toBeNull()
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual(options)
     expect(getState().phase1RunRecords).toHaveLength(0)
     expect(getState().systemNotification).toBe("Current run wasn't saved.")
+  })
+
+  it('keeps completed calibration when going home then back to the game menu', () => {
+    completeCalibration()
+    getState().returnToDifficultySelect()
+    const calibration = getState().calibrationResult
+    const options = getState().phase1DifficultyOptions.map(option => option.key)
+
+    getState().goHome()
+    getState().goGameMenu()
+
+    expect(getState().phase).toBe('difficultySelect')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual(options)
+  })
+
+  it('keeps the previous completed calibration when recalibration is abandoned to the game menu', () => {
+    completeCalibration()
+    const calibration = getState().calibrationResult
+    const options = getState().phase1DifficultyOptions.map(option => option.key)
+
+    getState().startCalibration()
+    getState().typeCalibrationChar('b')
+    getState().goGameMenu()
+
+    expect(getState().phase).toBe('difficultySelect')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual(options)
+    expect(getState().calibrationTypedContent).toBe('')
+    expect(getState().systemNotification).toBe("Current calibration wasn't saved.")
+  })
+
+  it('keeps completed run records when going home then back to the game menu', () => {
+    startMediumRun()
+    getState().tick(getState().gameStartTime! + PHASE1_RUN_DURATION_MS)
+    expect(getState().phase1RunRecords).toHaveLength(1)
+
+    getState().goHome()
+    getState().goGameMenu()
+
+    expect(getState().phase).toBe('difficultySelect')
+    expect(getState().phase1RunRecords).toHaveLength(1)
   })
 
   it('clears system notifications on request', () => {

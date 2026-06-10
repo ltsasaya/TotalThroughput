@@ -91,6 +91,7 @@ export interface Phase1RunRecord {
   averageTypingSpeed: number
   reactionSpeed: number
   utilizationPercent: number
+  averageQueueLength: number
   maxQueueLength: number
   stillWaitingCount: number
   durationMs: number

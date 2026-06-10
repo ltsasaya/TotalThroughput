@@ -28,7 +28,8 @@ last bin, clamp to `180-200` for display until BOSS approves an expanded range.
 
 ## Calibrated Choices
 
-Let `i` be the calibrated bin index. The initial browser-only mapping is:
+Let `i` be the calibrated bin index. The current browser-only mapping is
+provisional while BOSS manually tests difficulty feel:
 
 | Choice | Displayed WPM range | Target load | Regime |
 |---|---|---:|---|
@@ -38,8 +39,9 @@ Let `i` be the calibrated bin index. The initial browser-only mapping is:
 | Impossible | `min(i + 2, last)` | 1.10 | Overload |
 
 The range label is educational context for the player. It should not be treated
-as an exact success/failure requirement. The configured arrival rate for one
-server worker is:
+as an exact success/failure requirement. BOSS may shift Hard to `i` and adjust
+the surrounding choices after manual testing. The configured arrival rate for
+one server worker is:
 
 ```
 lambda = targetLoad / D
@@ -47,13 +49,19 @@ lambda = targetLoad / D
 
 where `D` is the player's measured service demand from calibration.
 
+The current target loads are also provisional tuning values. They represent
+configured offered load, not a guarantee that observed utilization or completed
+throughput will match the same percentage in one finite stochastic run.
+
 ## Run Rules
 
 * Each selected difficulty lasts 60 seconds.
-* Each run uses one seeded constant-rate Poisson arrival schedule.
+* The current implementation uses one seeded constant-rate Poisson arrival
+  schedule; TODO-006 keeps the seed/data-collection strategy under review.
 * Requests are handled FIFO by the player as the single worker.
-* Phase 1 has no punitive drops. Unfinished requests at the end are reported as
-  still waiting.
+* Phase 1 has no punitive drops. Unfinished requests at the end are excluded
+  from completed throughput and completed-request averages; the display wording
+  remains under TODO-006 review.
 * After a run, return to the difficulty selection page so the player can try
   another difficulty or recalibrate.
 
@@ -65,6 +73,7 @@ reference, not an exact result for one finite 60-second typing run.
 
 ## Existing Phase 2 Labels
 
-The older `beginner`, `standard`, `hard`, and `theory` labels remain in source
-until Phase 2 is reconnected to the new player workflow. Do not use those labels
-for the new Phase 1 difficulty selection screen.
+The older `beginner`, `standard`, `hard`, and `theory` labels remain in dormant
+source for legacy compatibility. The original Phase 2 design is out of current
+scope. Do not use those labels for the new Phase 1 difficulty selection screen
+or for future Phase 2 planning unless BOSS explicitly reuses them.

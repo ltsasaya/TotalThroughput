@@ -2,6 +2,7 @@ import type { CalibrationResult, Phase1DifficultyKey, Phase1DifficultyOption, Ph
 import type { Phase1RunRecord } from '../types/metrics'
 import type { Task } from '../types/task'
 import { generatePoissonArrivalSchedule, type ScheduledArrival } from './arrival'
+import { PHASE1_PROMPT_SIZE } from './content'
 
 export const PHASE1_RUN_DURATION_MS = 60_000
 
@@ -44,6 +45,7 @@ export function generatePhase1RunArrivalSchedule(run: Phase1RunConfig): Schedule
     lambdaPerSecond: run.lambda,
     arrivalWindowMs: run.arrivalWindowMs,
     seed: run.seed,
+    sizeMix: [{ size: PHASE1_PROMPT_SIZE, weight: 1 }],
   })
 }
 
@@ -53,6 +55,21 @@ export function busyTimeWithinWindow(tasks: Record<string, Task>, durationMs: nu
     const end = Math.min(task.completionTime ?? durationMs, durationMs)
     return end > task.serviceStartTime ? sum + (end - task.serviceStartTime) : sum
   }, 0)
+}
+
+export function averageQueueLengthWithinWindow(tasks: Record<string, Task>, durationMs: number): number {
+  if (durationMs <= 0) return 0
+
+  const waitingMs = Object.values(tasks).reduce((sum, task) => {
+    const arrival = Math.min(Math.max(task.arrivalTime, 0), durationMs)
+    const waitEnd = task.serviceStartTime === undefined
+      ? durationMs
+      : Math.min(task.serviceStartTime, durationMs)
+
+    return waitEnd > arrival ? sum + (waitEnd - arrival) : sum
+  }, 0)
+
+  return waitingMs / durationMs
 }
 
 export function buildPhase1RunRecord({
@@ -107,6 +124,7 @@ export function buildPhase1RunRecord({
     averageTypingSpeed: avg(typingSpeeds),
     reactionSpeed: avg(reactionTimes),
     utilizationPercent: durationMs > 0 ? (busyTimeWithinWindow(tasks, durationMs) / durationMs) * 100 : 0,
+    averageQueueLength: averageQueueLengthWithinWindow(tasks, durationMs),
     maxQueueLength,
     stillWaitingCount: allTasks.filter(task => task.status !== 'completed').length,
     durationMs,

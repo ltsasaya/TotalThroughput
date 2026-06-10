@@ -75,6 +75,34 @@ const DEFAULT_METRICS: LiveMetrics = {
   targetPerWorkerLoad: 0,
 }
 
+// Temporary BOSS-requested run-testing bypass; remove before finalizing calibration.
+const TEMP_RUN_TESTING_CALIBRATION_WPM = 100
+
+function buildTemporaryRunTestingCalibration(): CalibrationResult {
+  const correctCharsForWpm = Math.round(TEMP_RUN_TESTING_CALIBRATION_WPM * 5 * (CALIBRATION_DURATION_MS / 60_000))
+  const typedContent = 'a'.repeat(correctCharsForWpm)
+  return calculateCalibrationResult({
+    text: typedContent,
+    typedContent,
+    firstKeystrokeTime: 0,
+  })
+}
+
+function resolveMenuCalibration(
+  calibrationResult: CalibrationResult | null,
+  phase1DifficultyOptions: Phase1DifficultyOption[],
+) {
+  const resolvedCalibration = calibrationResult ?? buildTemporaryRunTestingCalibration()
+  const resolvedOptions = calibrationResult && phase1DifficultyOptions.length > 0
+    ? phase1DifficultyOptions
+    : buildPhase1DifficultyOptions(resolvedCalibration)
+
+  return {
+    calibrationResult: resolvedCalibration,
+    phase1DifficultyOptions: resolvedOptions,
+  }
+}
+
 function buildConfig(difficulty: DifficultyMode, phase2ServiceDemandMs = 3_000): GameConfig {
   const phase2CoreCount = phase2WorkerCount(difficulty)
   const phase2Run = buildPhase2RunConfig(difficulty, phase2ServiceDemandMs)
@@ -285,6 +313,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   systemNotification: null,
 
   startGame: () => {
+    const state = get()
+    const hasCompletedCalibration = state.calibrationResult !== null
+    const menuCalibration = resolveMenuCalibration(state.calibrationResult, state.phase1DifficultyOptions)
     set({
       phase: 'difficultySelect',
       config: { ...DEFAULT_CONFIG, phase1Duration: PHASE1_RUN_DURATION_MS },
@@ -292,20 +323,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       calibrationText: initialCalibrationText,
       calibrationTypedContent: '',
       calibrationFirstKeystrokeTime: null,
-      calibrationResult: null,
-      phase1DifficultyOptions: [],
+      ...menuCalibration,
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
-      phase1RunRecords: [],
-      lastPhase1RunRecord: null,
+      phase1RunRecords: hasCompletedCalibration ? state.phase1RunRecords : [],
+      lastPhase1RunRecord: hasCompletedCalibration ? state.lastPhase1RunRecord : null,
       phase1MaxQueueLength: 0,
-      phase1Result: null,
+      phase1Result: hasCompletedCalibration ? state.phase1Result : null,
       systemNotification: null,
     })
   },
 
   goHome: () => {
-    const systemNotification = navigationInterruptionMessage(get().phase)
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
     set({
       phase: 'idle',
       config: DEFAULT_CONFIG,
@@ -313,23 +344,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       calibrationText: initialCalibrationText,
       calibrationTypedContent: '',
       calibrationFirstKeystrokeTime: null,
-      calibrationResult: null,
-      phase1DifficultyOptions: [],
+      calibrationResult: state.calibrationResult,
+      phase1DifficultyOptions: state.phase1DifficultyOptions,
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
-      phase1RunRecords: [],
-      lastPhase1RunRecord: null,
+      phase1RunRecords: state.phase1RunRecords,
+      lastPhase1RunRecord: state.lastPhase1RunRecord,
       phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
       currentPhase1LevelIndex: 0,
       phase1LevelResults: [],
       phase1MaxQueueLength: 0,
-      phase1Result: null,
+      phase1Result: state.phase1Result,
       systemNotification,
     })
   },
 
   goGameMenu: () => {
-    const systemNotification = navigationInterruptionMessage(get().phase)
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    const menuCalibration = resolveMenuCalibration(state.calibrationResult, state.phase1DifficultyOptions)
     set({
       phase: 'difficultySelect',
       config: { ...DEFAULT_CONFIG, phase1Duration: PHASE1_RUN_DURATION_MS },
@@ -337,6 +370,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       calibrationText: initialCalibrationText,
       calibrationTypedContent: '',
       calibrationFirstKeystrokeTime: null,
+      ...menuCalibration,
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
@@ -356,11 +390,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       calibrationText: buildCalibrationText(),
       calibrationTypedContent: '',
       calibrationFirstKeystrokeTime: null,
-      calibrationResult: null,
-      phase1DifficultyOptions: [],
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
-      lastPhase1RunRecord: null,
       phase1MaxQueueLength: 0,
       systemNotification: null,
     })

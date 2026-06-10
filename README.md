@@ -6,9 +6,10 @@ waits for service, and responses return. It then uses that server model to
 teach throughput, latency, utilization, overload, and systems performance more
 generally.
 
-Players build intuition before formulas. They first operate a single-server request
-queue, then use that measured service demand to dispatch work across multiple
-simulated server workers.
+Players build intuition before formulas. The current playable flow focuses on
+one server: calibrate typing capacity, choose a calibrated one-minute request
+run, and observe how arrival rate, service demand, queue length, utilization,
+throughput, and response time relate.
 
 ## Gameplay
 
@@ -21,15 +22,10 @@ worker needs to process one request.
 As arrival rate increases, queued tasks wait longer. If arrivals outpace
 service rate, backlog and response time grow.
 
-### Phase 2: Multi-Server Dispatch
+### Future Phase 2
 
-The player becomes the dispatcher for a server pool. They route requests from
-a shared queue to multiple automatic workers. The workers process at the
-service demand measured in Phase 1.
-
-This phase teaches why parallel servers increase capacity, why latency rises
-near saturation, and why keeping every worker busy is not the same thing as
-keeping response time low.
+The previous multi-server dispatch concept is deferred. A new Phase 2 concept
+will be planned separately after the current Phase 1 path is stable.
 
 ## Model
 
@@ -38,15 +34,16 @@ larger systems:
 
 - Worker: core, thread, process, or server.
 - Queue: request backlog.
-- Dispatcher: policy for assigning queued requests to available workers.
+- Dispatcher: future policy surface for assigning queued requests to available
+  workers.
 - Arrival rate: incoming work over time.
 - Service rate: completed work capacity over time.
 - Response time: waiting time plus service time.
 
 The model is intentionally simplified for teaching. It does not currently model
-preemption, migration, context-switch costs, caches, networking, I/O, or memory
-pressure. Dispatch is FIFO and service is deterministic in the current
-playable model.
+preemption, migration, context-switch costs, caches, networking, I/O, memory
+pressure, or multi-worker dispatch in the active player flow. Current Phase 1
+service is the player's typed work on one request at a time.
 
 ## Project Direction
 

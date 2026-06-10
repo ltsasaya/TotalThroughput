@@ -2,7 +2,7 @@
 
 This guide is the source of truth for Total Throughput's app-wide visual
 direction. It covers color, typography, spacing, component treatment, and visual
-composition. It does not change Phase 2 gameplay, dispatch rules, metrics, or
+composition. It does not define future Phase 2 gameplay, metrics, or
 simulation behavior.
 
 ## Product Feel
@@ -48,7 +48,8 @@ into the start-page -> Educational Manual -> play workflow.
 - Do not add fonts, image assets, icon libraries, animation packages, component
   kits, hosted services, or paid visual tooling for this revamp.
 - Gameplay and results screens should use the same monochrome lab language.
-  Phase 2 remains style-compatibility only until BOSS approves gameplay changes.
+  The original Phase 2 is out of current scope until BOSS supplies a new
+  concept and approves a question-first plan.
 - The current approved workflow shows an Educational Manual after `Play` and
   before active play begins. The manual becomes the primary educational
   backbone for introducing the game context and purpose.
@@ -150,7 +151,6 @@ visual rules across multiple components.
 - Keep the network responsive with square hub clusters and small satellite
   nodes. Hubs should not connect directly to other hubs; each hub may send one
   faint line toward the actual center of the `Play` button.
-- Keep the learning sections visually separated after the first viewport.
 
 ### Educational Manual
 
@@ -220,13 +220,6 @@ visual rules across multiple components.
   players can reopen the Educational Manual without putting Manual inside the
   Baseline panel.
 
-### Learning Sections
-
-- Use the request-flow metaphor before formulas.
-- Keep formulas visually distinct and label caveats plainly.
-- Do not present `R ~= D / (1 - rho)` as an exact Phase 1 result.
-- Prefer compact bordered rows and formula callouts over dark cards.
-
 ### Phase 1 Play
 
 - Phase 1 now starts with a 30-second calibration screen. Keep it visually
@@ -241,21 +234,31 @@ visual rules across multiple components.
   without implying the range is an exact pass/fail requirement.
 - After each 60-second run, show a compact run summary and return controls:
   continue to difficulty selection or recalibrate.
-- The active request sits in a bounded workbench panel.
-- Typing text is the dominant element in the center.
-- Stats and queue collapse into stacked panels on smaller screens.
-- Show queue age, task size, current progress, and typing error state without
-  moving the layout.
-- Use rectangular progress tracks and bounded queue rows. Preserve the existing
-  keyboard and queue mechanics.
+- The active request and waiting queue sit in one bounded workbench panel.
+- Typing text is the dominant element in the center. The active typing task is
+  position-anchored at the workbench center; waiting requests render in a
+  separate fixed slot immediately beneath it, similar to the calibration row
+  stack, so queue arrivals never push the active task upward.
+- Show up to five queued requests below the active task. Each queued row shows
+  the request text and its elapsed response time so far. If more are waiting,
+  show a muted overflow row below the fifth request.
+- Stats collapse below the workbench on smaller screens.
+- Show queue age and typing error state without moving the layout. Do not show
+  `S`/`M`/`L` size chips for current Phase 1 requests.
+- Do not show a Phase 1 progress bar or separate error-count badge. Incorrect
+  characters turn red, receive a red underline, and the whole incorrect word
+  receives a light red highlight. The red underline is required so incorrectly
+  typed spaces are visible.
+- Preserve the existing keyboard, queue, arrival-rate, task-length, and metric
+  mechanics during this UI pass.
 
-### Phase 2 Play
+### Future Phase 2
 
-- Phase 2 receives the same palette, panels, badges, and chart treatment.
-- This visual pass must not change dispatch rules, worker assignment, arrival
-  generation, service demand, or debrief math.
-- Phase 2 polish beyond style compatibility remains deferred until BOSS
-  promotes it.
+- Do not add or tune Phase 2 UI until BOSS supplies the new Phase 2 concept.
+- When Phase 2 resumes, reuse the same restrained lab language unless BOSS
+  approves a different visual direction.
+- Define the future Phase 2 workflow, interaction model, metrics, and debrief
+  requirements before editing UI components.
 
 ### Results And Debriefs
 

@@ -1,4 +1,4 @@
-// Task size bucket shown to the player (coarse estimate)
+// Legacy coarse task-size bucket. Current Phase 1 does not show this to players.
 export type TaskSize = 'S' | 'M' | 'L'
 
 export type TaskStatus =
@@ -28,7 +28,7 @@ export interface TaskEvent {
 export interface Task {
   id: string
   arrivalTime: number          // ms since game start
-  size: TaskSize               // coarse size shown to player
+  size: TaskSize               // legacy coarse size bucket; hidden in current Phase 1
   trueServiceDemand: number    // ms — actual processing time (hidden in standard mode)
   deadline?: number            // optional expiration time, ms since game start
   status: TaskStatus

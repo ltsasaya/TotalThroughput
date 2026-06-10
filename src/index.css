@@ -800,6 +800,7 @@ a:focus-visible {
 .calibration-summary-card {
   max-width: 34rem;
   padding: 1.45rem;
+  transform: translateY(clamp(-48px, -4vh, -24px));
   width: min(100%, 34rem);
 }
 

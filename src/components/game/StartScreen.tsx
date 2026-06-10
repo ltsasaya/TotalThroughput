@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import { LearnSection } from './LearnSection'
 import { RetroHeader } from './RetroHeader'
 
 interface NetworkNode {
@@ -213,7 +212,6 @@ export function StartScreen() {
         </main>
       </section>
 
-      <LearnSection />
     </div>
   )
 }

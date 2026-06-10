@@ -105,13 +105,13 @@ export function FormulaCallout({
   className,
 }: {
   formula: ReactNode
-  caption: ReactNode
+  caption?: ReactNode
   className?: string
 }) {
   return (
     <div className={cx('tt-formula px-4 py-3', className)}>
       <div className="font-mono text-sm" style={{ color: 'var(--tt-info)' }}>{formula}</div>
-      <div className="tt-label mt-1">{caption}</div>
+      {caption && <div className="tt-label mt-1">{caption}</div>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
-import { MetricItem, Panel, SectionLabel, SizeBadge, StatusBadge } from '@/components/ui/primitives'
+import { MetricItem, Panel, SectionLabel } from '@/components/ui/primitives'
 import { TopBar } from './TopBar'
 
 function waitColor(ms: number): string {
@@ -39,11 +39,8 @@ export function Phase1View() {
   const content = activeTask?.content ?? ''
   const typedContent = activeTask?.typedContent ?? ''
   const remaining = config.phase1Duration - phaseElapsed
-  const activeCount = activeTask ? 1 : 0
-  const stillWaiting = queue.length + activeCount
-
-  // Count active errors for the badge
-  const errorCount = [...typedContent].filter((c, i) => c !== content[i]).length
+  const visibleQueue = queue.slice(0, 5)
+  const hiddenQueueCount = Math.max(0, queue.length - visibleQueue.length)
 
   // Group characters by word to prevent mid-word line breaks
   interface CharEntry { char: string; idx: number }
@@ -59,6 +56,22 @@ export function Phase1View() {
   }
   if (currentWord.length > 0) wordGroups.push(currentWord)
 
+  function typedCharClass(char: string, idx: number): string {
+    let cls = 'font-mono text-2xl font-bold'
+    if (idx < typedContent.length) {
+      if (typedContent[idx] === char) {
+        cls += ' text-[color:var(--tt-success)]'
+      } else {
+        cls += ' text-[color:var(--tt-danger)] underline decoration-[color:var(--tt-danger)] decoration-[3px] underline-offset-4'
+      }
+    } else if (idx === typedContent.length) {
+      cls += ' text-[color:var(--tt-text)] underline underline-offset-4'
+    } else {
+      cls += ' text-[color:var(--tt-text-subtle)]'
+    }
+    return cls
+  }
+
   return (
     <div className="app-shell flex h-screen flex-col">
       <TopBar
@@ -66,20 +79,16 @@ export function Phase1View() {
           ? `${phase1RunConfig.difficulty.label}: ${phase1RunConfig.difficulty.range.label} WPM`
           : 'Phase 1 Run'}
         remaining={remaining}
-        queueLength={liveMetrics.queueLength}
       />
 
-      <main className="grid flex-1 gap-4 overflow-y-auto p-3 lg:grid-cols-[220px_minmax(0,1fr)_260px] lg:overflow-hidden lg:p-4">
+      <main className="grid flex-1 gap-4 overflow-y-auto p-3 lg:grid-cols-[220px_minmax(0,1fr)] lg:overflow-hidden lg:p-4">
         <Panel className="order-2 flex flex-col gap-4 p-4 lg:order-1 lg:h-full lg:overflow-hidden">
           <div>
             <SectionLabel>Stats</SectionLabel>
-            <div className="mt-2 font-mono text-xs text-[color:var(--tt-info)]">
-              One server worker - finite 60s observation
-            </div>
           </div>
           <div className="tt-scrollbar grid grid-cols-2 gap-4 lg:grid-cols-1 lg:overflow-y-auto">
             <StatBlock
-              label="Completed"
+              label="Total Throughput"
               value={String(liveMetrics.completedCount)}
             />
             <StatBlock label="Served Rate X" value={`${liveMetrics.throughput.toFixed(2)}/s`} />
@@ -87,13 +96,9 @@ export function Phase1View() {
               label="Arrival λ"
               value={phase1RunConfig ? `${phase1RunConfig.lambda.toFixed(2)}/s` : '—'}
             />
-            <StatBlock
-              label="Ref Load ρ"
-              value={phase1RunConfig ? `${Math.round(phase1RunConfig.targetLoad * 100)}%` : '—'}
-            />
             <StatBlock label="Avg Service D" value={`${(liveMetrics.avgServiceTime / 1000).toFixed(1)}s`} />
             <StatBlock
-              label="Served Avg R"
+              label="Avg Response Time (R)"
               value={liveMetrics.avgResponseTime > 0
                 ? `${(liveMetrics.avgResponseTime / 1000).toFixed(1)}s`
                 : '—'}
@@ -111,117 +116,91 @@ export function Phase1View() {
                 : '—'}
             />
             <StatBlock
-              label="Utilization"
+              label="Utilization (U)"
               value={liveMetrics.perCoreUtilization[0] !== undefined
                 ? `${Math.round(liveMetrics.perCoreUtilization[0] * 100)}%`
                 : '—'}
             />
-            <StatBlock label="Max Queue" value={String(phase1MaxQueueLength)} />
-            <StatBlock label="Still Waiting" value={String(stillWaiting)} />
+            <StatBlock label="Peak Queue" value={String(phase1MaxQueueLength)} />
           </div>
         </Panel>
 
-        <Panel className="order-1 flex min-h-[360px] flex-col p-5 lg:order-2 lg:h-full">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <SectionLabel>Workbench</SectionLabel>
-              <div className="mt-1 text-sm font-semibold text-[color:var(--tt-text)]">
-                {activeTask ? 'Service current request' : 'Awaiting next request'}
-              </div>
-            </div>
-            <StatusBadge tone={activeTask ? 'success' : 'neutral'}>
-              {activeTask ? 'busy' : 'idle'}
-            </StatusBadge>
+        <Panel className="order-1 flex min-h-[640px] flex-col p-5 lg:order-2 lg:h-full">
+          <div className="mb-4">
+            <SectionLabel>Worker</SectionLabel>
           </div>
 
-          <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="relative flex flex-1 overflow-hidden text-center">
             {!activeTask ? (
-              <p className="tt-muted text-xl">Waiting for requests...</p>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="tt-muted text-xl">Waiting for requests...</p>
+              </div>
             ) : (
               <>
-                <div className="mb-5 flex items-center justify-center gap-3">
-                  <SizeBadge size={activeTask.size} />
-                  {errorCount > 0 && (
-                    <StatusBadge tone="danger">{errorCount} error{errorCount > 1 ? 's' : ''}</StatusBadge>
-                  )}
-                </div>
-
-                <div className="flex max-w-3xl flex-wrap justify-center leading-relaxed">
+                <div
+                  className="absolute top-1/2 left-1/2 flex w-full -translate-x-1/2 -translate-y-1/2 justify-center px-4"
+                  data-testid="phase1-active-task-anchor"
+                >
+                  <div className="flex max-w-3xl flex-wrap justify-center leading-relaxed">
                   {wordGroups.map((group, wi) => {
                     const isSpace = group.length === 1 && group[0].char === ' '
                     if (isSpace) {
                       const { idx } = group[0]
-                      let cls = 'font-mono text-2xl font-bold'
-                      if (idx < typedContent.length) {
-                        cls += typedContent[idx] === ' ' ? ' text-[color:var(--tt-success)]' : ' text-[color:var(--tt-danger)]'
-                      } else if (idx === typedContent.length) {
-                        cls += ' text-[color:var(--tt-text)] underline underline-offset-4'
-                      } else {
-                        cls += ' text-[color:var(--tt-text-subtle)]'
-                      }
-                      return <span key={wi} className={cls}>{'\u00A0'}</span>
+                      return <span key={wi} className={typedCharClass(' ', idx)}>{'\u00A0'}</span>
                     }
+                    const wordHasError = group.some(({ char, idx }) => idx < typedContent.length && typedContent[idx] !== char)
                     return (
-                      <span key={wi} className="inline-flex whitespace-nowrap">
+                      <span
+                        key={wi}
+                        className={`inline-flex whitespace-nowrap px-1 ${wordHasError ? 'bg-[color:var(--tt-danger-soft)]' : 'bg-transparent'}`}
+                        >
                         {group.map(({ char, idx }) => {
-                          let cls = 'font-mono text-2xl font-bold'
-                          if (idx < typedContent.length) {
-                            cls += typedContent[idx] === char ? ' text-[color:var(--tt-success)]' : ' text-[color:var(--tt-danger)]'
-                          } else if (idx === typedContent.length) {
-                            cls += ' text-[color:var(--tt-text)] underline underline-offset-4'
-                          } else {
-                            cls += ' text-[color:var(--tt-text-subtle)]'
-                          }
-                          return <span key={idx} className={cls}>{char}</span>
+                          return <span key={idx} className={typedCharClass(char, idx)}>{char}</span>
                         })}
                       </span>
                     )
                   })}
+                  </div>
                 </div>
 
-                <div className="mt-5 h-3 w-full border-[3px] border-black bg-white">
-                  <div
-                    className="h-full bg-[color:var(--tt-success)] transition-all"
-                    style={{ width: content.length > 0 ? `${(typedContent.length / content.length) * 100}%` : '0%' }}
-                  />
+                <div
+                  className="absolute top-[calc(50%+3.75rem)] left-1/2 flex w-full max-w-3xl -translate-x-1/2 flex-col gap-1 px-4"
+                  data-testid="phase1-queue-stack"
+                >
+                  {visibleQueue.map((id, index) => {
+                    const t = tasks[id]
+                    if (!t) return null
+                    const waitMs = phaseElapsed - t.arrivalTime
+                    return (
+                      <div
+                        key={id}
+                        className="grid min-h-10 grid-cols-[5rem_minmax(0,1fr)_5rem] items-center justify-center gap-3 px-2"
+                      >
+                        <span className={`text-right font-mono text-sm font-bold whitespace-nowrap ${waitColor(waitMs)}`}>
+                          {(waitMs / 1000).toFixed(1)}s
+                        </span>
+                        <span className="truncate text-center font-mono text-[1.35rem] font-bold leading-8 text-[color:var(--tt-text-subtle)]">
+                          {t.content ?? t.id}
+                        </span>
+                        <span className="text-left font-mono text-xs font-bold text-[color:var(--tt-text-subtle)]">
+                          {index === 0 ? `Queue ${queue.length}` : ''}
+                        </span>
+                      </div>
+                    )
+                  })}
+                  {hiddenQueueCount > 0 && (
+                    <div className="grid min-h-10 grid-cols-[5rem_minmax(0,1fr)_5rem] items-center justify-center gap-3 bg-[color:var(--tt-surface-muted)] px-2">
+                      <span />
+                      <span className="truncate text-center font-mono text-[1.35rem] font-bold leading-8 text-[color:var(--tt-text-subtle)]">
+                        +{hiddenQueueCount} more waiting
+                      </span>
+                      <span />
+                    </div>
+                  )}
                 </div>
               </>
             )}
           </div>
-        </Panel>
-
-        <Panel className="order-3 flex flex-col p-4 lg:h-full lg:overflow-hidden">
-          <div className="flex items-center mb-3">
-            <SectionLabel>Queue</SectionLabel>
-            <StatusBadge className="ml-2">{queue.length}</StatusBadge>
-          </div>
-          {queue.length === 0 ? (
-            <div className="flex min-h-24 flex-1 items-center justify-center">
-              <span className="tt-muted text-sm">No requests waiting</span>
-            </div>
-          ) : (
-            <div className="tt-scrollbar flex max-h-56 flex-1 flex-col gap-1.5 overflow-y-auto lg:max-h-none">
-              {queue.map((id) => {
-                const t = tasks[id]
-                if (!t) return null
-                const waitMs = phaseElapsed - t.arrivalTime
-                return (
-                  <div
-                    key={id}
-                    className="flex items-center gap-2 border-[2px] border-black bg-[color:var(--tt-surface-raised)] p-2"
-                  >
-                    <SizeBadge size={t.size} />
-                    <span className="flex-1 truncate font-mono text-xs text-[color:var(--tt-text-muted)]">
-                      {t.content ?? t.id}
-                    </span>
-                    <span className={`text-xs whitespace-nowrap ${waitColor(waitMs)}`}>
-                      {(waitMs / 1000).toFixed(1)}s
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
         </Panel>
       </main>
     </div>

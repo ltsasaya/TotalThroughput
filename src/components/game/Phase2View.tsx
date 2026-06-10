@@ -59,8 +59,6 @@ export function Phase2View() {
         remaining={remaining}
         droppedCount={liveMetrics.droppedCount}
         dropLimit={config.dropLimit}
-        queueLength={liveMetrics.queueLength}
-        queueLimit={config.queueSizeLimit}
         score={score}
         latencyWarning={latencyWarning}
         isFinalStretch={isFinalStretch}
