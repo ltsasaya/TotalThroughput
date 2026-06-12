@@ -76,7 +76,7 @@ export function Phase1View() {
     <div className="app-shell flex h-screen flex-col">
       <TopBar
         label={phase1RunConfig
-          ? `${phase1RunConfig.difficulty.label}: ${phase1RunConfig.difficulty.range.label} WPM`
+          ? `${phase1RunConfig.difficulty.label}: expected arrival ${phase1RunConfig.lambda.toFixed(2)}/s`
           : 'Phase 1 Run'}
         remaining={remaining}
       />
@@ -164,7 +164,7 @@ export function Phase1View() {
                 </div>
 
                 <div
-                  className="absolute top-[calc(50%+3.75rem)] left-1/2 flex w-full max-w-3xl -translate-x-1/2 flex-col gap-1 px-4"
+                  className="absolute top-[calc(50%+2.25rem)] left-1/2 flex w-full max-w-3xl -translate-x-1/2 flex-col gap-1 px-4"
                   data-testid="phase1-queue-stack"
                 >
                   {visibleQueue.map((id, index) => {

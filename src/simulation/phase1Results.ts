@@ -2,6 +2,7 @@ import type { Phase1LevelConfig } from '../types/game'
 import type { Phase1LevelResult, Phase1Result } from '../types/metrics'
 import type { Task } from '../types/task'
 import { phase1LevelDurationMs } from './phase1Levels'
+import { observedInGameWpm } from './phase1Runs'
 
 const FALLBACK_SERVICE_MS = 3_000
 const MIN_AGGREGATE_COMPLETIONS = 8
@@ -49,11 +50,8 @@ export function buildPhase1LevelResult(
     .filter(t => t.firstKeystrokeTime !== undefined && t.serviceStartTime !== undefined)
     .map(t => t.firstKeystrokeTime! - t.serviceStartTime!)
   const typingSpeeds = completed
-    .filter(t => t.firstKeystrokeTime !== undefined && t.completionTime !== undefined)
-    .map((t) => {
-      const typingMs = t.completionTime! - t.firstKeystrokeTime!
-      return typingMs > 0 ? ((t.content ?? '').length / 5) / (typingMs / 60_000) : 0
-    })
+    .filter(t => t.serviceStartTime !== undefined && t.completionTime !== undefined)
+    .map(observedInGameWpm)
 
   const avgServiceTime = avg(serviceTimes)
   const avgResponseTime = avg(responseTimes)

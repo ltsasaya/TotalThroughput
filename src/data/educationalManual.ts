@@ -12,7 +12,7 @@ export interface ManualPage {
   diagram?: 'request-response' | 'queue' | 'typing-run'
 }
 
-export const DEFAULT_PLAYER_NAME = 'Player Name'
+export const DEFAULT_PLAYER_NAME = 'you'
 
 export function resolvePlayerName(playerName?: string) {
   const trimmedName = playerName?.trim()

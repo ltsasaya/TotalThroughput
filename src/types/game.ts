@@ -6,6 +6,13 @@ export type GamePhase =
   | 'calibrationSummary'
   | 'difficultySelect'
   | 'simulationLab'
+  | 'concurrencyRaceSample'
+  | 'auth'
+  | 'profile'
+  | 'instructorDashboard'
+  | 'classDashboard'
+  | 'joinClass'
+  | 'globalData'
   | 'phase1'
   | 'phase1Summary'
   | 'phase2'
@@ -67,7 +74,7 @@ export interface Phase1DifficultyOption {
   label: string
   range: WpmRange
   targetLoad: number
-  regime: 'low' | 'moderate' | 'near-saturation' | 'overload'
+  regime: 'low' | 'moderate' | 'high' | 'near-saturation' | 'overload'
   seed: number
 }
 

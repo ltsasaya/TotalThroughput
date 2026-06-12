@@ -3,7 +3,7 @@ import type { LiveMetrics } from '../types/metrics'
 import type { Task } from '../types/task'
 import type { ScheduledArrival } from './arrival'
 import { generatePhase1Task } from './content'
-import { busyTimeWithinWindow, PHASE1_RUN_DURATION_MS } from './phase1Runs'
+import { busyTimeWithinWindow, observedInGameWpm, PHASE1_RUN_DURATION_MS } from './phase1Runs'
 
 export interface Phase1RunTickInput {
   tasks: Record<string, Task>
@@ -82,10 +82,7 @@ export function computePhase1RunTick(state: Phase1RunTickInput, elapsed: number)
     avgReactionSpeed = avg(tasksWithKeystroke.map(task => task.firstKeystrokeTime! - task.serviceStartTime!))
     avgTypingSpeed = avg(tasksWithKeystroke
       .filter(task => task.completionTime !== undefined)
-      .map((task) => {
-        const typingMs = task.completionTime! - task.firstKeystrokeTime!
-        return typingMs > 0 ? ((task.content ?? '').length / 5) / (typingMs / 60_000) : 0
-      }))
+      .map(observedInGameWpm))
   }
 
   const boundedElapsed = Math.min(elapsed, PHASE1_RUN_DURATION_MS)

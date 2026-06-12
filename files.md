@@ -25,6 +25,13 @@
 | `src/types/core.ts` | `Core`, `CoreStatus` — internal worker/core model |
 | `src/types/game.ts` | `GamePhase`, legacy `DifficultyMode`, calibrated Phase 1 difficulty/result/config types, Phase 2 run config, `GameConfig` |
 | `src/types/metrics.ts` | `LiveMetrics`, browser-only `Phase1RunRecord`, legacy `Phase1Result`, `RunSummary`, `GradeLevel`, `TimePoint` |
+| `src/types/account.ts` | Account, profile, instructor dashboard, class dashboard, join-class, and global-data DTO types |
+
+## API Client
+
+| File | Description |
+|---|---|
+| `src/api/client.ts` | Same-origin JSON fetch wrapper with credentials, auth/profile/class/global-data calls, and signed-in activity/run persistence helpers |
 
 ## Store
 
@@ -32,9 +39,42 @@
 |---|---|
 | `src/store/gameStore.ts` | Zustand store — browser-only calibration, difficulty selection, calibrated Phase 1 runs, Phase 2 compatibility, persistent navigation, typing/tick/reset actions |
 | `src/store/simulationLabStore.ts` | Zustand store — local simulation lab inputs, active graph series, latest seeded run, recent seed records, and validation errors |
+| `src/store/accountStore.ts` | Zustand account store — current user bootstrap, sign-in/register/sign-out state, and auth errors |
 | `src/store/__tests__/gameStore.test.ts` | Unit tests — calibration, difficulty selection, calibrated Phase 1 run transitions, run records, persistent navigation, reset |
 | `src/store/__tests__/gameStore.phase2.test.ts` | Unit tests — Phase 2: startPhase2, dispatchTask, core progress, completion, metrics, end condition |
-| `src/store/__tests__/simulationLabStore.test.ts` | Unit tests — Simulation Lab store starts without an auto-run and computes only after Run |
+| `src/store/__tests__/simulationLabStore.test.ts` | Unit tests — Simulation Lab store starts without an auto-run and reports successful Run calls for activity counting |
+
+## Server
+
+| File | Description |
+|---|---|
+| `server/index.ts` | Local Node API entry point on `PORT` or 8787 |
+| `server/app.ts` | API route registration, request dispatch, safe error responses, and same-origin mutation guard |
+| `server/db.ts` | `pg` pool, `.env` loading, and transaction helper |
+| `server/env.ts` | Minimal local `.env` parser and required environment validation |
+| `server/crypto.ts` | Password hashing, password verification, opaque session token hashing, and class-code generation |
+| `server/http.ts` | Route helper, JSON response helpers, bounded JSON body parser, cookies, and auth context types |
+| `server/runValidation.ts` | Field-specific Phase 1 run-summary validation and bounds before persistence |
+| `server/sessionCookie.ts` | HttpOnly SameSite session cookie string helpers without database dependency |
+| `server/sessions.ts` | HttpOnly session cookie creation, session lookup, and revocation |
+| `server/validation.ts` | Runtime request-body validation helpers for strings, booleans, usernames, passwords, and numeric fields |
+| `server/migrate.ts` | SQL migration runner for `migrations/*.sql` |
+| `server/routes/auth.ts` | Register, login, logout, and current-user API routes |
+| `server/routes/classes.ts` | Instructor profile/dashboard, class creation, class check/join, class dashboard, student remove/profile routes |
+| `server/routes/globalData.ts` | Global completed-run scatterplot data route with WPM filtering |
+| `server/routes/profile.ts` | Signed-in profile summary, run list, joined classes, and teaching classes route |
+| `server/routes/runs.ts` | Signed-in Phase 1 run summary persistence and Simulation Lab activity counter routes |
+| `server/crypto.test.ts` | Unit tests for password hashing/verification, opaque session token hashing, and cookie flags |
+| `server/runValidation.test.ts` | Unit tests for Phase 1 run-summary bounds, difficulty enum, and UUID validation |
+
+## Database
+
+| File | Description |
+|---|---|
+| `migrations/001_profiles_classes_global_data.sql` | Postgres schema for users, sessions, instructor profiles, classes, class memberships, user activity, and Phase 1 run summaries |
+| `migrations/002_typing_run_summary_constraints.sql` | Postgres check constraints for persisted Phase 1 summary bounds and difficulty keys |
+| `migrations/003_remove_class_password_requirement.sql` | Postgres migration that makes legacy class password hashes nullable for code-only class joins |
+| `migrations/004_simplify_typing_run_summary.sql` | Postgres migration that removes duplicate run-summary columns and adds observed arrival rate plus throughput/sec |
 
 ## Simulation
 
@@ -75,18 +115,26 @@
 | File | Description |
 |---|---|
 | `src/components/ui/primitives.tsx` | Shared visual-system primitives — panels, labels, metric items, buttons, badges, formula callouts, and `cx` helper |
-| `src/components/game/RetroHeader.tsx` | Shared semi-retro placeholder header with persistent Home/Game Menu navigation and placeholder instructor/Sign In controls |
-| `src/components/game/StartScreen.tsx` | Idle phase — semi-retro monochrome start screen with placeholder nav/actions and `Play` handoff to the Game Menu |
+| `src/components/account/DashboardBits.tsx` | Shared account/class dashboard helpers — dashboard shell, metric band, fields, errors, masked class-code display, class cards, and run rows |
+| `src/components/account/AuthView.tsx` | Sign In/Register page with post-auth return routing |
+| `src/components/profile/ProfileDashboardView.tsx` | Profile dashboard with top metrics, Runs/Classes tabs, saved run bars, joined classes, and teaching classes |
+| `src/components/classes/InstructorDashboardView.tsx` | Instructor dashboard with first-use instructor-name modal, metric band, icon-only new-class button, and Class Info modal |
+| `src/components/classes/ClassDashboardView.tsx` | Class dashboard with class metrics, student rows, `...` actions, remove student, and class-scoped student profile modal |
+| `src/components/classes/JoinClassView.tsx` | Two-step Join Class flow: class code, then optional/required student name and ID |
+| `src/components/global-data/GlobalDataView.tsx` | Global Data page with graph selector, WPM filter rail, and Recharts scatterplot |
+| `src/components/game/RetroHeader.tsx` | Shared semi-retro header with persistent Home/Game Menu, Global Data, For Instructors, and Sign In/Profile controls |
+| `src/components/game/StartScreen.tsx` | Idle phase — semi-retro monochrome start screen with `Play` and real `Join Class` action |
+| `src/components/game/ConcurrencyRaceSampleView.tsx` | Start-page sample game idea — transaction scheduling prototype adapted from the Concurrency Race zip |
 | `src/components/game/EducationalManual.tsx` | Play-to-Game-Menu onboarding manual — modal/full-screen manual shell, page navigation, close/home handoff, and page-specific diagrams |
 | `src/components/game/EducationalManualDiagrams.tsx` | Semi-retro SVG diagrams for Educational Manual pages |
-| `src/components/game/LearnMoreSimulationPanel.tsx` | Game Menu full-width Learn More / Simulation panel that opens the local simulation lab |
+| `src/components/game/LearnMorePage.tsx` | Single-page Learn More modal using the Educational Manual shell |
 | `src/components/game/CalibrationView.tsx` | 30-second monkeytype-style calibration screen with a fixed five-row generated-row viewport, start overlay, and live WPM/accuracy |
-| `src/components/game/CalibrationSummaryView.tsx` | Post-calibration summary card — WPM, accuracy, display bin, recalibrate, and Game Menu actions |
-| `src/components/game/DifficultySelectView.tsx` | Game Menu — pre-calibration manual/calibration hub, calibrated Easy/Medium/Hard/Impossible run selection, and browser-session run record list |
+| `src/components/game/CalibrationSummaryView.tsx` | Post-calibration summary card — WPM, accuracy, difficulty bin, recalibrate, and Game Menu actions |
+| `src/components/game/DifficultySelectView.tsx` | Game Menu — pre-calibration manual/calibration hub, calibrated Easy/Medium/Hard/Impossible run selection, Global Data entry, and browser-session run record list |
 | `src/components/game/TopBar.tsx` | Shared active-run header — persistent Home/Game Menu navigation, phase label, countdown timer, optional dropped counter, queue display, optional score |
 | `src/components/game/Phase1View.tsx` | Calibrated 60-second single-server typing run — active request, FIFO queue, countdown, live stats sidebar |
 | `src/components/game/Phase1RunSummary.tsx` | Browser-only Phase 1 run summary — recorded metrics, setup values, finite-run/reference formula caveat, continue/recalibrate actions |
-| `src/components/game/SimulationLabView.tsx` | Standalone Simulation Lab screen — controls, series toggles, M/M/c reference, seed records, graph settings band |
+| `src/components/game/SimulationLabView.tsx` | Standalone Simulation Lab screen — controls, series toggles, M/M/c reference, seed records, graph settings band, and signed-in activity count after successful Run |
 | `src/components/game/SimulationInputs.tsx` | Simulation Lab boxed input components — draft editing for model parameters and graph-axis inputs |
 | `src/components/game/SimulationChart.tsx` | Recharts line chart for finite seeded simulation samples |
 | `src/components/game/SimulationSweepPanel.tsx` | Simulation Lab compact concurrency sweep table for `c = 1, 2, 4, 8` |
@@ -108,13 +156,14 @@
 
 | File | Description |
 |---|---|
-| `vite.config.ts` | Vite + Vitest config — React plugin, Tailwind plugin, `@` path alias, test environment |
+| `vite.config.ts` | Vite + Vitest config — React plugin, Tailwind plugin, `@` path alias, `/api` dev proxy, test environment |
 | `tsconfig.json` | Root TypeScript config — references app + node |
 | `tsconfig.app.json` | App TypeScript config — strict, path aliases |
-| `tsconfig.node.json` | Node TypeScript config for Vite config file |
-| `eslint.config.js` | ESLint config — typescript-eslint, no-console, `_`-prefixed args ignored |
-| `package.json` | Dependencies and npm scripts (`dev`, `build`, `lint`, `test`, `test:watch`) |
+| `tsconfig.node.json` | Node TypeScript config for Vite config and server files |
+| `eslint.config.js` | ESLint config — browser and Node globals, no-console, `_`-prefixed args ignored |
+| `package.json` | Dependencies and npm scripts (`dev`, `dev:vite`, `dev:api`, `db:migrate`, `build`, `lint`, `test`, `test:watch`) |
 | `index.html` | HTML entry point |
+| `scripts/dev.mjs` | Local dev supervisor that runs API and Vite dev servers together |
 
 ## Design
 

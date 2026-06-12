@@ -1,8 +1,10 @@
 # Difficulty Modes
 
 Difficulty for the browser-only Phase 1 overhaul is calibrated from the
-player's 30-second typing baseline. The displayed WPM ranges are fixed bins;
-the actual arrival rate is tuned from the player's measured service demand.
+player's 30-second typing baseline. The player's difficulty bin uses fixed WPM
+bins; difficulty run surfaces use expected arrival rate or target load instead
+of shifted WPM ranges. The actual arrival rate is tuned from the player's
+measured service demand.
 
 WPM uses the project-wide typing-test convention: characters divided by five
 over elapsed minutes, not actual word-token counts.
@@ -31,17 +33,19 @@ last bin, clamp to `180-200` for display until BOSS approves an expanded range.
 Let `i` be the calibrated bin index. The current browser-only mapping is
 provisional while BOSS manually tests difficulty feel:
 
-| Choice | Displayed WPM range | Target load | Regime |
+| Choice | Internal WPM bin mapping | Target load | Regime |
 |---|---|---:|---|
-| Easy | `max(i - 1, 0)` | 0.55 | Low load |
-| Medium | `i` | 0.75 | Moderate load |
-| Hard | `min(i + 1, last)` | 0.92 | Near saturation |
-| Impossible | `min(i + 2, last)` | 1.10 | Overload |
+| Easy | `max(i - 1, 0)` | 0.25 | Low load |
+| Medium | `i` | 0.50 | Moderate load |
+| Hard | `min(i + 1, last)` | 0.75 | High load |
+| Impossible | `min(i + 2, last)` | 1.00 | Capacity limit |
 
-The range label is educational context for the player. It should not be treated
-as an exact success/failure requirement. BOSS may shift Hard to `i` and adjust
-the surrounding choices after manual testing. The configured arrival rate for
-one server worker is:
+The WPM bin mapping remains internal run setup and should not be displayed as a
+difficulty range outside the player's own calibration/difficulty-bin surfaces.
+Game Menu cards, active run headers, run history, and run summaries should show
+target load or expected arrival rate instead. BOSS may shift Hard to `i` and
+adjust the surrounding choices after manual testing. The configured arrival
+rate for one server worker is:
 
 ```
 lambda = targetLoad / D
@@ -49,9 +53,10 @@ lambda = targetLoad / D
 
 where `D` is the player's measured service demand from calibration.
 
-The current target loads are also provisional tuning values. They represent
-configured offered load, not a guarantee that observed utilization or completed
-throughput will match the same percentage in one finite stochastic run.
+The current target loads are BOSS-approved tuning values: evenly spaced 25%,
+50%, 75%, and 100%. They represent configured offered load, not a guarantee
+that observed utilization or completed throughput will match the same
+percentage in one finite stochastic run.
 
 ## Run Rules
 

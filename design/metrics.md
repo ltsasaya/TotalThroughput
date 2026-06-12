@@ -27,9 +27,10 @@ WPM = (characters / 5) / minutes
 ```
 
 For calibration, use correct characters divided by five over the 30-second
-window. For completed request typing speed, use the completed prompt character
-count divided by five over active typing minutes. Do not calculate WPM by
-counting actual space-delimited words.
+window. For observed in-game WPM, use the completed prompt character count
+divided by five over service minutes from task activation to completion,
+including reaction time. Do not calculate WPM by counting actual
+space-delimited words.
 
 ## Response Time Formula
 
@@ -77,15 +78,17 @@ produce a frontend-owned record with these fields:
 | **Average response time** | Mean `completionTime - arrivalTime` for completed requests |
 | **Average service demand** | Mean active typing service time for completed requests, written as `D` |
 | **Total Throughput** | Count of completed requests during the 60-second run |
-| **Average typing speed** | Mean WPM while actively typing completed requests |
+| **Throughput/sec** | Completed requests divided by the 60-second run window |
+| **Average typing speed** | Mean observed in-game WPM for completed requests, including reaction time |
 | **Reaction speed** | Mean time from request activation to first keystroke |
 | **Utilization %** | Observed busy typing time divided by the 60-second run window |
 | **Average queue length** | Time-average waiting queue length over the 60-second run window |
 | **Max queue length** | Highest waiting queue length reached during the run; retained as a diagnostic, not the primary teaching metric |
 
-The browser record should also keep the calibrated WPM/bin, selected difficulty
-range, configured `lambda`, target load, arrival count, still-waiting count,
-seed, and any reference response-time value shown to the player. The
+The browser record should also keep the calibrated WPM/bin, selected
+difficulty, configured `lambda`, observed arrival rate, target load, arrival
+count, still-waiting count, seed, and any reference response-time value shown
+to the player. The
 still-waiting or unfinished count is diagnostic only and must not be added to
 completed throughput, response time, service demand, typing speed, or reaction
 speed. These fields are not persistence work yet; they keep the frontend record
@@ -94,6 +97,23 @@ shape ready for the later server-owned model.
 Persisted playerbase dataset work is deferred. The browser record shape should
 be stable enough to migrate later, but no API or database call is part of the
 browser-only slice.
+
+## Persisted Phase 1 Summary Bridge
+
+The promoted profile/classes/global-data slice persists signed-in completed
+Phase 1 run summaries using the browser record shape above, plus server-owned
+database id, user id, optional class id, and completion timestamp. The
+`typing_runs` table stores `difficulty_key` instead of duplicate difficulty
+labels, `completed_count` instead of duplicate total-throughput counts,
+configured `arrival_rate`, observed `observed_arrival_rate`, and
+`throughput_per_second` for the completed-request rate. This is a local-first
+bridge for profile and scatterplot views; it is not the final server-owned
+task/event lifecycle.
+
+Class dashboards count runs through explicit class association. When a signed-in
+student belongs to exactly one class, the server can associate future completed
+runs with that class. If a student belongs to multiple classes, a later class
+selection control is needed before those runs can be class-scoped.
 
 ## Browser-Only Simulation Lab Metrics
 

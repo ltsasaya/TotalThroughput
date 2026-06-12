@@ -64,8 +64,9 @@ request size or type model depends on a BOSS-approved plan.
 
 Phase 1 calibrated difficulty runs use a 60-second observation window. Work
 unfinished at the end is tracked for diagnostics but excluded from completed
-throughput and completed-request averages. Arrival rate, offered load, observed
-throughput, and busy fraction use the 60-second run as their denominator.
+throughput and completed-request averages. Configured arrival rate is stored
+separately from observed arrival rate. Throughput/sec and busy fraction use the
+60-second run as their denominator.
 
 ### Calibration WPM bins
 
@@ -85,7 +86,9 @@ Phase 1 calibration produces a WPM baseline and assigns it to one fixed bin:
 | 9 | 160-180 |
 | 10 | 180-200 |
 
-The WPM bin drives displayed difficulty ranges. Actual player typing determines
+The WPM bin drives calibration/difficulty-bin context and the internal difficulty
+mapping. Difficulty cards and run surfaces should show target load or expected
+arrival rate instead of shifted WPM ranges. Actual player typing determines
 observed service demand `D`, which tunes the request arrival rate for a
 selected run.
 
@@ -95,10 +98,10 @@ Levels should teach these load regimes:
 
 | Regime | Target load factor | Behavior |
 |---|---|---|
-| Low | 0.35-0.55 | Queue remains short, latency is stable |
-| Moderate | 0.70-0.85 | Queue forms but often recovers |
-| Near saturation | 0.90-0.98 | Response time becomes sensitive to small bursts |
-| Overload | > 1.0 | Backlog at window end demonstrates capacity pressure |
+| Low | 0.25 | Queue remains short, latency is stable |
+| Moderate | 0.50 | Queue may form but should often recover |
+| High | 0.75 | Queue forms more visibly under bursts |
+| Capacity limit | 1.00 | Sustained busy-worker pressure and backlog risk |
 
 For a single serial server, `rho ~= lambda * D`. In Phase 1, `D` is estimated
 from completed served requests, so `rho` is a reference-load estimate rather

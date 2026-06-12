@@ -9,8 +9,8 @@ The start flow uses a dedicated Educational Manual screen after `Play` and
 before active Phase 1 play. This replaces the old `prePhase1` popup as the
 primary onboarding surface for the server request/response premise.
 
-The manual starts with the player as the server, introduces clients such as
-**Player Name**, explains request/response flow, shows a simple client/server
+The manual starts with the player as the server, introduces clients using the
+signed-in username, explains request/response flow, shows a simple client/server
 diagram, and then explains the client waiting consequence. The
 first diagram follows BOSS's request sequence reference using a simplified client
 computer, simplified server, dashed lifelines, request/response arrows, and
@@ -27,7 +27,7 @@ intentionally avoids the API concept and avoids a work-list inside the
 server.
 
 The third page explains the player's immediate objective: complete typing tasks
-for **Player Name** and other clients, improve client satisfaction by completing
+for the signed-in username and other clients, improve client satisfaction by completing
 work faster, minimize Response Time (`R`), and enter calibration so the game can
 determine the player's red-highlighted level.
 

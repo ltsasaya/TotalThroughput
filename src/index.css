@@ -492,31 +492,6 @@ a:focus-visible {
   z-index: 50;
 }
 
-.learn-more-simulation-panel {
-  overflow: hidden;
-}
-
-.learn-more-simulation-layout {
-  align-items: center;
-  display: grid;
-  gap: 22px;
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.learn-more-simulation-panel h2 {
-  color: #000;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.05;
-  margin: 0.4rem 0 0;
-}
-
-.learn-more-simulation-button {
-  align-self: stretch;
-  min-height: 4.7rem;
-  min-width: 11rem;
-}
-
 .simulation-series-toggle {
   font-size: 0.625rem;
   line-height: 1.2;
@@ -586,7 +561,9 @@ a:focus-visible {
 .retro-app-nav-right {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
+  justify-content: flex-end;
 }
 
 .retro-app-nav-actions {
@@ -622,21 +599,22 @@ a:focus-visible {
   cursor: pointer;
 }
 
-.retro-app-home:hover {
+.retro-app-home:hover,
+.retro-app-nav-link:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
-.retro-app-nav-link,
-.retro-app-signin {
-  cursor: default;
-}
-
 .retro-app-signin {
   border: 3px solid #000;
+  cursor: pointer;
   min-height: 38px;
   min-width: 0;
   padding: 4px 16px;
+}
+
+.retro-app-nav-link {
+  cursor: pointer;
 }
 
 .retro-app-nav-link:disabled,
@@ -656,6 +634,29 @@ a:focus-visible {
   padding: 0 32px;
   position: relative;
   z-index: 10;
+}
+
+.retro-start-idea-button {
+  background: #fff;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  color: #000;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  left: 32px;
+  letter-spacing: 0.025em;
+  line-height: 1.3;
+  padding: 8px 12px;
+  position: absolute;
+  text-transform: lowercase;
+  top: 72px;
+  z-index: 12;
+}
+
+.retro-start-idea-button:hover {
+  background: #f4f4f4;
 }
 
 .tt-system-notice {
@@ -1189,12 +1190,6 @@ a:focus-visible {
   text-align: center;
 }
 
-@media (max-width: 1180px) {
-  .learn-more-simulation-layout {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-}
-
 @media (max-width: 760px) {
   .retro-app-nav {
     padding: 10px 18px;
@@ -1246,6 +1241,13 @@ a:focus-visible {
     padding: 0 30px;
   }
 
+  .retro-start-idea-button {
+    font-size: 0.75rem;
+    left: 18px;
+    padding: 7px 10px;
+    top: 68px;
+  }
+
   .retro-start-title {
     font-size: 3rem;
   }
@@ -1260,14 +1262,6 @@ a:focus-visible {
 
   .retro-start-button-secondary {
     font-size: 1rem;
-  }
-
-  .learn-more-simulation-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .learn-more-simulation-button {
-    width: 100%;
   }
 
   .retro-manual-shell {

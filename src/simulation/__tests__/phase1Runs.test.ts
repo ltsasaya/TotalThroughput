@@ -27,7 +27,7 @@ const OPTION: Phase1DifficultyOption = {
   key: 'medium',
   label: 'Medium',
   range: { min: 75, max: 90, label: '75-90' },
-  targetLoad: 0.75,
+  targetLoad: 0.50,
   regime: 'moderate',
   seed: 1234,
 }
@@ -50,7 +50,7 @@ function completedTask(id: string, arrivalTime: number, serviceStartTime: number
 describe('buildPhase1RunConfig', () => {
   it('uses lambda = targetLoad / D', () => {
     const config = buildPhase1RunConfig({ option: OPTION, calibrationResult: CALIBRATION, runIndex: 0 })
-    expect(config.lambda).toBeCloseTo(0.75 / 2.4)
+    expect(config.lambda).toBeCloseTo(0.50 / 2.4)
     expect(config.arrivalWindowMs).toBe(PHASE1_RUN_DURATION_MS)
     expect(config.expectedArrivals).toBe(Math.round(config.lambda * 60))
   })

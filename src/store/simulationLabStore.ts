@@ -40,7 +40,7 @@ interface SimulationLabStore {
   setInput: (key: SimulationLabEditableInput, value: number) => void
   clearPendingEstimate: () => void
   toggleSeries: (key: SimulationSeriesKey) => void
-  runSimulation: (inputs?: Omit<ServerLabInputs, 'seed'>) => void
+  runSimulation: (inputs?: Omit<ServerLabInputs, 'seed'>) => 'ran' | 'pending' | 'blocked' | 'failed'
   resetInputs: () => void
 }
 
@@ -125,7 +125,7 @@ export const useSimulationLabStore = create<SimulationLabStore>((set, get) => ({
         error: `Experiment is too large: ${estimate.messages.join('; ')}`,
         pendingEstimate: null,
       })
-      return
+      return 'blocked'
     }
 
     if (estimate.requiresConfirmation && !confirmed) {
@@ -134,7 +134,7 @@ export const useSimulationLabStore = create<SimulationLabStore>((set, get) => ({
         error: null,
         pendingEstimate: estimate,
       })
-      return
+      return 'pending'
     }
 
     try {
@@ -150,12 +150,14 @@ export const useSimulationLabStore = create<SimulationLabStore>((set, get) => ({
         error: null,
         pendingEstimate: null,
       }))
+      return 'ran'
     } catch (error) {
       set({
         inputs,
         error: error instanceof Error ? error.message : 'Simulation failed',
         pendingEstimate: null,
       })
+      return 'failed'
     }
   },
 

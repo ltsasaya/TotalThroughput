@@ -57,7 +57,7 @@ describe('buildPhase1DifficultyOptions', () => {
     const options = buildPhase1DifficultyOptions(result)
     expect(options.map(option => option.key)).toEqual(['easy', 'medium', 'hard', 'impossible'])
     expect(options.map(option => option.range.label)).toEqual(['50-60', '60-75', '75-90', '90-105'])
-    expect(options.map(option => option.targetLoad)).toEqual([0.55, 0.75, 0.92, 1.10])
+    expect(options.map(option => option.targetLoad)).toEqual([0.25, 0.50, 0.75, 1.00])
   })
 })
 

@@ -16,7 +16,7 @@ export interface LiveMetrics {
   arrivalRate: number          // configured arrivals/sec during the Phase 2 arrival window
   targetPerWorkerLoad: number  // configured Phase 2 reference load lambda * D / c
   avgReactionSpeed?: number    // ms — avg from task activation to first keystroke (Phase 1 only)
-  avgTypingSpeed?: number      // WPM — avg (chars/5) / typingMinutes per task (Phase 1 only)
+  avgTypingSpeed?: number      // WPM — avg (chars/5) / service minutes per task, including reaction time
 }
 
 export interface Phase1LevelResult {
@@ -75,17 +75,16 @@ export interface Phase1RunRecord {
   id: string
   difficultyKey: string
   difficultyLabel: string
-  difficultyRangeLabel: string
   calibrationWpm: number
   calibrationRangeLabel: string
   calibrationBinIndex: number
   targetLoad: number
   arrivalRate: number
+  observedArrivalRate: number
   expectedArrivals: number
   arrivalCount: number
   completedCount: number
-  totalThroughput: number
-  actualThroughput: number
+  throughputPerSecond: number
   averageResponseTime: number
   averageServiceDemand: number
   averageTypingSpeed: number

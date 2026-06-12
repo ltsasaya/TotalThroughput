@@ -425,6 +425,20 @@ describe('persistent navigation', () => {
     expect(getState().systemNotification).toBe("Current run wasn't saved.")
   })
 
+  it('opens the concurrency race sample without clearing calibration or run records', () => {
+    startMediumRun()
+    getState().tick(getState().gameStartTime! + PHASE1_RUN_DURATION_MS)
+    const calibration = getState().calibrationResult
+    const records = getState().phase1RunRecords
+
+    getState().openConcurrencyRaceSample()
+
+    expect(getState().phase).toBe('concurrencyRaceSample')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1RunRecords).toEqual(records)
+    expect(getState().tasks).toEqual({})
+  })
+
   it('preserves the unsaved-run notification when going through the game menu before simulation', () => {
     startMediumRun()
     const calibration = getState().calibrationResult

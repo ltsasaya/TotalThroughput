@@ -1,31 +1,32 @@
 import { useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useAccountStore } from '@/store/accountStore'
 import { AppButton, cx, MetricItem, Panel, SectionLabel } from '@/components/ui/primitives'
 import type { Phase1DifficultyKey, Phase1DifficultyOption } from '@/types/game'
 import { EducationalManual } from './EducationalManual'
-import { LearnMoreSimulationPanel } from './LearnMoreSimulationPanel'
+import { LearnMorePage } from './LearnMorePage'
 import { RetroHeader } from './RetroHeader'
 
 interface GameMenuOption {
   key: Phase1DifficultyKey
   label: string
   regime: Phase1DifficultyOption['regime']
-  rangeLabel?: string
   targetLoad?: number
 }
 
 const UNCALIBRATED_OPTIONS: GameMenuOption[] = [
   { key: 'easy', label: 'Easy', regime: 'low' },
   { key: 'medium', label: 'Medium', regime: 'moderate' },
-  { key: 'hard', label: 'Hard', regime: 'near-saturation' },
+  { key: 'hard', label: 'Hard', regime: 'high' },
   { key: 'impossible', label: 'Impossible', regime: 'overload' },
 ]
 
 function difficultyDescription(regime: Phase1DifficultyOption['regime']) {
   if (regime === 'low') return 'Little to no queue expected.'
   if (regime === 'moderate') return 'Short queues should appear.'
+  if (regime === 'high') return 'Visible queue pressure.'
   if (regime === 'near-saturation') return 'Near saturation.'
-  return 'Do you dare.'
+  return 'Capacity limit.'
 }
 
 function RunRecordMetric({ label, value }: { label: string; value: string | number }) {
@@ -67,14 +68,18 @@ function ManualIcon() {
 }
 
 export function DifficultySelectView() {
+  const user = useAccountStore(s => s.user)
   const calibrationResult = useGameStore(s => s.calibrationResult)
   const phase1DifficultyOptions = useGameStore(s => s.phase1DifficultyOptions)
   const phase1RunRecords = useGameStore(s => s.phase1RunRecords)
   const startCalibratedRun = useGameStore(s => s.startCalibratedRun)
   const recalibrate = useGameStore(s => s.recalibrate)
+  const openSimulationLab = useGameStore(s => s.openSimulationLab)
+  const openGlobalData = useGameStore(s => s.openGlobalData)
   const hasSeenEducationalManual = useGameStore(s => s.hasSeenEducationalManual)
   const markEducationalManualSeen = useGameStore(s => s.markEducationalManualSeen)
   const [isManualOpen, setIsManualOpen] = useState(false)
+  const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false)
 
   const hasValidCalibration = calibrationResult !== null && phase1DifficultyOptions.length > 0
   const isManualDiscoveryLocked = !hasValidCalibration && !hasSeenEducationalManual
@@ -83,7 +88,6 @@ export function DifficultySelectView() {
       key: option.key,
       label: option.label,
       regime: option.regime,
-      rangeLabel: option.range.label,
       targetLoad: option.targetLoad,
     }))
     : UNCALIBRATED_OPTIONS
@@ -126,7 +130,7 @@ export function DifficultySelectView() {
                   value={hasValidCalibration ? Math.round(calibrationResult?.rawWpm ?? 0) : '-'}
                 />
                 <MetricItem
-                  label="Display bin"
+                  label="Difficulty bin"
                   value={hasValidCalibration ? `${calibrationResult?.wpmRange.label ?? '-'} WPM` : '-'}
                 />
               </div>
@@ -168,14 +172,6 @@ export function DifficultySelectView() {
                     {option.targetLoad !== undefined ? `${Math.round(option.targetLoad * 100)}%` : '-'}
                   </span>
                 </div>
-                <div
-                  className={cx(
-                    'game-menu-difficulty-range',
-                    !hasValidCalibration && 'game-menu-calibration-required-text',
-                  )}
-                >
-                  {option.rangeLabel ? `${option.rangeLabel} WPM range` : 'calibration required'}
-                </div>
               </div>
               <div className="game-menu-difficulty-description">
                 {difficultyDescription(option.regime)}
@@ -184,7 +180,22 @@ export function DifficultySelectView() {
           ))}
         </div>
 
-        <LearnMoreSimulationPanel />
+        <Panel className="grid gap-3 p-4 md:grid-cols-3">
+          <AppButton type="button" variant="secondary" className="min-h-16 px-3 text-center" onClick={openSimulationLab}>
+            Simulate Server Concurrency
+          </AppButton>
+          <AppButton type="button" variant="secondary" className="min-h-16 px-3 text-center" onClick={openGlobalData}>
+            View Global Data
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="secondary"
+            className="min-h-16 px-3 text-center"
+            onClick={() => setIsLearnMoreOpen(true)}
+          >
+            Learn More
+          </AppButton>
+        </Panel>
 
         {phase1RunRecords.length > 0 && (
           <Panel className="p-4">
@@ -197,10 +208,10 @@ export function DifficultySelectView() {
                 >
                   <div className="min-w-0">
                     <div className="font-bold text-[color:var(--tt-text)]">{record.difficultyLabel}</div>
-                    <div className="tt-label">{record.difficultyRangeLabel} WPM - configured load {Math.round(record.targetLoad * 100)}%</div>
+                    <div className="tt-label">expected arrival {record.arrivalRate.toFixed(3)}/s - configured load {Math.round(record.targetLoad * 100)}%</div>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <RunRecordMetric label="Total Throughput" value={record.totalThroughput} />
+                    <RunRecordMetric label="Total Throughput" value={record.completedCount} />
                     <RunRecordMetric label="Avg Response Time (R)" value={`${(record.averageResponseTime / 1000).toFixed(2)}s`} />
                     <RunRecordMetric label="Avg Queue Length" value={queueLength(record.averageQueueLength)} />
                   </div>
@@ -217,8 +228,15 @@ export function DifficultySelectView() {
         <div className="game-menu-manual-overlay">
           <EducationalManual
             presentation="modal"
+            playerName={user?.username}
             onComplete={() => setIsManualOpen(false)}
           />
+        </div>
+      )}
+
+      {isLearnMoreOpen && (
+        <div className="game-menu-manual-overlay">
+          <LearnMorePage onClose={() => setIsLearnMoreOpen(false)} />
         </div>
       )}
     </div>

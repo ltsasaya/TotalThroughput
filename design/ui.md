@@ -36,10 +36,11 @@ into the start-page -> Educational Manual -> play workflow.
 - Keep the semi-retro top navigation persistent across the start screen,
   Educational Manual, Game Menu, and calibration flow. Active gameplay uses the
   same plain navigation controls inside `TopBar`.
-- The left side includes plain text `Home` and `Game Menu` controls. `Home`
-  returns to the start screen; `Game Menu` returns to the recurring difficulty
-  hub. If a calibration or run is active, navigation goes anyway and shows a
-  system notification that the current calibration/run was not saved.
+- The left side includes plain text `Home`, `Game Menu`, and `Global Data`
+  controls. `Home` returns to the start screen; `Game Menu` returns to the
+  recurring difficulty hub. If a calibration or run is active, navigation goes
+  anyway and shows a system notification that the current calibration/run was
+  not saved.
 - Header/navigation text follows the local rulebook typography convention:
   Title Case labels with the same font, size, weight, and letter spacing.
   `Sign In` may differ by boxed container treatment only. Persistent header
@@ -132,6 +133,40 @@ visual rules across multiple components.
 
 ## Screen Rules
 
+### Account, Profile, Classes, And Global Data
+
+- Keep account and class screens in the same semi-retro operational lab
+  language: hard borders, compact metric bands, monospace labels, and existing
+  primitives before adding new visual treatment.
+- Persistent header controls remain Title Case and use `.retro-header-text`.
+  `Global Data`, `For Instructors`, and `Sign In`/`Profile` are real controls
+  but share the same header typography.
+- Instructor dashboard top band shows instructor name, number of classes, and
+  number of students. The icon-only `+` new-class action appears as the first
+  class-grid tile and uses the same box footprint as class cards.
+- Class creation uses a modal styled like the Educational Manual frame with
+  `Class Info`, class name, and Student ID/Student Name checkboxes. Class codes
+  display as `****` until clicked wherever instructors can see them.
+- Class dashboards use a top metric band and dense student rows. The page
+  header shows the back action, while the class name appears in the metric band.
+  Student names fall back to `Anon` when optional name collection is disabled or
+  omitted.
+- Profile uses a top metric band, then a control row with the Runs/Classes
+  segmented selection and a compact right-aligned Sign Out action. Runs are
+  displayed as compact bars; student class cards do not link to full class
+  dashboards.
+- Global Data uses a top graph selector, a left WPM filter rail on desktop,
+  and a large scatterplot. Any utilization axis is fixed from 0 to 100. Queue
+  length and observed arrival-rate axes start at 0. The observed arrival-rate
+  axis uses 0.4 as its default upper bound and expands to the highest available
+  point when data exceeds 0.4. The filter rail includes a WPM source toggle for
+  `Calibration WPM` or `In-Game WPM`; the WPM range filter uses calibration WPM
+  so the same completed runs stay visible, while the selected source controls
+  dot color. Tooltips show both calibration and in-game WPM. Dot color is the
+  only broad use of green/yellow/orange/red in this slice and maps the selected
+  WPM source from 30 to 200. Points without observed in-game WPM render neutral
+  gray when that source is selected.
+
 ### Start Screen
 
 - First viewport should closely match the sample UI: top horizontal nav line,
@@ -207,7 +242,7 @@ visual rules across multiple components.
 - Before a valid calibration exists, show the difficulty cards in a disabled
   state and mark the calibration button with a red required indicator.
 - Show a named `Baseline` panel in the menu header. Inside it, use plain stat
-  labels: `WPM` and `Display bin`.
+  labels: `WPM` and `Difficulty bin`.
 - Keep the calibration/recalibration action inside the Baseline panel as the
   panel action row. Before valid calibration exists, mark that action with a
   red required indicator.
@@ -219,11 +254,11 @@ visual rules across multiple components.
 - Include a compact icon-only manual control in the Game Menu intro area so
   players can reopen the Educational Manual without putting Manual inside the
   Baseline panel.
-- Add a full-width Learn More / Simulation panel below the difficulty cards.
-  It should feel like part of the operational lab, not a marketing section.
-  The primary action is `Simulation`, which opens the standalone browser-side
-  simulation lab. Do not show compact model/run/local-compute stats in this
-  panel.
+- Add one full-width action band below the difficulty cards with buttons for
+  `Simulate Server Concurrency`, `View Global Data`, and `Learn More`. The
+  simulation button opens the standalone browser-side simulation lab, the
+  global-data button opens the scatterplot, and `Learn More` opens a
+  single-page Educational Manual-style modal placeholder.
 
 ### Simulation Lab
 
@@ -267,8 +302,8 @@ visual rules across multiple components.
   semi-retro panel and button treatment. It should show WPM, accuracy, display
   bin, plus `Recalibrate` and `Game Menu` actions.
 - After calibration, show four calibrated choices: Easy, Medium, Hard, and
-  Impossible. Each choice should show the derived WPM range and target load
-  without implying the range is an exact pass/fail requirement.
+  Impossible. Each choice should show the target load percentage, but not the
+  derived WPM bin range.
 - After each 60-second run, show a compact run summary and return controls:
   continue to difficulty selection or recalibrate.
 - The active request and waiting queue sit in one bounded workbench panel.

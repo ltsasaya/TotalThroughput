@@ -41,10 +41,10 @@ completed throughput or completed-request latency.
 * Calibration computes a WPM baseline, a fixed WPM bin, and a service-demand
   estimate that can tune request arrivals.
 * When calibration ends, a compact completion card shows WPM, accuracy, and
-  display bin. The player can recalibrate or continue to the Game Menu.
+  difficulty bin. The player can recalibrate or continue to the Game Menu.
 * The player then sees four one-minute difficulty choices: Easy, Medium, Hard,
-  and Impossible. Their displayed WPM ranges are derived from the fixed WPM bin
-  table in `difficulty.md`.
+  and Impossible. The choices show target load/expected arrival context, not
+  shifted WPM bin ranges.
 * Selecting a difficulty starts a 60-second single-server request run. The
   current implementation uses one seeded constant-rate Poisson arrival
   schedule; TODO-006 keeps the data-collection seed strategy under review.

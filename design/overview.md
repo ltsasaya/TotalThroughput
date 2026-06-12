@@ -89,13 +89,26 @@ After playing, a user should be able to understand:
 * Post-run instructional explanations
 * Score centered on latency-sensitive play
 
+## Promoted Post-MVP Data Slice
+
+BOSS promoted a local-first data product slice after the browser-only gameplay
+work: simple username/password sign-in, profile dashboards, instructor/class
+dashboards, class joining, global completed-run scatterplots, and Simulation
+Lab activity counts.
+
+This slice keeps the stack minimal: the existing Vite app, a small same-origin
+TypeScript API, explicit SQL migrations, and one managed Postgres database. It
+does not add social auth, an external auth provider, an ORM, queues, realtime,
+or a framework migration.
+
 ### Out of Scope
 
 * Full preemption and migration in base mode
 * Memory-thrashing simulation
 * Workflow execution (Phase 3)
 * Multiplayer
-* Persistent accounts or cloud backend
+* Persistent accounts or cloud backend in the original MVP; the promoted
+  post-MVP slice now adds simple accounts/classes/profile/global-data surfaces.
 
 ## Success Criteria
 

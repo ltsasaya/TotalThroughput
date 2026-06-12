@@ -35,6 +35,7 @@ import {
   phase2WorkerCount,
   PHASE2_DURATION_MS,
 } from '../simulation/phase2Runs'
+import { savePhase1RunIfSignedIn } from '../api/client'
 
 function navigationInterruptionMessage(phase: GamePhase): string | null {
   if (phase === 'calibration') return "Current calibration wasn't saved."
@@ -165,7 +166,7 @@ function buildPhase1ResultFromRecord(record: Phase1RunRecord): Phase1Result {
     completedCount: record.completedCount,
     activeWindowCompletedCount: record.completedCount,
     tailCompletedCount: 0,
-    activeWindowThroughput: record.actualThroughput,
+    activeWindowThroughput: record.throughputPerSecond,
     droppedCount: 0,
     unfinishedAtEndCount: record.stillWaitingCount,
     servedShare: record.arrivalCount > 0 ? record.completedCount / record.arrivalCount : 0,
@@ -200,6 +201,8 @@ interface GameStore {
   phase1RunRecords: Phase1RunRecord[]
   lastPhase1RunRecord: Phase1RunRecord | null
   hasSeenEducationalManual: boolean
+  selectedClassId: string | null
+  returnPhaseAfterAuth: GamePhase | null
 
   arrivalSchedule: ScheduledArrival[]
   nextArrivalIndex: number
@@ -231,6 +234,14 @@ interface GameStore {
   goHome: () => void
   goGameMenu: () => void
   openSimulationLab: () => void
+  openConcurrencyRaceSample: () => void
+  openAuth: (returnPhase?: GamePhase | null) => void
+  openProfile: () => void
+  openInstructorDashboard: () => void
+  openClassDashboard: (classId: string) => void
+  openJoinClass: () => void
+  openGlobalData: () => void
+  consumeReturnPhaseAfterAuth: () => GamePhase | null
   clearSystemNotification: () => void
   markEducationalManualSeen: () => void
   startCalibration: () => void
@@ -292,6 +303,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   phase1RunRecords: [],
   lastPhase1RunRecord: null,
   hasSeenEducationalManual: false,
+  selectedClassId: null,
+  returnPhaseAfterAuth: null,
   arrivalSchedule: [],
   nextArrivalIndex: 0,
   phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
@@ -329,6 +342,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1RunRecords: hasCompletedCalibration ? state.phase1RunRecords : [],
       lastPhase1RunRecord: hasCompletedCalibration ? state.lastPhase1RunRecord : null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
       phase1MaxQueueLength: 0,
       phase1Result: hasCompletedCalibration ? state.phase1Result : null,
       systemNotification: null,
@@ -351,6 +366,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1RunRecords: state.phase1RunRecords,
       lastPhase1RunRecord: state.lastPhase1RunRecord,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
       phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
       currentPhase1LevelIndex: 0,
       phase1LevelResults: [],
@@ -375,6 +392,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
       systemNotification,
     })
   },
@@ -389,8 +408,114 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
+      selectedClassId: null,
       systemNotification: systemNotification ?? state.systemNotification,
     })
+  },
+
+  openConcurrencyRaceSample: () => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'concurrencyRaceSample',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      phase1MaxQueueLength: 0,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
+      systemNotification: systemNotification ?? state.systemNotification,
+    })
+  },
+
+  openAuth: (returnPhase = null) => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'auth',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: returnPhase,
+      systemNotification,
+    })
+  },
+
+  openProfile: () => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'profile',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
+      systemNotification,
+    })
+  },
+
+  openInstructorDashboard: () => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'instructorDashboard',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
+      systemNotification,
+    })
+  },
+
+  openClassDashboard: (classId) => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'classDashboard',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      selectedClassId: classId,
+      returnPhaseAfterAuth: null,
+      systemNotification,
+    })
+  },
+
+  openJoinClass: () => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'joinClass',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
+      systemNotification,
+    })
+  },
+
+  openGlobalData: () => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'globalData',
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
+      systemNotification,
+    })
+  },
+
+  consumeReturnPhaseAfterAuth: () => {
+    const returnPhase = get().returnPhaseAfterAuth
+    set({ returnPhaseAfterAuth: null })
+    return returnPhase
   },
 
   clearSystemNotification: () => set({ systemNotification: null }),
@@ -680,6 +805,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
         tasks: tickOutput.tasks,
         maxQueueLength: tickOutput.phase1MaxQueueLength,
       })
+      void savePhase1RunIfSignedIn(runRecord).catch(() => {
+        set({ systemNotification: 'Run saved locally; server save failed.' })
+      })
       set({
         ...phase1State,
         phase: 'phase1Summary',
@@ -713,6 +841,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1RunRecords: [],
       lastPhase1RunRecord: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
       phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
       currentPhase1LevelIndex: 0,
       phase1LevelResults: [],
@@ -728,6 +858,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       activePhase1TaskId: null,
+      selectedClassId: null,
+      returnPhaseAfterAuth: null,
       systemNotification: null,
     }),
 }))

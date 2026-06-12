@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { useAccountStore } from '@/store/accountStore'
 import { RetroHeader } from './RetroHeader'
 
 interface NetworkNode {
@@ -180,6 +181,10 @@ function NetworkVisualization() {
 
 export function StartScreen() {
   const startGame = useGameStore(s => s.startGame)
+  const openAuth = useGameStore(s => s.openAuth)
+  const openConcurrencyRaceSample = useGameStore(s => s.openConcurrencyRaceSample)
+  const openJoinClass = useGameStore(s => s.openJoinClass)
+  const user = useAccountStore(s => s.user)
 
   return (
     <div className="app-shell">
@@ -188,6 +193,9 @@ export function StartScreen() {
         <div className="retro-start-scanlines" aria-hidden="true" />
 
         <RetroHeader />
+        <button type="button" className="retro-start-idea-button" onClick={openConcurrencyRaceSample}>
+          another game idea
+        </button>
 
         <main className="retro-start-main">
           <h1 className="retro-start-title">Total Throughput</h1>
@@ -203,8 +211,11 @@ export function StartScreen() {
             </button>
             <button
               type="button"
-              disabled
               className="retro-start-button retro-start-button-secondary"
+              onClick={() => {
+                if (user) openJoinClass()
+                else openAuth('joinClass')
+              }}
             >
               Join Class
             </button>

@@ -15,6 +15,12 @@ function completedTasks(tasks: Record<string, Task>): Task[] {
   return Object.values(tasks).filter(task => task.status === 'completed')
 }
 
+export function observedInGameWpm(task: Task): number {
+  if (task.serviceStartTime === undefined || task.completionTime === undefined) return 0
+  const serviceMs = task.completionTime - task.serviceStartTime
+  return serviceMs > 0 ? ((task.content ?? '').length / 5) / (serviceMs / 60_000) : 0
+}
+
 export function buildPhase1RunConfig({
   option,
   calibrationResult,
@@ -93,11 +99,8 @@ export function buildPhase1RunRecord({
     .filter(task => task.firstKeystrokeTime !== undefined && task.serviceStartTime !== undefined)
     .map(task => task.firstKeystrokeTime! - task.serviceStartTime!)
   const typingSpeeds = completed
-    .filter(task => task.firstKeystrokeTime !== undefined && task.completionTime !== undefined)
-    .map((task) => {
-      const typingMs = task.completionTime! - task.firstKeystrokeTime!
-      return typingMs > 0 ? ((task.content ?? '').length / 5) / (typingMs / 60_000) : 0
-    })
+    .filter(task => task.serviceStartTime !== undefined && task.completionTime !== undefined)
+    .map(observedInGameWpm)
 
   const averageServiceDemand = avg(serviceTimes)
   const referenceResponseTimeMs = runConfig.targetLoad < 1
@@ -108,17 +111,16 @@ export function buildPhase1RunRecord({
     id: `${runConfig.difficulty.key}-${runConfig.seed}`,
     difficultyKey: runConfig.difficulty.key,
     difficultyLabel: runConfig.difficulty.label,
-    difficultyRangeLabel: runConfig.difficulty.range.label,
     calibrationWpm: calibrationResult.rawWpm,
     calibrationRangeLabel: calibrationResult.wpmRange.label,
     calibrationBinIndex: calibrationResult.binIndex,
     targetLoad: runConfig.targetLoad,
     arrivalRate: runConfig.lambda,
+    observedArrivalRate: durationMs > 0 ? allTasks.length / (durationMs / 1000) : 0,
     expectedArrivals: runConfig.expectedArrivals,
     arrivalCount: allTasks.length,
     completedCount: completed.length,
-    totalThroughput: completed.length,
-    actualThroughput: durationMs > 0 ? completed.length / (durationMs / 1000) : 0,
+    throughputPerSecond: durationMs > 0 ? completed.length / (durationMs / 1000) : 0,
     averageResponseTime: avg(responseTimes),
     averageServiceDemand,
     averageTypingSpeed: avg(typingSpeeds),

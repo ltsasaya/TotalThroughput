@@ -31,7 +31,7 @@ export function Phase1RunSummary() {
             <div className="border-[3px] border-black bg-white p-4">
               <SectionLabel>Total Throughput</SectionLabel>
               <div className="mt-2 font-mono text-4xl font-bold text-[color:var(--tt-accent)]">
-                {record.totalThroughput}
+                {record.completedCount}
               </div>
               <div className="tt-label">requests completed</div>
             </div>
@@ -54,8 +54,7 @@ export function Phase1RunSummary() {
 
         <Panel className="p-4">
           <SectionLabel className="mb-3">Run setup</SectionLabel>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricItem label="Difficulty Range" value={`${record.difficultyRangeLabel} WPM`} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <MetricItem label="Expected Service Demand (D*)" value={ms(record.serviceDemandEstimateMs)} />
             <MetricItem label="Expected Arrival Rate (λ*)" value={`${record.arrivalRate.toFixed(3)}/s`} />
             <MetricItem label="Configured Load" value={`${Math.round(record.targetLoad * 100)}%`} />

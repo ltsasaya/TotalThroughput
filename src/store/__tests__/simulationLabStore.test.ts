@@ -15,9 +15,10 @@ describe('useSimulationLabStore', () => {
   })
 
   it('computes a seeded run only after Run is requested', () => {
-    useSimulationLabStore.getState().runSimulation()
+    const result = useSimulationLabStore.getState().runSimulation()
 
     const state = useSimulationLabStore.getState()
+    expect(result).toBe('ran')
     expect(state.currentRun).not.toBeNull()
     expect(state.sweepResults.length).toBeGreaterThan(0)
     expect(state.recentRuns).toHaveLength(1)

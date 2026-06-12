@@ -7,6 +7,7 @@ import {
   useSimulationLabStore,
 } from '@/store/simulationLabStore'
 import { cx } from '@/components/ui/primitives'
+import { recordSimulationActivityIfSignedIn } from '@/api/client'
 import { RetroHeader } from './RetroHeader'
 import { SimulationChart, type SimulationAxisSettings } from './SimulationChart'
 import { AxisInput, ParamInput } from './SimulationInputs'
@@ -132,25 +133,31 @@ export function SimulationLabView() {
       nextDrafts[control.key] = String(nextValue)
     })
     setInputDrafts(nextDrafts)
-    runSimulation(nextInputs)
+    const result = runSimulation(nextInputs)
+    if (result === 'ran') {
+      void recordSimulationActivityIfSignedIn().catch(() => undefined)
+    }
   }
 
   return (
     <div className="app-shell min-h-screen bg-white text-black font-mono">
       <RetroHeader />
       <div className="relative z-10 flex min-h-[calc(100svh-61px)] flex-col bg-white/95 md:h-[calc(100svh-61px)] md:overflow-hidden">
-        <section className="flex flex-wrap items-end gap-5 border-b-[3px] border-black bg-white px-4 py-4 md:px-8">
-          {CONTROL_META.map(control => (
-            <ParamInput
-              key={control.key}
-              label={control.label}
-              symbol={control.symbol}
-              value={inputDrafts[control.key]}
-              onDraftChange={setInputDraft(control.key)}
-              onCommit={() => commitInputDraft(control)}
-            />
-          ))}
-          <div className="flex flex-col gap-1">
+        <section className="border-b-[3px] border-black bg-white px-4 py-4 md:px-8">
+          <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+            <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+              {CONTROL_META.map(control => (
+                <ParamInput
+                  key={control.key}
+                  label={control.label}
+                  symbol={control.symbol}
+                  value={inputDrafts[control.key]}
+                  onDraftChange={setInputDraft(control.key)}
+                  onCommit={() => commitInputDraft(control)}
+                />
+              ))}
+            </div>
+            <div className="ml-auto flex w-full flex-col gap-1 sm:w-48">
             <button
               type="button"
               onClick={runCommittedSimulation}
@@ -166,6 +173,7 @@ export function SimulationLabView() {
             <span className="text-center font-mono text-[10px] font-bold tracking-wide text-gray-500">
               ρ {formatPercent(currentEstimate.loadProfile.perWorkerLoad)} · {currentEstimate.loadProfile.label}
             </span>
+            </div>
           </div>
         </section>
 

@@ -34,10 +34,10 @@ const DIFFICULTY_SPECS: Array<{
   regime: Phase1DifficultyOption['regime']
   seed: number
 }> = [
-  { key: 'easy', label: 'Easy', offset: -1, targetLoad: 0.55, regime: 'low', seed: 61_055 },
-  { key: 'medium', label: 'Medium', offset: 0, targetLoad: 0.75, regime: 'moderate', seed: 61_075 },
-  { key: 'hard', label: 'Hard', offset: 1, targetLoad: 0.92, regime: 'near-saturation', seed: 61_092 },
-  { key: 'impossible', label: 'Impossible', offset: 2, targetLoad: 1.10, regime: 'overload', seed: 61_110 },
+  { key: 'easy', label: 'Easy', offset: -1, targetLoad: 0.25, regime: 'low', seed: 61_025 },
+  { key: 'medium', label: 'Medium', offset: 0, targetLoad: 0.50, regime: 'moderate', seed: 61_050 },
+  { key: 'hard', label: 'Hard', offset: 1, targetLoad: 0.75, regime: 'high', seed: 61_075 },
+  { key: 'impossible', label: 'Impossible', offset: 2, targetLoad: 1.00, regime: 'overload', seed: 61_100 },
 ]
 
 function clamp(value: number, min: number, max: number): number {

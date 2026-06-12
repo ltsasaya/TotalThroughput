@@ -23,7 +23,7 @@ export function CalibrationSummaryView() {
           <div className="calibration-summary-metrics">
             <MetricItem label="WPM" value={wpm} />
             <MetricItem label="Accuracy" value={accuracy} />
-            <MetricItem label="Display bin" value={bin} />
+            <MetricItem label="Difficulty bin" value={bin} />
           </div>
           <div className="calibration-summary-actions">
             <AppButton variant="secondary" onClick={recalibrate}>

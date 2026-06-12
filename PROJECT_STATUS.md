@@ -4,13 +4,13 @@ Last updated: 2026-06-12
 
 ## Current State
 
-Total Throughput is a browser-only Vite, React, and TypeScript instructional
-game focused on server performance. The current branch contains the
-semi-retro player flow from start screen to Game Menu, Educational Manual,
-temporary 100 WPM run-testing bypass, calibrated one-minute Phase 1 runs,
-browser-session run summaries, and a local Simulation Lab for server
-concurrency intuition. The original Phase 2 server-pool flow is deferred until
-a new concept is supplied.
+Total Throughput is a Vite, React, and TypeScript instructional game focused
+on server performance. The current branch has the first local data-backed
+slice: a small same-origin TypeScript API, Neon/Postgres migrations, simple
+username/password auth, profile dashboards, instructor/classes, code-only class
+joining, global data scatterplots, Simulation Lab activity counts, and a
+start-page Concurrency Race sample. Vercel deployment is deferred until this
+local slice is accepted.
 
 ## Recent Work
 
@@ -34,6 +34,23 @@ a new concept is supplied.
 - Documented the Simulation Lab model boundary: finite seeded observations are
   separate from steady-state reference values, with no backend, persistence,
   accounts, or old Phase 2 routing in scope.
+- Added local Node API routes, Postgres migrations, and opaque HttpOnly
+  database-backed sessions without a `SESSION_SECRET`.
+- Added Sign In/Register/Sign Out, Profile, For Instructors, Class Dashboard,
+  Join Class, and Global Data screens using the existing semi-retro UI system.
+- Added instructor-name first-use popup, Class Info modal, class code creation,
+  masked click-to-reveal class codes, duplicate enrollment handling, and class
+  student rows with `...` actions.
+- Persisted signed-in completed Phase 1 run summaries for profile/class/global
+  views and counted Simulation Lab Run-button activity without persisting lab
+  seeds, inputs, samples, or results.
+- Simplified persisted run summary columns: `difficulty_key` derives display
+  labels, `completed_count` is the only completed-request count,
+  `observed_arrival_rate` is stored next to configured `arrival_rate`, and
+  `actual_throughput` is renamed to `throughput_per_second`.
+- Added a start-page `another game idea` button that opens an isolated
+  Concurrency Race sample adapted from BOSS's provided zip without adding zip
+  dependencies or theme files.
 
 ## Remaining Work
 
@@ -47,18 +64,28 @@ a new concept is supplied.
   be adjusted for stricter queueing notation.
 - Remove the temporary 100 WPM run-testing bypass before final calibration
   behavior is accepted.
-- Add the small TypeScript API planned for persisted run and task data.
-- Add managed Postgres schema and migrations for runs, tasks, events, and
-  summary metrics.
+- Add full server-owned run/task/event lifecycle and server-finalized metrics
+  for the later TODO-007 through TODO-011 foundation.
 - Connect the finalized browser-owned run model to server-owned task generation
   and run reloads.
+- Configure and smoke-test Vercel after BOSS accepts the local data slice.
 
 ## Verification
 
 - `git diff --check`: passed
-- `npm test`: passed, 161 tests
+- `npm test`: passed, 168 tests
 - `npm run lint`: passed
 - `npm run build`: passed with Vite's existing large chunk warning
+- `npm run db:migrate`: passed against the configured `.env` `DATABASE_URL`
+  for migrations 001 through 004, with a non-blocking `pg` SSL-mode warning.
+- HTTP smoke: Vite served `/` on the fallback local dev port and the running
+  API returned `/api/auth/me`.
+- Browser interaction smoke: not run in the final review because no browser
+  automation tool or local Playwright package was available in this session.
+- Browser QA: Sign In/Register/Sign Out, Profile metrics/tabs, instructor name
+  popup, class create/code display, Join Class, duplicate already-enrolled
+  message, class dashboard student row/menu, Global Data empty scatterplot
+  shell, and Simulation Lab activity count passed locally.
 - Browser QA: Phase 1 layout stability passed on desktop and mobile for empty
   queue, queued requests with overflow, wrong-letter highlighting, and
   wrong-space underline states.
