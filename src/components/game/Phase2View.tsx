@@ -39,7 +39,7 @@ export function Phase2View() {
     liveMetrics.avgServiceTime > 0 &&
     liveMetrics.avgWaitingTime / liveMetrics.avgServiceTime > 2.0
 
-  const gridClass = config.phase2CoreCount <= 4 ? 'grid-cols-2' : 'grid-cols-3'
+  const gridClass = config.phase2CoreCount <= 4 ? 'sm:grid-cols-2' : 'sm:grid-cols-2 xl:grid-cols-3'
 
   function handleCoreClick(coreId: number, isBusy: boolean) {
     if (isBusy) {
@@ -53,24 +53,22 @@ export function Phase2View() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 relative">
+    <div className="app-shell relative flex h-screen flex-col">
       <TopBar
         label="Phase 2: Server Pool"
         remaining={remaining}
         droppedCount={liveMetrics.droppedCount}
         dropLimit={config.dropLimit}
-        queueLength={liveMetrics.queueLength}
-        queueLimit={config.queueSizeLimit}
         score={score}
         latencyWarning={latencyWarning}
         isFinalStretch={isFinalStretch}
       />
 
-      <main className="flex flex-1 gap-4 p-4 overflow-hidden">
+      <main className="grid flex-1 gap-4 overflow-y-auto p-3 lg:grid-cols-[210px_minmax(0,1fr)_230px] lg:overflow-hidden lg:p-4">
         <StatsPanel />
 
-        <div className="flex-1 flex flex-col gap-4">
-          <div className={`grid ${gridClass} gap-4 flex-1`}>
+        <div className="flex min-h-[560px] flex-col gap-4 lg:min-h-0">
+          <div className={`grid grid-cols-1 ${gridClass} gap-4 flex-1`}>
             {cores.map(core => {
               const task = core.currentTaskId ? (tasks[core.currentTaskId] ?? null) : null
               return (
@@ -91,7 +89,7 @@ export function Phase2View() {
       </main>
 
       {isFinalStretch && (
-        <div className="absolute inset-0 bg-red-950/10 pointer-events-none" />
+        <div className="pointer-events-none absolute inset-0 bg-[color:var(--tt-danger-soft)]/20" />
       )}
     </div>
   )

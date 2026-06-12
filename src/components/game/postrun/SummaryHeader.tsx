@@ -25,10 +25,10 @@ export function SummaryHeader({ failed, survivedMs, phaseDuration, difficulty, c
 
   return (
     <div className="mb-8">
-      <h1 className={`text-3xl font-bold mb-1 ${failed ? 'text-red-400' : 'text-white'}`}>
+      <h1 className={`mb-1 text-3xl font-bold ${failed ? 'text-[color:var(--tt-danger)]' : 'text-[color:var(--tt-text)]'}`}>
         {failed ? 'Phase 2 Failed - Queue Overloaded' : 'Phase 2 Complete - Server Pool Dispatch'}
       </h1>
-      <p className="text-sm text-gray-400">{subheader}</p>
+      <p className="tt-copy text-sm">{subheader}</p>
     </div>
   )
 }

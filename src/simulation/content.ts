@@ -21,6 +21,8 @@ const CONTENT_BY_SIZE: Record<TaskSize, string[]> = {
   ],
 }
 
+export const PHASE1_PROMPT_SIZE: TaskSize = 'M'
+
 // Word count ranges per size: [min, max]
 const WORD_COUNT_RANGE: Record<TaskSize, [number, number]> = {
   S: [2, 3],
@@ -36,19 +38,21 @@ const DEADLINE_MS: Record<TaskSize, number> = {
   L: 20_000,
 }
 
+function poolForSize(size: TaskSize): string[] {
+  if (size === 'S') return [...CONTENT_BY_SIZE.S, ...CONTENT_BY_SIZE.S]
+  if (size === 'M') return [...CONTENT_BY_SIZE.S, ...CONTENT_BY_SIZE.M, ...CONTENT_BY_SIZE.M]
+  return [...CONTENT_BY_SIZE.S, ...CONTENT_BY_SIZE.M, ...CONTENT_BY_SIZE.L, ...CONTENT_BY_SIZE.L]
+}
+
+function phase1PromptWordCount(size: TaskSize): number {
+  const [min, max] = WORD_COUNT_RANGE[size]
+  return Math.round((min + max) / 2)
+}
+
 function pickWords(size: TaskSize): string {
   const [min, max] = WORD_COUNT_RANGE[size]
   const count = min + Math.floor(Math.random() * (max - min + 1))
-
-  // Build a combined pool weighted toward the task's own size
-  const pool: string[] = []
-  if (size === 'S') {
-    pool.push(...CONTENT_BY_SIZE.S, ...CONTENT_BY_SIZE.S)
-  } else if (size === 'M') {
-    pool.push(...CONTENT_BY_SIZE.S, ...CONTENT_BY_SIZE.M, ...CONTENT_BY_SIZE.M)
-  } else {
-    pool.push(...CONTENT_BY_SIZE.S, ...CONTENT_BY_SIZE.M, ...CONTENT_BY_SIZE.L, ...CONTENT_BY_SIZE.L)
-  }
+  const pool = poolForSize(size)
 
   const words: string[] = []
   for (let i = 0; i < count; i++) {
@@ -57,12 +61,30 @@ function pickWords(size: TaskSize): string {
   return words.join(' ')
 }
 
-function pickPhase1Words(contentSeed: number): string {
-  const pool = CONTENT_BY_SIZE.S
-  const firstIdx = Math.abs(contentSeed * 17 + 3) % pool.length
-  let secondIdx = Math.abs(contentSeed * 31 + 11) % pool.length
-  if (secondIdx === firstIdx) secondIdx = (secondIdx + 1) % pool.length
-  return `${pool[firstIdx]} ${pool[secondIdx]}`
+function pickPhase1Words(contentSeed: number, size = PHASE1_PROMPT_SIZE): string {
+  const pool = poolForSize(size)
+  const count = phase1PromptWordCount(size)
+  const words: string[] = []
+
+  for (let i = 0; i < count; i++) {
+    let idx = Math.abs((contentSeed * (17 + i * 14)) + 3 + i * 11) % pool.length
+    let guard = 0
+    while (words.includes(pool[idx]) && guard < pool.length) {
+      idx = (idx + 1) % pool.length
+      guard++
+    }
+    words.push(pool[idx])
+  }
+
+  return words.join(' ')
+}
+
+export function estimatePhase1PromptLength(size = PHASE1_PROMPT_SIZE): number {
+  const pool = poolForSize(size)
+  const count = phase1PromptWordCount(size)
+  const totalChars = pool.reduce((sum, word) => sum + word.length, 0)
+  const avgWordLength = totalChars / pool.length
+  return Math.round((avgWordLength * count) + (count - 1))
 }
 
 // trueServiceDemand: pass calibrated ms value for Phase 2 cores; omit (0) for Phase 1.
@@ -81,14 +103,14 @@ export function generateTask(size: TaskSize, arrivalTime: number, trueServiceDem
   }
 }
 
-export function generatePhase1Task(arrivalTime: number, contentSeed: number): Task {
+export function generatePhase1Task(arrivalTime: number, contentSeed: number, size = PHASE1_PROMPT_SIZE): Task {
   return {
     id: crypto.randomUUID(),
     arrivalTime,
-    size: 'S',
+    size,
     trueServiceDemand: 0,
     status: 'waiting',
-    content: pickPhase1Words(contentSeed),
+    content: pickPhase1Words(contentSeed, size),
     typedContent: '',
   }
 }

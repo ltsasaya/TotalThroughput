@@ -7,14 +7,21 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { SectionLabel } from '@/components/ui/primitives'
 
 interface PostRunChartsProps {
   throughputHistory: { time: number; value: number }[]
   queueLengthHistory: { time: number; value: number }[]
 }
 
-const TOOLTIP_STYLE = { background: '#1f2937', border: 'none', color: '#fff' }
-const GRID_STYLE = { strokeDasharray: '3 3', stroke: '#374151' }
+const TOOLTIP_STYLE = {
+  background: 'var(--tt-surface-raised)',
+  border: '3px solid var(--tt-border)',
+  borderRadius: 4,
+  color: 'var(--tt-text)',
+}
+const GRID_STYLE = { strokeDasharray: '4 4', stroke: 'var(--tt-chart-grid)' }
+const AXIS_TICK = { fill: 'var(--tt-text-subtle)', fontSize: 11 }
 
 export function PostRunCharts({ throughputHistory, queueLengthHistory }: PostRunChartsProps) {
   const tpData = throughputHistory.map(p => ({
@@ -36,43 +43,43 @@ export function PostRunCharts({ throughputHistory, queueLengthHistory }: PostRun
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <div className="text-sm font-semibold text-gray-400 mb-2">Throughput Over Time</div>
+        <SectionLabel className="mb-2 normal-case">Throughput Over Time</SectionLabel>
         <ResponsiveContainer width="100%" height={180}>
           <LineChart data={tpData}>
             <CartesianGrid {...GRID_STYLE} />
             <XAxis
               dataKey="t"
               ticks={xTicks}
-              tick={{ fill: '#6b7280', fontSize: 11 }}
-              label={{ value: 'Time (s)', position: 'insideBottomRight', offset: -4, fill: '#6b7280', fontSize: 11 }}
+              tick={AXIS_TICK}
+              label={{ value: 'Time (s)', position: 'insideBottomRight', offset: -4, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
             />
             <YAxis
-              tick={{ fill: '#6b7280', fontSize: 11 }}
-              label={{ value: 'req/s', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 11 }}
+              tick={AXIS_TICK}
+              label={{ value: 'req/s', angle: -90, position: 'insideLeft', fill: 'var(--tt-text-subtle)', fontSize: 11 }}
             />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Line type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="v" stroke="var(--tt-accent)" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div>
-        <div className="text-sm font-semibold text-gray-400 mb-2">Queue Length Over Time</div>
+        <SectionLabel className="mb-2 normal-case">Queue Length Over Time</SectionLabel>
         <ResponsiveContainer width="100%" height={180}>
           <LineChart data={qlData}>
             <CartesianGrid {...GRID_STYLE} />
             <XAxis
               dataKey="t"
               ticks={xTicks}
-              tick={{ fill: '#6b7280', fontSize: 11 }}
-              label={{ value: 'Time (s)', position: 'insideBottomRight', offset: -4, fill: '#6b7280', fontSize: 11 }}
+              tick={AXIS_TICK}
+              label={{ value: 'Time (s)', position: 'insideBottomRight', offset: -4, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
             />
             <YAxis
-              tick={{ fill: '#6b7280', fontSize: 11 }}
-              label={{ value: 'Queue Length', angle: -90, position: 'insideLeft', fill: '#6b7280', fontSize: 11 }}
+              tick={AXIS_TICK}
+              label={{ value: 'Queue Length', angle: -90, position: 'insideLeft', fill: 'var(--tt-text-subtle)', fontSize: 11 }}
             />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Line type="monotone" dataKey="v" stroke="#f59e0b" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="v" stroke="var(--tt-warning)" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>

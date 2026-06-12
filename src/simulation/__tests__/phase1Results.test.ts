@@ -12,8 +12,8 @@ function completedTask(id: string, arrivalTime: number, serviceStartTime: number
     size: 'S',
     trueServiceDemand: 0,
     status: 'completed',
-    content: 'test rpc',
-    typedContent: 'test rpc',
+    content: 'test request',
+    typedContent: 'test request',
     serviceStartTime,
     firstKeystrokeTime: serviceStartTime + 100,
     completionTime,
@@ -27,7 +27,7 @@ function waitingTask(id: string, arrivalTime: number): Task {
     size: 'S',
     trueServiceDemand: 0,
     status: 'waiting',
-    content: 'test rpc',
+    content: 'test request',
     typedContent: '',
   }
 }

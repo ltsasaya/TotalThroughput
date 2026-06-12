@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generatePhase1Task, generateTask } from '../content'
+import { estimatePhase1PromptLength, generatePhase1Task, generateTask } from '../content'
 
 describe('generateTask', () => {
   it('returns a task with the correct shape', () => {
@@ -45,12 +45,12 @@ describe('generateTask', () => {
 })
 
 describe('generatePhase1Task', () => {
-  it('creates two-word S-only prompts without deadlines', () => {
+  it('creates medium-length Phase 1 prompts without deadlines', () => {
     const task = generatePhase1Task(500, 10)
     expect(task.arrivalTime).toBe(500)
-    expect(task.size).toBe('S')
+    expect(task.size).toBe('M')
     expect(task.deadline).toBeUndefined()
-    expect(task.content!.split(' ')).toHaveLength(2)
+    expect(task.content!.split(' ')).toHaveLength(4)
   })
 
   it('uses the content seed to produce repeatable prompt text', () => {
@@ -59,6 +59,10 @@ describe('generatePhase1Task', () => {
     const third = generatePhase1Task(0, 43)
     expect(second.content).toBe(first.content)
     expect(third.content).not.toBe(first.content)
+  })
+
+  it('estimates Phase 1 service demand from medium prompt length', () => {
+    expect(estimatePhase1PromptLength()).toBeGreaterThan(20)
   })
 })
 

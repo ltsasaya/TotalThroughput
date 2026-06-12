@@ -51,7 +51,7 @@ describe('generatePoissonArrivalSchedule', () => {
     expect(schedule.length).toBeLessThanOrEqual(80)
   })
 
-  it('defaults to S-only arrivals for Phase 1 tuning', () => {
+  it('defaults to the legacy short-prompt size bucket when no size mix is supplied', () => {
     const schedule = generatePoissonArrivalSchedule({
       lambdaPerSecond: 1,
       arrivalWindowMs: 30_000,

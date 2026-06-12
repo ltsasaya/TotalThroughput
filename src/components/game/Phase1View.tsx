@@ -1,38 +1,22 @@
 import { useEffect } from 'react'
 import { useGameStore } from '@/store/gameStore'
+import { MetricItem, Panel, SectionLabel } from '@/components/ui/primitives'
 import { TopBar } from './TopBar'
-import type { TaskSize } from '@/types/task'
-
-const SIZE_BADGE: Record<TaskSize, string> = {
-  S: 'bg-green-900 text-green-300 text-xs font-bold px-2 py-0.5 rounded',
-  M: 'bg-yellow-900 text-yellow-300 text-xs font-bold px-2 py-0.5 rounded',
-  L: 'bg-red-900 text-red-300 text-xs font-bold px-2 py-0.5 rounded',
-}
-
-function SizeBadge({ size }: { size: TaskSize }) {
-  return <span className={SIZE_BADGE[size]}>{size}</span>
-}
 
 function waitColor(ms: number): string {
-  if (ms < 3000) return 'text-gray-500'
-  if (ms < 7000) return 'text-amber-400'
-  return 'text-red-400'
+  if (ms < 3000) return 'text-[color:var(--tt-text-subtle)]'
+  if (ms < 7000) return 'text-[color:var(--tt-warning)]'
+  return 'text-[color:var(--tt-danger)]'
 }
 
 function StatBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-2xl text-white font-bold">{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
-    </div>
-  )
+  return <MetricItem label={label} value={value} valueClass="text-xl lg:text-2xl" />
 }
 
 export function Phase1View() {
   const config = useGameStore(s => s.config)
   const phaseElapsed = useGameStore(s => s.phaseElapsed)
-  const phase1Levels = useGameStore(s => s.phase1Levels)
-  const currentPhase1LevelIndex = useGameStore(s => s.currentPhase1LevelIndex)
+  const phase1RunConfig = useGameStore(s => s.phase1RunConfig)
   const activePhase1TaskId = useGameStore(s => s.activePhase1TaskId)
   const tasks = useGameStore(s => s.tasks)
   const queue = useGameStore(s => s.queue)
@@ -55,11 +39,8 @@ export function Phase1View() {
   const content = activeTask?.content ?? ''
   const typedContent = activeTask?.typedContent ?? ''
   const remaining = config.phase1Duration - phaseElapsed
-  const currentLevel = phase1Levels[currentPhase1LevelIndex]
-  const completionTarget = currentLevel?.minCompletedSamples ?? 0
-
-  // Count active errors for the badge
-  const errorCount = [...typedContent].filter((c, i) => c !== content[i]).length
+  const visibleQueue = queue.slice(0, 5)
+  const hiddenQueueCount = Math.max(0, queue.length - visibleQueue.length)
 
   // Group characters by word to prevent mid-word line breaks
   interface CharEntry { char: string; idx: number }
@@ -75,43 +56,57 @@ export function Phase1View() {
   }
   if (currentWord.length > 0) wordGroups.push(currentWord)
 
+  function typedCharClass(char: string, idx: number): string {
+    let cls = 'font-mono text-2xl font-bold'
+    if (idx < typedContent.length) {
+      if (typedContent[idx] === char) {
+        cls += ' text-[color:var(--tt-success)]'
+      } else {
+        cls += ' text-[color:var(--tt-danger)] underline decoration-[color:var(--tt-danger)] decoration-[3px] underline-offset-4'
+      }
+    } else if (idx === typedContent.length) {
+      cls += ' text-[color:var(--tt-text)] underline underline-offset-4'
+    } else {
+      cls += ' text-[color:var(--tt-text-subtle)]'
+    }
+    return cls
+  }
+
   return (
-    <div className="flex flex-col h-screen bg-gray-950 relative">
+    <div className="app-shell flex h-screen flex-col">
       <TopBar
-        label={`Phase 1: RPC Level ${currentPhase1LevelIndex + 1}/${phase1Levels.length}`}
+        label={phase1RunConfig
+          ? `${phase1RunConfig.difficulty.label}: expected arrival ${phase1RunConfig.lambda.toFixed(2)}/s`
+          : 'Phase 1 Run'}
         remaining={remaining}
-        queueLength={liveMetrics.queueLength}
       />
 
-      <main className="flex flex-1 gap-4 p-4 overflow-hidden">
-        <div className="bg-gray-900 rounded-xl p-4 flex flex-col gap-4 min-w-[180px] max-w-[200px] h-full">
+      <main className="grid flex-1 gap-4 overflow-y-auto p-3 lg:grid-cols-[220px_minmax(0,1fr)] lg:overflow-hidden lg:p-4">
+        <Panel className="order-2 flex flex-col gap-4 p-4 lg:order-1 lg:h-full lg:overflow-hidden">
           <div>
-            <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Stats</div>
-            {currentLevel && (
-              <div className="mt-1 text-xs text-blue-300 font-mono">
-                {currentLevel.label} - {currentLevel.isDemo ? 'demo' : 'gate'}
-              </div>
-            )}
+            <SectionLabel>Stats</SectionLabel>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="tt-scrollbar grid grid-cols-2 gap-4 lg:grid-cols-1 lg:overflow-y-auto">
             <StatBlock
-              label="Completed Samples"
-              value={`${liveMetrics.completedCount}/${completionTarget || '—'}`}
+              label="Total Throughput"
+              value={String(liveMetrics.completedCount)}
             />
             <StatBlock label="Served Rate X" value={`${liveMetrics.throughput.toFixed(2)}/s`} />
             <StatBlock
-              label="Burst λ"
-              value={currentLevel ? `${currentLevel.lambda.toFixed(2)}/s` : '—'}
-            />
-            <StatBlock
-              label="Ref Load ρ"
-              value={currentLevel ? `${Math.round(currentLevel.referenceLoad * 100)}%` : '—'}
+              label="Arrival λ"
+              value={phase1RunConfig ? `${phase1RunConfig.lambda.toFixed(2)}/s` : '—'}
             />
             <StatBlock label="Avg Service D" value={`${(liveMetrics.avgServiceTime / 1000).toFixed(1)}s`} />
             <StatBlock
-              label="Served Avg R"
+              label="Avg Response Time (R)"
               value={liveMetrics.avgResponseTime > 0
                 ? `${(liveMetrics.avgResponseTime / 1000).toFixed(1)}s`
+                : '—'}
+            />
+            <StatBlock
+              label="Reaction"
+              value={(liveMetrics.avgReactionSpeed ?? 0) > 0
+                ? `${((liveMetrics.avgReactionSpeed ?? 0) / 1000).toFixed(2)}s`
                 : '—'}
             />
             <StatBlock
@@ -120,101 +115,93 @@ export function Phase1View() {
                 ? `${Math.round(liveMetrics.avgTypingSpeed!)} WPM`
                 : '—'}
             />
-            <StatBlock label="Max Queue" value={String(phase1MaxQueueLength)} />
+            <StatBlock
+              label="Utilization (U)"
+              value={liveMetrics.perCoreUtilization[0] !== undefined
+                ? `${Math.round(liveMetrics.perCoreUtilization[0] * 100)}%`
+                : '—'}
+            />
+            <StatBlock label="Peak Queue" value={String(phase1MaxQueueLength)} />
           </div>
-        </div>
+        </Panel>
 
-        <div className="flex-1 flex flex-col items-center justify-center text-center relative">
-          {!activeTask ? (
-            <p className="text-gray-500 text-xl">Waiting for requests...</p>
-          ) : (
-            <>
-              <div className="mb-4 flex items-center justify-center gap-3">
-                <SizeBadge size={activeTask.size} />
-                {errorCount > 0 && (
-                  <span className="text-xs text-red-400 font-mono">{errorCount} error{errorCount > 1 ? 's' : ''}</span>
-                )}
+        <Panel className="order-1 flex min-h-[640px] flex-col p-5 lg:order-2 lg:h-full">
+          <div className="mb-4">
+            <SectionLabel>Worker</SectionLabel>
+          </div>
+
+          <div className="relative flex flex-1 overflow-hidden text-center">
+            {!activeTask ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="tt-muted text-xl">Waiting for requests...</p>
               </div>
-
-              <div className="flex justify-center flex-wrap leading-relaxed">
-                {wordGroups.map((group, wi) => {
-                  const isSpace = group.length === 1 && group[0].char === ' '
-                  if (isSpace) {
-                    const { idx } = group[0]
-                    let cls = 'font-mono text-2xl font-bold tracking-wide'
-                    if (idx < typedContent.length) {
-                      cls += typedContent[idx] === ' ' ? ' text-green-400' : ' text-red-400'
-                    } else if (idx === typedContent.length) {
-                      cls += ' text-white underline underline-offset-4'
-                    } else {
-                      cls += ' text-gray-600'
-                    }
-                    return <span key={wi} className={cls}>{'\u00A0'}</span>
-                  }
-                  return (
-                    <span key={wi} className="inline-flex whitespace-nowrap">
-                      {group.map(({ char, idx }) => {
-                        let cls = 'font-mono text-2xl font-bold tracking-wide'
-                        if (idx < typedContent.length) {
-                          cls += typedContent[idx] === char ? ' text-green-400' : ' text-red-400'
-                        } else if (idx === typedContent.length) {
-                          cls += ' text-white underline underline-offset-4'
-                        } else {
-                          cls += ' text-gray-600'
-                        }
-                        return <span key={idx} className={cls}>{char}</span>
-                      })}
-                    </span>
-                  )
-                })}
-              </div>
-
-              <div className="w-full bg-gray-800 rounded-full h-1.5 mt-4">
+            ) : (
+              <>
                 <div
-                  className="bg-green-500 h-1.5 rounded-full transition-all"
-                  style={{ width: content.length > 0 ? `${(typedContent.length / content.length) * 100}%` : '0%' }}
-                />
-              </div>
-            </>
-          )}
-
-        </div>
-
-        <div className="bg-gray-900 rounded-xl p-4 flex flex-col h-full min-w-[200px] max-w-[240px]">
-          <div className="flex items-center mb-3">
-            <span className="text-sm font-semibold uppercase tracking-wider text-gray-400">Queue</span>
-            <span className="ml-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">
-              {queue.length}
-            </span>
-          </div>
-          {queue.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <span className="text-gray-600 text-sm">No requests waiting</span>
-            </div>
-          ) : (
-            <div className="overflow-y-auto flex-1 flex flex-col gap-1.5">
-              {queue.map((id) => {
-                const t = tasks[id]
-                if (!t) return null
-                const waitMs = phaseElapsed - t.arrivalTime
-                return (
-                  <div
-                    key={id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-800"
-                  >
-                    <SizeBadge size={t.size} />
-                    <span className="text-xs text-gray-300 font-mono flex-1 truncate">
-                      {t.content ?? t.id}
-                    </span>
-                    <span className={`text-xs whitespace-nowrap ${waitColor(waitMs)}`}>
-                      {(waitMs / 1000).toFixed(1)}s
-                    </span>
+                  className="absolute top-1/2 left-1/2 flex w-full -translate-x-1/2 -translate-y-1/2 justify-center px-4"
+                  data-testid="phase1-active-task-anchor"
+                >
+                  <div className="flex max-w-3xl flex-wrap justify-center leading-relaxed">
+                  {wordGroups.map((group, wi) => {
+                    const isSpace = group.length === 1 && group[0].char === ' '
+                    if (isSpace) {
+                      const { idx } = group[0]
+                      return <span key={wi} className={typedCharClass(' ', idx)}>{'\u00A0'}</span>
+                    }
+                    const wordHasError = group.some(({ char, idx }) => idx < typedContent.length && typedContent[idx] !== char)
+                    return (
+                      <span
+                        key={wi}
+                        className={`inline-flex whitespace-nowrap px-1 ${wordHasError ? 'bg-[color:var(--tt-danger-soft)]' : 'bg-transparent'}`}
+                        >
+                        {group.map(({ char, idx }) => {
+                          return <span key={idx} className={typedCharClass(char, idx)}>{char}</span>
+                        })}
+                      </span>
+                    )
+                  })}
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+
+                <div
+                  className="absolute top-[calc(50%+2.25rem)] left-1/2 flex w-full max-w-3xl -translate-x-1/2 flex-col gap-1 px-4"
+                  data-testid="phase1-queue-stack"
+                >
+                  {visibleQueue.map((id, index) => {
+                    const t = tasks[id]
+                    if (!t) return null
+                    const waitMs = phaseElapsed - t.arrivalTime
+                    return (
+                      <div
+                        key={id}
+                        className="grid min-h-10 grid-cols-[5rem_minmax(0,1fr)_5rem] items-center justify-center gap-3 px-2"
+                      >
+                        <span className={`text-right font-mono text-sm font-bold whitespace-nowrap ${waitColor(waitMs)}`}>
+                          {(waitMs / 1000).toFixed(1)}s
+                        </span>
+                        <span className="truncate text-center font-mono text-[1.35rem] font-bold leading-8 text-[color:var(--tt-text-subtle)]">
+                          {t.content ?? t.id}
+                        </span>
+                        <span className="text-left font-mono text-xs font-bold text-[color:var(--tt-text-subtle)]">
+                          {index === 0 ? `Queue ${queue.length}` : ''}
+                        </span>
+                      </div>
+                    )
+                  })}
+                  {hiddenQueueCount > 0 && (
+                    <div className="grid min-h-10 grid-cols-[5rem_minmax(0,1fr)_5rem] items-center justify-center gap-3 bg-[color:var(--tt-surface-muted)] px-2">
+                      <span />
+                      <span className="truncate text-center font-mono text-[1.35rem] font-bold leading-8 text-[color:var(--tt-text-subtle)]">
+                        +{hiddenQueueCount} more waiting
+                      </span>
+                      <span />
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </Panel>
       </main>
     </div>
   )

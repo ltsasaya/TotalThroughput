@@ -1,25 +1,27 @@
-import { describe, it, expect } from 'vitest'
-import { computePhase1Tick, type Phase1TickInput } from '../phase1Tick'
-import { buildPhase1Levels, phase1LevelDurationMs } from '../phase1Levels'
-import { buildPhase2RunConfig } from '../phase2Runs'
-import type { GameConfig, Phase1LevelConfig } from '../../types/game'
+import { describe, expect, it } from 'vitest'
+import type { Phase1RunConfig } from '../../types/game'
 import type { LiveMetrics } from '../../types/metrics'
 import type { Task } from '../../types/task'
+import { computePhase1RunTick, type Phase1RunTickInput } from '../phase1Tick'
+import { PHASE1_RUN_DURATION_MS } from '../phase1Runs'
 
-const LEVEL = buildPhase1Levels('standard')[0]
-
-const BASE_CONFIG: GameConfig = {
-  difficulty: 'standard',
-  phase2CoreCount: 4,
-  phase1Duration: phase1LevelDurationMs(LEVEL),
-  phase2Duration: 120_000,
-  queueSizeLimit: 6,
-  dropLimit: 5,
-  showTrueServiceDemand: false,
-  deadlineMultiplier: 1.0,
-  referenceWPM: 70,
-  phase1Levels: [LEVEL],
-  phase2Run: buildPhase2RunConfig('standard', 3_000),
+const RUN_CONFIG: Phase1RunConfig = {
+  difficulty: {
+    key: 'medium',
+    label: 'Medium',
+    range: { min: 75, max: 90, label: '75-90' },
+    targetLoad: 0.50,
+    regime: 'moderate',
+    seed: 123,
+  },
+  seed: 123,
+  lambda: 0.3,
+  targetLoad: 0.50,
+  expectedArrivals: 18,
+  arrivalWindowMs: PHASE1_RUN_DURATION_MS,
+  serviceDemandMs: 2_500,
+  calibrationWpm: 75,
+  calibrationBinIndex: 4,
 }
 
 const BASE_METRICS: LiveMetrics = {
@@ -37,22 +39,21 @@ const BASE_METRICS: LiveMetrics = {
   targetPerWorkerLoad: 0,
 }
 
-function minimalInput(level: Phase1LevelConfig = LEVEL): Phase1TickInput {
+function input(overrides: Partial<Phase1RunTickInput> = {}): Phase1RunTickInput {
   return {
-    config: { ...BASE_CONFIG, phase1Duration: phase1LevelDurationMs(level), phase1Levels: [level] },
     tasks: {},
     queue: [],
     activePhase1TaskId: null,
     liveMetrics: { ...BASE_METRICS },
     arrivalSchedule: [],
     nextArrivalIndex: 0,
-    phaseElapsed: 0,
-    currentPhase1Level: level,
     phase1MaxQueueLength: 0,
+    phase1RunConfig: RUN_CONFIG,
+    ...overrides,
   }
 }
 
-function waitingTask(id: string, deadline?: number): Task {
+function waitingTask(id: string): Task {
   return {
     id,
     arrivalTime: 0,
@@ -61,7 +62,6 @@ function waitingTask(id: string, deadline?: number): Task {
     status: 'waiting',
     content: 'test task',
     typedContent: '',
-    deadline,
   }
 }
 
@@ -75,110 +75,71 @@ function completedTask(id: string, serviceStartTime: number, completionTime: num
     content: 'test',
     typedContent: 'test',
     serviceStartTime,
+    firstKeystrokeTime: serviceStartTime + 100,
     completionTime,
   }
 }
 
-describe('computePhase1Tick - level timing', () => {
-  it('does not end the level before duration elapses', () => {
-    const output = computePhase1Tick(minimalInput(), phase1LevelDurationMs(LEVEL) - 1)
-    expect(output.levelEnded).toBe(false)
-  })
-
-  it('ends the level when elapsed reaches duration', () => {
-    const output = computePhase1Tick(minimalInput(), phase1LevelDurationMs(LEVEL))
-    expect(output.levelEnded).toBe(true)
-  })
-})
-
-describe('computePhase1Tick - no-drop task flow', () => {
-  it('spawns elapsed Poisson arrivals as Phase 1 S prompts without deadlines', () => {
-    const input: Phase1TickInput = {
-      ...minimalInput(),
+describe('computePhase1RunTick', () => {
+  it('spawns elapsed arrivals and activates the first waiting request', () => {
+    const output = computePhase1RunTick(input({
       arrivalSchedule: [
         { arrivalTime: 100, size: 'S' },
         { arrivalTime: 200, size: 'S' },
       ],
-    }
-    const output = computePhase1Tick(input, 250)
-    const spawned = Object.values(output.tasks)
-    expect(spawned).toHaveLength(2)
-    expect(spawned.every(task => task.size === 'S')).toBe(true)
-    expect(spawned.every(task => task.deadline === undefined)).toBe(true)
+    }), 250)
+
+    expect(Object.values(output.tasks)).toHaveLength(2)
+    expect(output.activePhase1TaskId).not.toBeNull()
+    expect(output.queue).toHaveLength(1)
     expect(output.nextArrivalIndex).toBe(2)
   })
 
-  it('activates the first waiting task when no task is active', () => {
-    const task = waitingTask('t1')
-    const output = computePhase1Tick({ ...minimalInput(), tasks: { t1: task }, queue: ['t1'] }, 100)
-    expect(output.activePhase1TaskId).toBe('t1')
-    expect(output.tasks.t1.status).toBe('active')
-    expect(output.tasks.t1.serviceStartTime).toBe(100)
+  it('ends exactly at the 60-second observation window', () => {
+    expect(computePhase1RunTick(input(), PHASE1_RUN_DURATION_MS - 1).runEnded).toBe(false)
+    expect(computePhase1RunTick(input(), PHASE1_RUN_DURATION_MS).runEnded).toBe(true)
   })
 
-  it('does not expire or drop tasks, even if a legacy deadline is present', () => {
-    const task = waitingTask('t1', 0)
-    const output = computePhase1Tick({ ...minimalInput(), tasks: { t1: task }, queue: ['t1'] }, 100)
-    expect(output.tasks.t1.status).toBe('active')
-    expect(output.liveMetrics.droppedCount).toBe(0)
-  })
-
-  it('leaves unfinished work unchanged when a level ends', () => {
-    const waiting = waitingTask('waiting')
-    const active: Task = {
-      ...waitingTask('active'),
-      status: 'active',
-      typedContent: 'te',
-      serviceStartTime: 1000,
-    }
-    const input: Phase1TickInput = {
-      ...minimalInput(),
-      tasks: { waiting, active },
+  it('does not drop unfinished work at run end', () => {
+    const active: Task = { ...waitingTask('active'), status: 'active', serviceStartTime: 1000, typedContent: 'te' }
+    const output = computePhase1RunTick(input({
+      tasks: { active, waiting: waitingTask('waiting') },
       queue: ['waiting'],
       activePhase1TaskId: 'active',
-    }
-    const output = computePhase1Tick(input, phase1LevelDurationMs(LEVEL))
-    expect(output.levelEnded).toBe(true)
-    expect(output.tasks.waiting.status).toBe('waiting')
+    }), PHASE1_RUN_DURATION_MS)
+
     expect(output.tasks.active.status).toBe('active')
+    expect(output.tasks.waiting.status).toBe('waiting')
     expect(output.liveMetrics.droppedCount).toBe(0)
   })
-})
 
-describe('computePhase1Tick - metrics', () => {
-  it('computes service, waiting, response, and throughput metrics from completed tasks', () => {
-    const task = completedTask('t1', 1000, 4000)
-    const input: Phase1TickInput = { ...minimalInput(), tasks: { t1: task } }
-    const output = computePhase1Tick(input, 10_000)
+  it('computes completed-only metrics and live utilization', () => {
+    const output = computePhase1RunTick(input({
+      tasks: {
+        done: completedTask('done', 1000, 4000),
+        active: { ...waitingTask('active'), status: 'active', serviceStartTime: 8000 },
+      },
+      activePhase1TaskId: 'active',
+    }), 10_000)
+
     expect(output.liveMetrics.completedCount).toBe(1)
     expect(output.liveMetrics.avgWaitingTime).toBe(1000)
     expect(output.liveMetrics.avgServiceTime).toBe(3000)
     expect(output.liveMetrics.avgResponseTime).toBe(4000)
-    expect(output.liveMetrics.throughput).toBeCloseTo(0.1)
+    expect(output.liveMetrics.avgReactionSpeed).toBe(100)
+    expect(output.liveMetrics.perCoreUtilization[0]).toBeCloseTo(0.5)
   })
 
-  it('computes reaction speed and typing speed when firstKeystrokeTime is set', () => {
-    const task: Task = {
-      ...completedTask('t1', 1000, 5000),
-      firstKeystrokeTime: 1500,
-      content: 'hello world',
-    }
-    const output = computePhase1Tick({ ...minimalInput(), tasks: { t1: task } }, 10_000)
-    expect(output.liveMetrics.avgReactionSpeed).toBe(500)
-    expect(output.liveMetrics.avgTypingSpeed).toBeCloseTo(37.7, 0)
-  })
-
-  it('tracks max queue length across ticks', () => {
-    const input: Phase1TickInput = {
-      ...minimalInput(),
+  it('tracks max queue length', () => {
+    const output = computePhase1RunTick(input({
       arrivalSchedule: [
         { arrivalTime: 100, size: 'S' },
         { arrivalTime: 101, size: 'S' },
         { arrivalTime: 102, size: 'S' },
       ],
       phase1MaxQueueLength: 1,
-    }
-    const output = computePhase1Tick(input, 150)
+    }), 150)
+
     expect(output.phase1MaxQueueLength).toBe(2)
   })
 })

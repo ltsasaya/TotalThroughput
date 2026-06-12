@@ -7,9 +7,9 @@ export interface GlossaryEntry {
 
 export const GLOSSARY: GlossaryEntry[] = [
   {
-    symbol: 'RPC',
-    name: 'Remote Procedure Call',
-    definition: 'A client request to a server that waits for a response. In this game, each typing task represents one RPC.',
+    symbol: 'Req',
+    name: 'Request',
+    definition: 'A unit of client work sent to a server that waits for a response. In this game, each typing task represents one request.',
   },
   {
     symbol: 'D',
@@ -20,7 +20,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     symbol: 'R',
     name: 'Response Time',
     formula: 'R = D + W',
-    definition: 'Client-observed time from RPC arrival to completion for served requests. Includes waiting time and service time.',
+    definition: 'Client-observed time from request arrival to completion for served requests. Includes waiting time and service time.',
   },
   {
     symbol: 'W',
@@ -36,7 +36,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     symbol: 'λmax',
     name: 'Peak Rate',
     formula: 'λmax = 1/D (one server)  |  λmax ≈ c/D (c workers)',
-    definition: 'Reference RPC arrival rate at saturation. A continuing queue cannot sustain arrivals above λmax without growing backlog.',
+    definition: 'Reference request arrival rate at saturation. A continuing queue cannot sustain arrivals above λmax without growing backlog.',
   },
   {
     symbol: 'ρ',

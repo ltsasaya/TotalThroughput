@@ -3,7 +3,7 @@
 ## Summary
 
 Total Throughput is a browser-based instructional game that teaches server
-performance through direct play. The introductory model is clients sending RPCs
+performance through direct play. The introductory model is clients sending requests
 to a server: requests arrive, wait in a queue when workers are busy, receive
 service, and return responses. The game then uses that server model to
 introduce systems performance more generally. The player first operates a
@@ -16,7 +16,7 @@ The project is primarily a teaching tool. It should be enjoyable enough to motiv
 
 * Teach server throughput, queue growth, waiting time, service time, response
   time, utilization, and overload through gameplay.
-* Introduce server queues through a client/RPC request-response model before
+* Introduce server queues through a client request/response model before
   showing formulas.
 * Show the difference between one-server capacity and multi-server capacity.
 * Demonstrate that more workers do not automatically produce proportional
@@ -64,14 +64,13 @@ Game-like teaching tool.
 After playing, a user should be able to understand:
 
 * Throughput as completed work per unit time.
-* A server as clients, RPC requests, queue, service, and response.
+* A server as clients, requests, queue, service, and response.
 * Service time as the time spent actually doing work.
 * Waiting time as the time spent in queue before service starts.
 * Response time as waiting time plus service time.
 * Queue growth when arrival rate exceeds effective service capacity.
-* Why parallel workers can raise ideal capacity.
-* Why actual throughput can fall below ideal throughput when dispatch overhead,
-  idle workers, or uneven load appear.
+* Why added capacity can raise ideal throughput, once a future multi-resource
+  or multi-worker phase is defined.
 * Why a system can look busy while producing poor useful work.
 * Why low latency and high throughput are related but not identical goals.
 * How the same server-performance vocabulary generalizes to CPUs, disks,
@@ -83,12 +82,24 @@ After playing, a user should be able to understand:
 
 * Browser-based playable prototype
 * Phase 1 calibration
-* Phase 2 server-pool dispatch
-* Variable-size tasks
+* Calibrated one-minute Phase 1 request runs
+* Medium-length request typing tasks
 * Live metrics
 * Post-run graphs
 * Post-run instructional explanations
 * Score centered on latency-sensitive play
+
+## Promoted Post-MVP Data Slice
+
+BOSS promoted a local-first data product slice after the browser-only gameplay
+work: simple username/password sign-in, profile dashboards, instructor/class
+dashboards, class joining, global completed-run scatterplots, and Simulation
+Lab activity counts.
+
+This slice keeps the stack minimal: the existing Vite app, a small same-origin
+TypeScript API, explicit SQL migrations, and one managed Postgres database. It
+does not add social auth, an external auth provider, an ORM, queues, realtime,
+or a framework migration.
 
 ### Out of Scope
 
@@ -96,23 +107,26 @@ After playing, a user should be able to understand:
 * Memory-thrashing simulation
 * Workflow execution (Phase 3)
 * Multiplayer
-* Persistent accounts or cloud backend
+* Persistent accounts or cloud backend in the original MVP; the promoted
+  post-MVP slice now adds simple accounts/classes/profile/global-data surfaces.
 
 ## Success Criteria
 
 * Players can understand the game quickly.
 * Repeated runs produce visibly different queue and latency behavior under different strategies.
 * Phase 1 produces a believable baseline.
-* Phase 2 clearly shows that actual performance can fall below ideal parallel performance.
+* Phase 1 summaries distinguish configured load from observed finite-run metrics.
 * Post-run feedback correctly explains the outcome.
 * An instructor can use the tool to support discussion of server performance
   and the systems concepts that generalize from it.
 
 ## Open Design Questions
 
-* Exact typing task content for Phase 1.
-* Exact formula weights for waiting-time and idle-core penalties.
-* Exact queue threshold and drop threshold for loss.
-* Whether task sizes should be represented as S/M/L, task types, or noisy estimates.
+* Final difficulty offsets and target load tuning.
+* Final Poisson seed/data-collection strategy.
+* Whether unfinished work should be shown, hidden, or relabeled in summaries.
+* Future Phase 2 concept, workflow, and model assumptions.
+* Whether future request variation should use named task types or noisy
+  estimates; current Phase 1 should not show `S`/`M`/`L` request sizes.
 * Whether difficulty should scale by arrival rate only or also by core count and information quality.
 * Whether the post-run theory explanation should be fully generated from templates or chosen from authored explanations.

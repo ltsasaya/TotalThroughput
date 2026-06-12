@@ -1,12 +1,8 @@
 import { useGameStore } from '@/store/gameStore'
+import { MetricItem, Panel, SectionLabel } from '@/components/ui/primitives'
 
 function StatRow({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
-  return (
-    <div>
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className={`text-lg font-bold ${valueClass ?? 'text-white'}`}>{value}</div>
-    </div>
-  )
+  return <MetricItem label={label} value={value} valueClass={`text-lg ${valueClass ?? ''}`} />
 }
 
 export function StatsPanel() {
@@ -31,50 +27,43 @@ export function StatsPanel() {
       : 0
 
   const queueClass =
-    queueLength > 10 ? 'text-red-400' : queueLength > 8 ? 'text-amber-400' : 'text-white'
+    queueLength > 10 ? 'text-[color:var(--tt-danger)]' : queueLength > 8 ? 'text-[color:var(--tt-warning)]' : 'text-[color:var(--tt-text)]'
 
   const waitSec = avgWaitingTime / 1000
-  const waitClass = waitSec > 6 ? 'text-red-400' : waitSec > 3 ? 'text-amber-400' : 'text-white'
+  const waitClass = waitSec > 6 ? 'text-[color:var(--tt-danger)]' : waitSec > 3 ? 'text-[color:var(--tt-warning)]' : 'text-[color:var(--tt-text)]'
 
   return (
-    <div className="bg-gray-900 rounded-xl p-4 flex flex-col gap-4 min-w-[180px] max-w-[200px] h-full">
+    <Panel className="flex w-full flex-col gap-4 p-4 lg:h-full lg:min-w-[180px] lg:max-w-[210px]">
       <div>
-        <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
-          Live Stats
-        </div>
+        <SectionLabel>Live Stats</SectionLabel>
       </div>
 
       {phase1Result !== null && (
         <>
           <div className="flex flex-col gap-1">
-            <div className="text-xs text-gray-500">Calib. service</div>
-            <div className="text-base font-bold text-gray-300">
-              {(phase1Result.avgServiceTime / 1000).toFixed(1)}s / request
-            </div>
-            <div className="text-xs text-gray-500">
-              {phase1Result.measuredTasksPerSecond.toFixed(2)} req/s
-            </div>
+            <MetricItem
+              label="Calib. service"
+              value={`${(phase1Result.avgServiceTime / 1000).toFixed(1)}s / request`}
+              valueClass="text-base text-[color:var(--tt-text-muted)]"
+            />
+            <div className="tt-label">{phase1Result.measuredTasksPerSecond.toFixed(2)} req/s</div>
           </div>
-          <div className="border-t border-gray-800" />
+          <div className="tt-divider" />
         </>
       )}
 
       <div className="flex flex-col gap-3">
         <div>
-          <div className="text-xs text-gray-500">Arrival Rate</div>
-          <div className="text-lg font-bold text-white">{arrivalRate.toFixed(2)} req/s</div>
-          <div className="text-sm text-gray-500">
-            target load {(targetPerWorkerLoad * 100).toFixed(0)}% / worker
-          </div>
+          <MetricItem label="Arrival Rate" value={`${arrivalRate.toFixed(2)} req/s`} valueClass="text-lg" />
+          <div className="tt-label text-sm">target load {(targetPerWorkerLoad * 100).toFixed(0)}% / worker</div>
         </div>
 
         <div>
-          <div className="text-xs text-gray-500">Throughput</div>
-          <div className="text-lg font-bold text-white">{throughput.toFixed(2)} req/s</div>
-          <div className="text-sm text-gray-500">{idealThroughput.toFixed(2)} req/s ideal c/D</div>
+          <MetricItem label="Throughput" value={`${throughput.toFixed(2)} req/s`} valueClass="text-lg" />
+          <div className="tt-label text-sm">{idealThroughput.toFixed(2)} req/s ideal c/D</div>
         </div>
 
-        <div className="border-t border-gray-800" />
+        <div className="tt-divider" />
 
         <StatRow
           label="Queue"
@@ -94,21 +83,21 @@ export function StatsPanel() {
         />
       </div>
 
-      <div className="border-t border-gray-800" />
+      <div className="tt-divider" />
 
       <div className="flex flex-col gap-3">
         <StatRow
           label="Completed"
           value={String(completedCount)}
-          valueClass="text-green-400"
+          valueClass="text-[color:var(--tt-success)]"
         />
 
         <StatRow
           label="Dropped"
           value={String(droppedCount)}
-          valueClass={droppedCount > 0 ? 'text-red-400' : 'text-gray-500'}
+          valueClass={droppedCount > 0 ? 'text-[color:var(--tt-danger)]' : 'text-[color:var(--tt-text-subtle)]'}
         />
       </div>
-    </div>
+    </Panel>
   )
 }

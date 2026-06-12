@@ -16,7 +16,21 @@ throughout the codebase.
 | **Offered Load / Load Factor** | For one server, `rho ~= lambda * D`; for `c` workers, `lambda * D / c` |
 | **Ideal Throughput** | Expected throughput if all workers stayed fully busy with zero coordination cost |
 | **Actual Throughput** | Observed completed work under the player's real dispatch decisions |
-| **Still Waiting** | Admitted work that remains unfinished when the observation window ends |
+| **Unfinished Work** | Admitted work that remains incomplete when the observation window ends; excluded from completed throughput and completed-request averages |
+
+## WPM Convention
+
+WPM always means standard typing-test WPM, matching tools such as Monkeytype:
+
+```
+WPM = (characters / 5) / minutes
+```
+
+For calibration, use correct characters divided by five over the 30-second
+window. For observed in-game WPM, use the completed prompt character count
+divided by five over service minutes from task activation to completion,
+including reaction time. Do not calculate WPM by counting actual
+space-delimited words.
 
 ## Response Time Formula
 
@@ -53,3 +67,68 @@ The system must record event timestamps for:
 * Arrival-window end and observation-window end
 
 Without these timestamps the game cannot compute instructional metrics correctly.
+
+## Browser-Only Phase 1 Run Record
+
+Until API/database work resumes, each one-minute Phase 1 difficulty run should
+produce a frontend-owned record with these fields:
+
+| Field | Meaning |
+|---|---|
+| **Average response time** | Mean `completionTime - arrivalTime` for completed requests |
+| **Average service demand** | Mean active typing service time for completed requests, written as `D` |
+| **Total Throughput** | Count of completed requests during the 60-second run |
+| **Throughput/sec** | Completed requests divided by the 60-second run window |
+| **Average typing speed** | Mean observed in-game WPM for completed requests, including reaction time |
+| **Reaction speed** | Mean time from request activation to first keystroke |
+| **Utilization %** | Observed busy typing time divided by the 60-second run window |
+| **Average queue length** | Time-average waiting queue length over the 60-second run window |
+| **Max queue length** | Highest waiting queue length reached during the run; retained as a diagnostic, not the primary teaching metric |
+
+The browser record should also keep the calibrated WPM/bin, selected
+difficulty, configured `lambda`, observed arrival rate, target load, arrival
+count, still-waiting count, seed, and any reference response-time value shown
+to the player. The
+still-waiting or unfinished count is diagnostic only and must not be added to
+completed throughput, response time, service demand, typing speed, or reaction
+speed. These fields are not persistence work yet; they keep the frontend record
+shape ready for the later server-owned model.
+
+Persisted playerbase dataset work is deferred. The browser record shape should
+be stable enough to migrate later, but no API or database call is part of the
+browser-only slice.
+
+## Persisted Phase 1 Summary Bridge
+
+The promoted profile/classes/global-data slice persists signed-in completed
+Phase 1 run summaries using the browser record shape above, plus server-owned
+database id, user id, optional class id, and completion timestamp. The
+`typing_runs` table stores `difficulty_key` instead of duplicate difficulty
+labels, `completed_count` instead of duplicate total-throughput counts,
+configured `arrival_rate`, observed `observed_arrival_rate`, and
+`throughput_per_second` for the completed-request rate. This is a local-first
+bridge for profile and scatterplot views; it is not the final server-owned
+task/event lifecycle.
+
+Class dashboards count runs through explicit class association. When a signed-in
+student belongs to exactly one class, the server can associate future completed
+runs with that class. If a student belongs to multiple classes, a later class
+selection control is needed before those runs can be class-scoped.
+
+## Browser-Only Simulation Lab Metrics
+
+The Learn More / Simulation lab reports finite-run observations from a seeded
+local M/M/c-style simulation:
+
+| Metric | Meaning |
+|---|---|
+| **Requests in system (N)** | Jobs that have arrived and have not completed at the sampled time |
+| **Waiting queue length** | Jobs that have arrived but have not started service at the sampled time |
+| **Response time (R)** | Cumulative average completion time minus arrival time for jobs completed so far |
+| **Utilization (U)** | Cumulative busy worker time divided by `c * elapsedTime` |
+| **Arrival rate (lambda)** | Cumulative arrivals divided by elapsed time |
+| **Throughput (X)** | Cumulative completions within the observation window divided by elapsed time |
+
+The lab also computes a steady-state M/M/c reference using Erlang C when
+`lambda * D / c < 1`. Treat that reference as the expected stable-system
+comparison, not as the exact result of a finite seeded run.
