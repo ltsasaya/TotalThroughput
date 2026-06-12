@@ -492,6 +492,36 @@ a:focus-visible {
   z-index: 50;
 }
 
+.learn-more-simulation-panel {
+  overflow: hidden;
+}
+
+.learn-more-simulation-layout {
+  align-items: center;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.learn-more-simulation-panel h2 {
+  color: #000;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.05;
+  margin: 0.4rem 0 0;
+}
+
+.learn-more-simulation-button {
+  align-self: stretch;
+  min-height: 4.7rem;
+  min-width: 11rem;
+}
+
+.simulation-series-toggle {
+  font-size: 0.625rem;
+  line-height: 1.2;
+}
+
 .retro-manual-dialog {
   align-items: center;
   display: flex;
@@ -1159,6 +1189,12 @@ a:focus-visible {
   text-align: center;
 }
 
+@media (max-width: 1180px) {
+  .learn-more-simulation-layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
 @media (max-width: 760px) {
   .retro-app-nav {
     padding: 10px 18px;
@@ -1224,6 +1260,14 @@ a:focus-visible {
 
   .retro-start-button-secondary {
     font-size: 1rem;
+  }
+
+  .learn-more-simulation-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .learn-more-simulation-button {
+    width: 100%;
   }
 
   .retro-manual-shell {

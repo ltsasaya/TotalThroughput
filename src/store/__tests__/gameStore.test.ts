@@ -396,6 +396,51 @@ describe('persistent navigation', () => {
     expect(getState().phase1RunRecords).toHaveLength(1)
   })
 
+  it('opens the simulation lab without clearing calibration or run records', () => {
+    startMediumRun()
+    getState().tick(getState().gameStartTime! + PHASE1_RUN_DURATION_MS)
+    const calibration = getState().calibrationResult
+    const records = getState().phase1RunRecords
+
+    getState().openSimulationLab()
+
+    expect(getState().phase).toBe('simulationLab')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1RunRecords).toEqual(records)
+    expect(getState().tasks).toEqual({})
+  })
+
+  it('routes an active run to the simulation lab without recording the unfinished run', () => {
+    startMediumRun()
+    const calibration = getState().calibrationResult
+    const firstArrival = getState().arrivalSchedule[0]
+    getState().tick(getState().gameStartTime! + firstArrival.arrivalTime + 1)
+
+    getState().openSimulationLab()
+
+    expect(getState().phase).toBe('simulationLab')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1RunRecords).toHaveLength(0)
+    expect(getState().tasks).toEqual({})
+    expect(getState().systemNotification).toBe("Current run wasn't saved.")
+  })
+
+  it('preserves the unsaved-run notification when going through the game menu before simulation', () => {
+    startMediumRun()
+    const calibration = getState().calibrationResult
+    const firstArrival = getState().arrivalSchedule[0]
+    getState().tick(getState().gameStartTime! + firstArrival.arrivalTime + 1)
+
+    getState().goGameMenu()
+    getState().openSimulationLab()
+
+    expect(getState().phase).toBe('simulationLab')
+    expect(getState().calibrationResult).toEqual(calibration)
+    expect(getState().phase1RunRecords).toHaveLength(0)
+    expect(getState().tasks).toEqual({})
+    expect(getState().systemNotification).toBe("Current run wasn't saved.")
+  })
+
   it('clears system notifications on request', () => {
     getState().startCalibration()
     getState().goHome()

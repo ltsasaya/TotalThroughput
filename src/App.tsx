@@ -10,6 +10,7 @@ import { CalibrationSummaryView } from './components/game/CalibrationSummaryView
 import { DifficultySelectView } from './components/game/DifficultySelectView'
 import { Phase1RunSummary } from './components/game/Phase1RunSummary'
 import Phase2DebriefPopup from './components/game/Phase2DebriefPopup'
+import { SimulationLabView } from './components/game/SimulationLabView'
 
 function App() {
   useGameLoop()
@@ -39,6 +40,7 @@ function App() {
   if (phase === 'calibration') return <>{systemNotice}<CalibrationView /></>
   if (phase === 'calibrationSummary') return <>{systemNotice}<CalibrationSummaryView /></>
   if (phase === 'difficultySelect') return <>{systemNotice}<DifficultySelectView /></>
+  if (phase === 'simulationLab') return <>{systemNotice}<SimulationLabView /></>
   if (phase === 'phase1') return <>{systemNotice}<Phase1View /></>
   if (phase === 'phase1Summary') return <>{systemNotice}<Phase1RunSummary /></>
   if (phase === 'phase2') return <>{systemNotice}<Phase2View /></>

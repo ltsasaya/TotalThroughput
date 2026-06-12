@@ -8,6 +8,7 @@ historical only; BOSS will supply a new Phase 2 concept later.
 | Phase | Role | Status |
 |---|---|---|
 | Phase 1 | Single-server calibration plus calibrated one-minute difficulty runs | MVP overhaul |
+| Learn More / Simulation | Local browser lab for multi-worker server intuition | In progress |
 | Phase 2 | Future BOSS-directed concept | Deferred, out of current scope |
 | Phase 3 | Workflow mode: task completions trigger downstream tasks | Planned, out of scope |
 
@@ -111,6 +112,27 @@ leftover backlog in Phase 1; overload is framed as observable capacity pressure.
 * Reference-load comparison using `rho ~= lambda * D`
 * Optional simple M/M/1 reference curve `R ~= D / (1 - rho)`, labeled as
   steady-state intuition rather than the finite-run response model
+
+---
+
+## Learn More / Simulation Lab
+
+The Game Menu includes a full-width Learn More / Simulation panel below the
+Phase 1 difficulty choices. This panel does not revive the original Phase 2.
+It opens a standalone browser-side lab where the player can simulate a server
+with configurable service demand `D`, expected arrival rate `lambda`,
+concurrency `c`, and observation time `t`.
+
+Opening the lab is passive and does not create a default simulation. Each Run
+creates a new seeded finite simulation and displays the seed so a run can be
+replayed or compared. After a run, the lab also shows a steady-state M/M/c
+reference when the selected inputs are stable. The finite random run and the
+steady-state reference must remain visually and textually distinct.
+
+The lab is in scope for teaching what more realistic servers look like and how
+concurrency changes queueing behavior. It is out of scope for backend,
+persistence, accounts, hosted compute, and the future BOSS-directed Phase 2
+gameplay redesign.
 
 ---
 

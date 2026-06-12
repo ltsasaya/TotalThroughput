@@ -31,8 +31,10 @@
 | File | Description |
 |---|---|
 | `src/store/gameStore.ts` | Zustand store — browser-only calibration, difficulty selection, calibrated Phase 1 runs, Phase 2 compatibility, persistent navigation, typing/tick/reset actions |
+| `src/store/simulationLabStore.ts` | Zustand store — local simulation lab inputs, active graph series, latest seeded run, recent seed records, and validation errors |
 | `src/store/__tests__/gameStore.test.ts` | Unit tests — calibration, difficulty selection, calibrated Phase 1 run transitions, run records, persistent navigation, reset |
 | `src/store/__tests__/gameStore.phase2.test.ts` | Unit tests — Phase 2: startPhase2, dispatchTask, core progress, completion, metrics, end condition |
+| `src/store/__tests__/simulationLabStore.test.ts` | Unit tests — Simulation Lab store starts without an auto-run and computes only after Run |
 
 ## Simulation
 
@@ -45,6 +47,9 @@
 | `src/simulation/phase1Results.ts` | Phase 1 per-level and aggregate calibration result builders, including active-window rate and backlog/tail metrics |
 | `src/simulation/phase1Runs.ts` | Calibrated Phase 1 run config builder, 60-second schedule helper, utilization helper, and browser-only run record builder |
 | `src/simulation/phase1Tick.ts` | `computePhase1RunTick` — pure no-drop calibrated Phase 1 tick: Poisson arrivals, activation, live metrics, 60-second run-end flag |
+| `src/simulation/serverLab.ts` | Browser-only simulation lab model — seeded finite M/M/c-style simulation and Erlang C steady-state reference |
+| `src/simulation/serverLabExperiment.ts` | Simulation Lab experiment helpers — load bands, browser-cost estimates, confirmation guard, and concurrency sweeps |
+| `src/simulation/chartTicks.ts` | Graph tick helpers — clean time-axis tick generation and compact numeric tick labels |
 | `src/simulation/phase2Runs.ts` | Phase 2 server-pool run config builder — target per-worker load, measured-D lambda, seeds, size mix, and Poisson schedule helper |
 | `src/simulation/phase2Tick.ts` | `computePhase2Tick` — pure Phase 2 tick: arrivals, core progress, completion, idle waste, RunSummary + grade computation |
 | `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, Phase 1 medium prompts, word count ranges per size, exact deadline values |
@@ -53,6 +58,9 @@
 | `src/simulation/__tests__/phase1Results.test.ts` | Unit tests — Phase 1 gate/demo result math and aggregate unlock rules |
 | `src/simulation/__tests__/phase1Runs.test.ts` | Unit tests — calibrated run lambda, deterministic run schedule, browser-only run record metrics |
 | `src/simulation/__tests__/phase1Tick.test.ts` | Unit tests — computePhase1RunTick: no-drop run timing, Phase 1 prompt spawning, activation, live metrics |
+| `src/simulation/__tests__/serverLab.test.ts` | Unit tests — simulation lab determinism, seed variation, worker-count behavior, input validation, and Erlang C reference |
+| `src/simulation/__tests__/serverLabExperiment.test.ts` | Unit tests — Simulation Lab load bands, run guards, and concurrency sweep behavior |
+| `src/simulation/__tests__/chartTicks.test.ts` | Unit tests — simulation graph tick helper output and label formatting |
 | `src/simulation/__tests__/phase2Runs.test.ts` | Unit tests — Phase 2 run config lambda math, worker counts, deterministic Poisson schedules, and S/M/L mix |
 | `src/simulation/__tests__/phase2Tick.test.ts` | Unit tests — computePhase2Tick: phase-end, score formula, grade thresholds, idle waste, task completion |
 
@@ -71,12 +79,17 @@
 | `src/components/game/StartScreen.tsx` | Idle phase — semi-retro monochrome start screen with placeholder nav/actions and `Play` handoff to the Game Menu |
 | `src/components/game/EducationalManual.tsx` | Play-to-Game-Menu onboarding manual — modal/full-screen manual shell, page navigation, close/home handoff, and page-specific diagrams |
 | `src/components/game/EducationalManualDiagrams.tsx` | Semi-retro SVG diagrams for Educational Manual pages |
+| `src/components/game/LearnMoreSimulationPanel.tsx` | Game Menu full-width Learn More / Simulation panel that opens the local simulation lab |
 | `src/components/game/CalibrationView.tsx` | 30-second monkeytype-style calibration screen with a fixed five-row generated-row viewport, start overlay, and live WPM/accuracy |
 | `src/components/game/CalibrationSummaryView.tsx` | Post-calibration summary card — WPM, accuracy, display bin, recalibrate, and Game Menu actions |
 | `src/components/game/DifficultySelectView.tsx` | Game Menu — pre-calibration manual/calibration hub, calibrated Easy/Medium/Hard/Impossible run selection, and browser-session run record list |
 | `src/components/game/TopBar.tsx` | Shared active-run header — persistent Home/Game Menu navigation, phase label, countdown timer, optional dropped counter, queue display, optional score |
 | `src/components/game/Phase1View.tsx` | Calibrated 60-second single-server typing run — active request, FIFO queue, countdown, live stats sidebar |
 | `src/components/game/Phase1RunSummary.tsx` | Browser-only Phase 1 run summary — recorded metrics, setup values, finite-run/reference formula caveat, continue/recalibrate actions |
+| `src/components/game/SimulationLabView.tsx` | Standalone Simulation Lab screen — controls, series toggles, M/M/c reference, seed records, graph settings band |
+| `src/components/game/SimulationInputs.tsx` | Simulation Lab boxed input components — draft editing for model parameters and graph-axis inputs |
+| `src/components/game/SimulationChart.tsx` | Recharts line chart for finite seeded simulation samples |
+| `src/components/game/SimulationSweepPanel.tsx` | Simulation Lab compact concurrency sweep table for `c = 1, 2, 4, 8` |
 | `src/components/game/Phase1Complete.tsx` | Legacy post-Phase-1 level summary retained for compatibility while the new workflow uses `Phase1RunSummary` |
 | `src/components/game/Phase2View.tsx` | Phase 2 server-pool layout — TopBar + QueuePanel + worker grid + StatsPanel |
 | `src/components/game/QueuePanel.tsx` | Scrollable list of waiting requests — NEXT marker, waiting time color coding |
@@ -84,6 +97,7 @@
 | `src/components/game/StatsPanel.tsx` | Live stats sidebar — throughput vs ideal, queue length, worker utilization, wait time, counts |
 | `src/components/game/PostRunSummary.tsx` | Full end-of-game summary — section-based layout: header, metrics, charts, wait/service bar, analysis |
 | `src/components/game/PostRunCharts.tsx` | Recharts line charts — throughput over time + queue length over time |
+| `src/components/game/__tests__/SimulationChart.test.tsx` | Unit tests — Simulation Lab chart hover chooses one nearest rendered series |
 | `src/components/game/postrun/SummaryHeader.tsx` | Run outcome header — success/failure title, difficulty + cores + duration subheader |
 | `src/components/game/postrun/MetricSections.tsx` | SUMMARY, LATENCY, CORE UTILIZATION sections with CSS progress bars per core |
 | `src/components/game/postrun/AnalysisSection.tsx` | Prose analysis, observed response/service ratio, dispatcher bottleneck warning banner |

@@ -230,6 +230,7 @@ interface GameStore {
   startGame: (difficulty?: DifficultyMode) => void
   goHome: () => void
   goGameMenu: () => void
+  openSimulationLab: () => void
   clearSystemNotification: () => void
   markEducationalManualSeen: () => void
   startCalibration: () => void
@@ -375,6 +376,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
       systemNotification,
+    })
+  },
+
+  openSimulationLab: () => {
+    const state = get()
+    const systemNotification = navigationInterruptionMessage(state.phase)
+    set({
+      phase: 'simulationLab',
+      config: { ...DEFAULT_CONFIG, phase1Duration: PHASE1_RUN_DURATION_MS },
+      ...resetRunState(),
+      selectedPhase1Difficulty: null,
+      phase1RunConfig: null,
+      phase1MaxQueueLength: 0,
+      systemNotification: systemNotification ?? state.systemNotification,
     })
   },
 

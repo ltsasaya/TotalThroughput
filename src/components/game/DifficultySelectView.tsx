@@ -3,6 +3,7 @@ import { useGameStore } from '@/store/gameStore'
 import { AppButton, cx, MetricItem, Panel, SectionLabel } from '@/components/ui/primitives'
 import type { Phase1DifficultyKey, Phase1DifficultyOption } from '@/types/game'
 import { EducationalManual } from './EducationalManual'
+import { LearnMoreSimulationPanel } from './LearnMoreSimulationPanel'
 import { RetroHeader } from './RetroHeader'
 
 interface GameMenuOption {
@@ -182,6 +183,8 @@ export function DifficultySelectView() {
             </button>
           ))}
         </div>
+
+        <LearnMoreSimulationPanel />
 
         {phase1RunRecords.length > 0 && (
           <Panel className="p-4">

@@ -137,6 +137,76 @@ lambda = targetLoad / D
 Do not use this `D` as a Phase 2 contract until BOSS defines the future Phase 2
 concept.
 
+## Learn More / Simulation Lab Model
+
+The Learn More / Simulation lab is a local browser-only queueing simulator, not
+a server-backed run service and not the future Phase 2 gameplay design.
+
+Inputs:
+* `D`: mean service demand in seconds
+* `lambda`: expected request arrival rate per second
+* `c`: number of identical workers
+* `t`: finite observation window in seconds
+* `seed`: recorded replay value generated for each run
+
+Opening the lab should not create a seeded run, graph, reference table, or
+concurrency sweep. The initial state is passive; the first generated seed and
+simulation output appear only after the player clicks `Run`.
+
+Simulation inputs should allow draft text editing without live clamping on each
+keystroke. Bounds and whole-number concurrency are applied when an input is
+committed or a run is started, so players can replace values such as `60` with
+`200` without intermediate states snapping the field.
+
+Run-time validation should estimate browser-side experiment cost from expected
+arrivals, display samples, and the concurrency sweep. Large or unstable
+experiments should warn and require a second run action; experiments above the
+hard browser-side budget should be blocked with a clear message.
+
+Finite runs use a seeded M/M/c-style model:
+* arrivals are sampled from a constant-rate Poisson process
+* service times are sampled from an exponential distribution with mean `D`
+* workers are identical
+* service is first-come, first-served to the first available worker
+* the simulation starts empty and runs for a finite observation window
+* jobs that finish after the observation window are not counted as completed
+  within the window
+
+The lab computes browser-side samples for requests in system `N`, waiting queue
+length, cumulative average response time `R`, utilization `U`, observed
+arrival rate, and observed throughput. The graph is an observation of the
+finite seeded run.
+
+Run summaries and averages are computed from the generated event stream. Chart
+samples are display samples only and may be downsampled for readability and
+browser responsiveness.
+
+The graph time axis should use generated nice-number ticks such as
+`0, 10, 20, ...` rather than irregular sampled timestamps.
+
+The steady-state reference uses Erlang C for stable M/M/c inputs. It may show
+`lambda * D`, `U = lambda * D / c`, `R`, and `N = lambda * R`. If
+`lambda * D / c >= 1`, the steady-state reference is unstable and should not
+display finite exact-looking response or system-count values.
+
+The lab classifies per-worker load `rho = lambda * D / c` into bands:
+comfortable below `0.70`, busy from `0.70` to `0.90`, near saturation from
+`0.90` to below `1.0`, and unstable at or above `1.0`. These are UI teaching
+bands, not theorem boundaries.
+
+The concurrency sweep compares `c = 1, 2, 4, 8` with the same `D`, `lambda`,
+duration, and seed policy. It shows finite-run observations and stable
+M/M/c references separately; one sweep is not evidence of a general result.
+
+Source basis: `notes/2026-05-30-1746_server-performance-research-summary.md`
+and `notes/2026-05-30-1732_queue-research-source-map.md` allow exact M/M/c
+references only when Erlang C or simulation curves are implemented. This lab
+implements both a finite simulation and an Erlang C reference, while keeping
+their assumptions separate from Phase 1 typing runs.
+The 2026-06-10 stable-simulation research note adds the source basis for load
+bands, run-time cost warnings, concurrency sweeps, and display-only chart
+sampling.
+
 ## Future Phase 2 Service Model
 
 The original Phase 2 server-pool service model is out of current scope. Treat

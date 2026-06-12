@@ -219,6 +219,43 @@ visual rules across multiple components.
 - Include a compact icon-only manual control in the Game Menu intro area so
   players can reopen the Educational Manual without putting Manual inside the
   Baseline panel.
+- Add a full-width Learn More / Simulation panel below the difficulty cards.
+  It should feel like part of the operational lab, not a marketing section.
+  The primary action is `Simulation`, which opens the standalone browser-side
+  simulation lab. Do not show compact model/run/local-compute stats in this
+  panel.
+
+### Simulation Lab
+
+- The Simulation Lab follows BOSS's Figma direction: top input strip, left
+  show/hide metric rail, large central graph, and bottom graph-settings band.
+- The top strip exposes `D`, `lambda`, `c`, and `t` as boxed numeric controls
+  plus a primary `Run` button. These controls should allow draft editing and
+  avoid live keystroke clamping; validation applies on commit/run.
+- Each `Run` creates a new local seeded simulation and displays the current
+  seed plus recent seed records. Large or unstable experiments should show a
+  clear warning and require a second run action instead of silently changing
+  the user's parameters.
+- Opening the Simulation Lab should not auto-generate a seed, graph, stable
+  reference table, or concurrency sweep. Show an empty graph/sweep state until
+  the player clicks `Run`.
+- Use a dense monochrome plotting surface with grid lines and visible axes.
+  Line colors stay restrained: black and cool greys are preferred.
+- Chart hover should focus on one point: the tooltip and active circle should
+  show only the visible series whose rendered point is closest to the cursor.
+- The left rail separates finite-run graph toggles from the steady-state
+  M/M/c reference. Label these areas as `Observed Seeded Run` and
+  `Stable M/M/c Reference`; keep formula/reference copy compact and clearly
+  distinct from observed graph lines.
+- Show the current per-worker load band near the run controls and in the
+  reference rail.
+- Bottom graph settings expose editable axis controls. The default time axis
+  should generate readable nice-number tick labels instead of irregular sampled
+  timestamps.
+- Include a compact concurrency sweep for `c = 1, 2, 4, 8` that compares
+  finite-run observations with the stable reference when the reference exists.
+- Do not connect this screen to backend, database, persistence, accounts, or
+  the old Phase 2 route.
 
 ### Phase 1 Play
 

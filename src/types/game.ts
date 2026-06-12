@@ -5,6 +5,7 @@ export type GamePhase =
   | 'calibration'
   | 'calibrationSummary'
   | 'difficultySelect'
+  | 'simulationLab'
   | 'phase1'
   | 'phase1Summary'
   | 'phase2'

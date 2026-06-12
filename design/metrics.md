@@ -94,3 +94,21 @@ shape ready for the later server-owned model.
 Persisted playerbase dataset work is deferred. The browser record shape should
 be stable enough to migrate later, but no API or database call is part of the
 browser-only slice.
+
+## Browser-Only Simulation Lab Metrics
+
+The Learn More / Simulation lab reports finite-run observations from a seeded
+local M/M/c-style simulation:
+
+| Metric | Meaning |
+|---|---|
+| **Requests in system (N)** | Jobs that have arrived and have not completed at the sampled time |
+| **Waiting queue length** | Jobs that have arrived but have not started service at the sampled time |
+| **Response time (R)** | Cumulative average completion time minus arrival time for jobs completed so far |
+| **Utilization (U)** | Cumulative busy worker time divided by `c * elapsedTime` |
+| **Arrival rate (lambda)** | Cumulative arrivals divided by elapsed time |
+| **Throughput (X)** | Cumulative completions within the observation window divided by elapsed time |
+
+The lab also computes a steady-state M/M/c reference using Erlang C when
+`lambda * D / c < 1`. Treat that reference as the expected stable-system
+comparison, not as the exact result of a finite seeded run.
