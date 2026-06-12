@@ -1,5 +1,4 @@
-import type pg from 'pg'
-import { pool } from './db'
+import { pool, type DbQueryable } from './db'
 import { createSessionToken, hashSessionToken } from './crypto'
 import { parseCookies, type AuthedUser } from './http'
 import type { IncomingMessage } from 'node:http'
@@ -7,7 +6,7 @@ export { expiredSessionCookie, sessionCookie } from './sessionCookie'
 
 const SESSION_COOKIE = 'tt_session'
 
-export async function createSession(userId: string, client: pg.PoolClient | typeof pool = pool): Promise<string> {
+export async function createSession(userId: string, client: DbQueryable = pool): Promise<string> {
   const token = createSessionToken()
   await client.query(
     `

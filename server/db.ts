@@ -3,14 +3,40 @@ import { loadLocalEnv, requireEnv } from './env'
 
 const { Pool } = pg
 
-loadLocalEnv()
+let poolInstance: pg.Pool | null = null
 
-const connectionString = requireEnv('DATABASE_URL')
+export interface DbQueryable {
+  query<R extends pg.QueryResultRow = pg.QueryResultRow, I = unknown[]>(
+    queryTextOrConfig: string | pg.QueryConfig<I>,
+    values?: pg.QueryConfigValues<I>,
+  ): Promise<pg.QueryResult<R>>
+}
 
-export const pool = new Pool({
-  connectionString,
-  ssl: connectionString.includes('sslmode=require') ? true : undefined,
-})
+interface LazyPool extends DbQueryable {
+  connect: () => Promise<pg.PoolClient>
+  end: () => Promise<void>
+}
+
+function getPool(): pg.Pool {
+  if (poolInstance) return poolInstance
+
+  loadLocalEnv()
+  const connectionString = requireEnv('DATABASE_URL')
+  poolInstance = new Pool({
+    connectionString,
+    ssl: connectionString.includes('sslmode=require') ? true : undefined,
+  })
+  return poolInstance
+}
+
+export const pool: LazyPool = {
+  query: <R extends pg.QueryResultRow = pg.QueryResultRow, I = unknown[]>(
+    queryTextOrConfig: string | pg.QueryConfig<I>,
+    values?: pg.QueryConfigValues<I>,
+  ): Promise<pg.QueryResult<R>> => getPool().query<R, I>(queryTextOrConfig, values),
+  connect: (): Promise<pg.PoolClient> => getPool().connect(),
+  end: (): Promise<void> => poolInstance?.end() ?? Promise.resolve(),
+}
 
 export async function withTransaction<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect()

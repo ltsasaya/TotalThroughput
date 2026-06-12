@@ -44,33 +44,23 @@ describe('initial state', () => {
 })
 
 describe('calibration flow', () => {
-  it('startGame opens the game menu with a temporary 100 WPM testing calibration', () => {
+  it('startGame opens the game menu without a completed calibration', () => {
     getState().startGame('standard')
     expect(getState().phase).toBe('difficultySelect')
     expect(getState().gameStartTime).toBeNull()
     expect(getState().phaseElapsed).toBe(0)
-    expect(getState().calibrationResult?.rawWpm).toBe(100)
-    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual([
-      'easy',
-      'medium',
-      'hard',
-      'impossible',
-    ])
+    expect(getState().calibrationResult).toBeNull()
+    expect(getState().phase1DifficultyOptions).toEqual([])
   })
 
-  it('goGameMenu opens the game menu with the same temporary testing calibration when no baseline exists', () => {
+  it('goGameMenu opens the game menu without a completed calibration', () => {
     getState().goGameMenu()
 
     expect(getState().phase).toBe('difficultySelect')
     expect(getState().gameStartTime).toBeNull()
     expect(getState().phaseElapsed).toBe(0)
-    expect(getState().calibrationResult?.rawWpm).toBe(100)
-    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual([
-      'easy',
-      'medium',
-      'hard',
-      'impossible',
-    ])
+    expect(getState().calibrationResult).toBeNull()
+    expect(getState().phase1DifficultyOptions).toEqual([])
   })
 
   it('startGame reuses an existing completed calibration and run records', () => {

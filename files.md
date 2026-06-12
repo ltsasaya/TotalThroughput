@@ -33,6 +33,12 @@
 |---|---|
 | `src/api/client.ts` | Same-origin JSON fetch wrapper with credentials, auth/profile/class/global-data calls, and signed-in activity/run persistence helpers |
 
+## Vercel API Functions
+
+| File | Description |
+|---|---|
+| `api/[...path].ts` | Single Vercel catch-all function that default-exports the shared Node API request handler for `/api/*` |
+
 ## Store
 
 | File | Description |

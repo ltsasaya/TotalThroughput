@@ -5,12 +5,11 @@ Last updated: 2026-06-12
 ## Current State
 
 Total Throughput is a Vite, React, and TypeScript instructional game focused
-on server performance. The current branch has the first local data-backed
-slice: a small same-origin TypeScript API, Neon/Postgres migrations, simple
-username/password auth, profile dashboards, instructor/classes, code-only class
-joining, global data scatterplots, Simulation Lab activity counts, and a
-start-page Concurrency Race sample. Vercel deployment is deferred until this
-local slice is accepted.
+on server performance. The current branch has the first data-backed slice: a
+small same-origin TypeScript API with a Vercel catch-all function, Neon/Postgres
+migrations, simple username/password auth, profile dashboards,
+instructor/classes, code-only class joining, global data scatterplots,
+Simulation Lab activity counts, and a start-page Concurrency Race sample.
 
 ## Recent Work
 
@@ -51,6 +50,12 @@ local slice is accepted.
 - Added a start-page `another game idea` button that opens an isolated
   Concurrency Race sample adapted from BOSS's provided zip without adding zip
   dependencies or theme files.
+- Added a Vercel API catch-all function for the existing server routes so
+  deployed `/api/*` calls reuse the same local API handler.
+- Made Postgres pool initialization lazy so Vercel can build function bundles
+  before a DB-backed endpoint actually needs `DATABASE_URL`.
+- Removed the temporary 100 WPM run-testing calibration bypass; Game Menu now
+  requires a real completed calibration before runs unlock.
 
 ## Remaining Work
 
@@ -62,13 +67,11 @@ local slice is accepted.
   labeling, or model-tuning fixes.
 - Decide whether the current `Queue Length (N)` display label should remain or
   be adjusted for stricter queueing notation.
-- Remove the temporary 100 WPM run-testing bypass before final calibration
-  behavior is accepted.
 - Add full server-owned run/task/event lifecycle and server-finalized metrics
   for the later TODO-007 through TODO-011 foundation.
 - Connect the finalized browser-owned run model to server-owned task generation
   and run reloads.
-- Configure and smoke-test Vercel after BOSS accepts the local data slice.
+- Smoke-test Vercel after the API wrapper fix is deployed.
 
 ## Verification
 
