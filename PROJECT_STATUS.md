@@ -52,6 +52,8 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
   dependencies or theme files.
 - Added Vercel API function wrappers for the existing server routes so
   deployed `/api/*` calls reuse the same local API handler.
+- Made Postgres pool initialization lazy so Vercel can build function bundles
+  before a DB-backed endpoint actually needs `DATABASE_URL`.
 - Removed the temporary 100 WPM run-testing calibration bypass; Game Menu now
   requires a real completed calibration before runs unlock.
 
