@@ -37,8 +37,7 @@
 
 | File | Description |
 |---|---|
-| `api/_handler.ts` | Vercel serverless adapter that reuses the shared Node API request handler |
-| `api/**/*.ts` | Thin Vercel route wrappers for auth, profile, instructor, class, global-data, run, and activity endpoints |
+| `api/**/*.ts` | Thin Vercel route wrappers for auth, profile, instructor, class, global-data, run, and activity endpoints that default-export the shared Node API request handler |
 
 ## Store
 
