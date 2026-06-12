@@ -76,30 +76,18 @@ const DEFAULT_METRICS: LiveMetrics = {
   targetPerWorkerLoad: 0,
 }
 
-// Temporary BOSS-requested run-testing bypass; remove before finalizing calibration.
-const TEMP_RUN_TESTING_CALIBRATION_WPM = 100
-
-function buildTemporaryRunTestingCalibration(): CalibrationResult {
-  const correctCharsForWpm = Math.round(TEMP_RUN_TESTING_CALIBRATION_WPM * 5 * (CALIBRATION_DURATION_MS / 60_000))
-  const typedContent = 'a'.repeat(correctCharsForWpm)
-  return calculateCalibrationResult({
-    text: typedContent,
-    typedContent,
-    firstKeystrokeTime: 0,
-  })
-}
-
-function resolveMenuCalibration(
+function resolveStoredMenuCalibration(
   calibrationResult: CalibrationResult | null,
   phase1DifficultyOptions: Phase1DifficultyOption[],
 ) {
-  const resolvedCalibration = calibrationResult ?? buildTemporaryRunTestingCalibration()
   const resolvedOptions = calibrationResult && phase1DifficultyOptions.length > 0
     ? phase1DifficultyOptions
-    : buildPhase1DifficultyOptions(resolvedCalibration)
+    : calibrationResult
+      ? buildPhase1DifficultyOptions(calibrationResult)
+      : []
 
   return {
-    calibrationResult: resolvedCalibration,
+    calibrationResult,
     phase1DifficultyOptions: resolvedOptions,
   }
 }
@@ -329,7 +317,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startGame: () => {
     const state = get()
     const hasCompletedCalibration = state.calibrationResult !== null
-    const menuCalibration = resolveMenuCalibration(state.calibrationResult, state.phase1DifficultyOptions)
+    const menuCalibration = resolveStoredMenuCalibration(state.calibrationResult, state.phase1DifficultyOptions)
     set({
       phase: 'difficultySelect',
       config: { ...DEFAULT_CONFIG, phase1Duration: PHASE1_RUN_DURATION_MS },
@@ -380,7 +368,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   goGameMenu: () => {
     const state = get()
     const systemNotification = navigationInterruptionMessage(state.phase)
-    const menuCalibration = resolveMenuCalibration(state.calibrationResult, state.phase1DifficultyOptions)
+    const menuCalibration = resolveStoredMenuCalibration(state.calibrationResult, state.phase1DifficultyOptions)
     set({
       phase: 'difficultySelect',
       config: { ...DEFAULT_CONFIG, phase1Duration: PHASE1_RUN_DURATION_MS },

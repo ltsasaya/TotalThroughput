@@ -1,4 +1,4 @@
-import { createServer, type IncomingMessage } from 'node:http'
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { HttpError, json, type RouteDefinition } from './http'
 import { resolveUserFromRequest } from './sessions'
 import { authRoutes } from './routes/auth'
@@ -37,40 +37,42 @@ function assertSameOriginForMutation(req: IncomingMessage) {
   throw new HttpError(403, 'Cross-origin request rejected.')
 }
 
-export function createAppServer() {
-  return createServer(async (req, res) => {
-    try {
-      assertSameOriginForMutation(req)
-      const url = new URL(req.url ?? '/', 'http://localhost')
-      const method = req.method ?? 'GET'
-      const matchedRoute = routes.find(candidate => (
-        candidate.method === method && candidate.pattern.test(url.pathname)
-      ))
+export async function handleApiRequest(req: IncomingMessage, res: ServerResponse) {
+  try {
+    assertSameOriginForMutation(req)
+    const url = new URL(req.url ?? '/', 'http://localhost')
+    const method = req.method ?? 'GET'
+    const matchedRoute = routes.find(candidate => (
+      candidate.method === method && candidate.pattern.test(url.pathname)
+    ))
 
-      if (!matchedRoute) {
-        json(res, 404, { error: 'Not found.' })
-        return
-      }
-
-      const match = matchedRoute.pattern.exec(url.pathname)
-      const params: Record<string, string> = {}
-      matchedRoute.keys.forEach((key, index) => {
-        params[key] = decodeURIComponent(match?.[index + 1] ?? '')
-      })
-
-      await matchedRoute.handler({
-        req,
-        res,
-        user: await resolveUserFromRequest(req),
-        params,
-        query: url.searchParams,
-      })
-    } catch (error) {
-      if (error instanceof HttpError) {
-        json(res, error.status, { error: error.message })
-        return
-      }
-      json(res, 500, { error: 'Server error.' })
+    if (!matchedRoute) {
+      json(res, 404, { error: 'Not found.' })
+      return
     }
-  })
+
+    const match = matchedRoute.pattern.exec(url.pathname)
+    const params: Record<string, string> = {}
+    matchedRoute.keys.forEach((key, index) => {
+      params[key] = decodeURIComponent(match?.[index + 1] ?? '')
+    })
+
+    await matchedRoute.handler({
+      req,
+      res,
+      user: await resolveUserFromRequest(req),
+      params,
+      query: url.searchParams,
+    })
+  } catch (error) {
+    if (error instanceof HttpError) {
+      json(res, error.status, { error: error.message })
+      return
+    }
+    json(res, 500, { error: 'Server error.' })
+  }
+}
+
+export function createAppServer() {
+  return createServer(handleApiRequest)
 }

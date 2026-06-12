@@ -33,6 +33,13 @@
 |---|---|
 | `src/api/client.ts` | Same-origin JSON fetch wrapper with credentials, auth/profile/class/global-data calls, and signed-in activity/run persistence helpers |
 
+## Vercel API Functions
+
+| File | Description |
+|---|---|
+| `api/_handler.ts` | Vercel serverless adapter that reuses the shared Node API request handler |
+| `api/**/*.ts` | Thin Vercel route wrappers for auth, profile, instructor, class, global-data, run, and activity endpoints |
+
 ## Store
 
 | File | Description |
