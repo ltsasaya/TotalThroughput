@@ -6,7 +6,7 @@ Last updated: 2026-06-12
 
 Total Throughput is a Vite, React, and TypeScript instructional game focused
 on server performance. The current branch has the first data-backed slice: a
-small same-origin TypeScript API with Vercel function wrappers, Neon/Postgres
+small same-origin TypeScript API with a Vercel catch-all function, Neon/Postgres
 migrations, simple username/password auth, profile dashboards,
 instructor/classes, code-only class joining, global data scatterplots,
 Simulation Lab activity counts, and a start-page Concurrency Race sample.
@@ -50,7 +50,7 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
 - Added a start-page `another game idea` button that opens an isolated
   Concurrency Race sample adapted from BOSS's provided zip without adding zip
   dependencies or theme files.
-- Added Vercel API function wrappers for the existing server routes so
+- Added a Vercel API catch-all function for the existing server routes so
   deployed `/api/*` calls reuse the same local API handler.
 - Made Postgres pool initialization lazy so Vercel can build function bundles
   before a DB-backed endpoint actually needs `DATABASE_URL`.

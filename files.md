@@ -37,7 +37,7 @@
 
 | File | Description |
 |---|---|
-| `api/**/*.ts` | Thin Vercel route wrappers for auth, profile, instructor, class, global-data, run, and activity endpoints that default-export the shared Node API request handler |
+| `api/[...path].ts` | Single Vercel catch-all function that default-exports the shared Node API request handler for `/api/*` |
 
 ## Store
 
