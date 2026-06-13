@@ -1,5 +1,5 @@
-import { pool } from '../db'
-import { json, requireUser, route, type RouteDefinition } from '../http'
+import { pool } from '../db.js'
+import { json, requireUser, route, type RouteDefinition } from '../http.js'
 
 function numberValue(value: unknown): number {
   if (value === null || value === undefined) return 0

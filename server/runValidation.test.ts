@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { HttpError } from './http'
-import { parsePhase1RunSummaryBody } from './runValidation'
-import { uuidValue } from './validation'
+import { HttpError } from './http.js'
+import { parsePhase1RunSummaryBody } from './runValidation.js'
+import { uuidValue } from './validation.js'
 
 const validRun = {
   difficultyKey: 'easy',

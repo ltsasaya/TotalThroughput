@@ -1,11 +1,11 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
-import { HttpError, json, type RouteDefinition } from './http'
-import { resolveUserFromRequest } from './sessions'
-import { authRoutes } from './routes/auth'
-import { classRoutes } from './routes/classes'
-import { globalDataRoutes } from './routes/globalData'
-import { profileRoutes } from './routes/profile'
-import { runRoutes } from './routes/runs'
+import { HttpError, json, type RouteDefinition } from './http.js'
+import { resolveUserFromRequest } from './sessions.js'
+import { authRoutes } from './routes/auth.js'
+import { classRoutes } from './routes/classes.js'
+import { globalDataRoutes } from './routes/globalData.js'
+import { profileRoutes } from './routes/profile.js'
+import { runRoutes } from './routes/runs.js'
 
 const routes: RouteDefinition[] = [
   ...authRoutes,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createSessionToken, hashPassword, hashSessionToken, verifyPassword } from './crypto'
-import { expiredSessionCookie, sessionCookie } from './sessionCookie'
+import { createSessionToken, hashPassword, hashSessionToken, verifyPassword } from './crypto.js'
+import { expiredSessionCookie, sessionCookie } from './sessionCookie.js'
 
 describe('server crypto helpers', () => {
   it('verifies scrypt password hashes without accepting the wrong password', async () => {

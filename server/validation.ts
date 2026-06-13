@@ -1,4 +1,4 @@
-import { HttpError } from './http'
+import { HttpError } from './http.js'
 
 export function asObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {

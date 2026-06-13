@@ -1,5 +1,5 @@
-import { pool } from './db'
-import { createAppServer } from './app'
+import { pool } from './db.js'
+import { createAppServer } from './app.js'
 
 const port = Number(process.env.PORT ?? 8787)
 const server = createAppServer()

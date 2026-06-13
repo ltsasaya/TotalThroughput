@@ -1,7 +1,7 @@
-import { pool, withTransaction } from '../db'
-import { createClassCode } from '../crypto'
-import { HttpError, json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http'
-import { asObject, booleanField, optionalStringField, stringField, uuidValue } from '../validation'
+import { pool, withTransaction } from '../db.js'
+import { createClassCode } from '../crypto.js'
+import { HttpError, json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http.js'
+import { asObject, booleanField, optionalStringField, stringField, uuidValue } from '../validation.js'
 
 function num(value: unknown): number {
   const parsed = Number(value ?? 0)
