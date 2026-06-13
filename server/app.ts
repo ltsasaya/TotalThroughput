@@ -37,6 +37,23 @@ function assertSameOriginForMutation(req: IncomingMessage) {
   throw new HttpError(403, 'Cross-origin request rejected.')
 }
 
+function deploymentErrorDetail(error: unknown): string | null {
+  if (!(error instanceof Error)) return null
+  const message = error.message
+  if (message.startsWith('Missing required environment variable:')) return message
+  if (message.includes('does not exist')) return message
+  if (message.includes('permission denied')) return message
+  if (message.includes('password authentication failed')) return 'Database authentication failed.'
+  if (
+    message.includes('ECONNREFUSED') ||
+    message.includes('ENOTFOUND') ||
+    message.includes('ETIMEDOUT')
+  ) {
+    return 'Database connection failed.'
+  }
+  return null
+}
+
 export async function handleApiRequest(req: IncomingMessage, res: ServerResponse) {
   try {
     assertSameOriginForMutation(req)
@@ -69,7 +86,8 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
       json(res, error.status, { error: error.message })
       return
     }
-    json(res, 500, { error: 'Server error.' })
+    const detail = deploymentErrorDetail(error)
+    json(res, 500, detail ? { error: 'Server error.', detail } : { error: 'Server error.' })
   }
 }
 
