@@ -1,8 +1,8 @@
-import { withTransaction } from '../db'
-import { hashPassword, verifyPassword } from '../crypto'
-import { HttpError, json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http'
-import { createSession, expiredSessionCookie, revokeSessionFromRequest, sessionCookie } from '../sessions'
-import { asObject, normalizedUsername, stringField, validatePassword, validateUsername } from '../validation'
+import { withTransaction } from '../db.js'
+import { hashPassword, verifyPassword } from '../crypto.js'
+import { HttpError, json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http.js'
+import { createSession, expiredSessionCookie, revokeSessionFromRequest, sessionCookie } from '../sessions.js'
+import { asObject, normalizedUsername, stringField, validatePassword, validateUsername } from '../validation.js'
 
 export const authRoutes: RouteDefinition[] = [
   route('GET', '/api/auth/me', async ({ res, user }) => {

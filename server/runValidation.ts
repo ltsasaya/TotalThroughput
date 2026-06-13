@@ -6,7 +6,7 @@ import {
   optionalNumberRangeField,
   optionalUuidField,
   stringField,
-} from './validation'
+} from './validation.js'
 
 const DIFFICULTIES = ['easy', 'medium', 'hard', 'impossible'] as const
 

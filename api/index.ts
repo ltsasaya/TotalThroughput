@@ -21,7 +21,7 @@ function restoreApiPath(req: RewrittenApiRequest) {
 export default async function handler(req: RewrittenApiRequest, res: ServerResponse) {
   try {
     restoreApiPath(req)
-    const { handleApiRequest } = await import('../server/app')
+    const { handleApiRequest } = await import('../server/app.js')
     await handleApiRequest(req, res)
   } catch (error) {
     if (res.headersSent) return

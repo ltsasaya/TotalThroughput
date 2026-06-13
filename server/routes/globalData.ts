@@ -1,5 +1,5 @@
-import { pool } from '../db'
-import { json, route, type RouteDefinition } from '../http'
+import { pool } from '../db.js'
+import { json, route, type RouteDefinition } from '../http.js'
 
 function readBound(query: URLSearchParams, key: string, fallback: number): number {
   const value = Number(query.get(key))

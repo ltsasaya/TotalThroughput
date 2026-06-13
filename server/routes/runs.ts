@@ -1,6 +1,6 @@
-import { pool } from '../db'
-import { json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http'
-import { parsePhase1RunSummaryBody } from '../runValidation'
+import { pool } from '../db.js'
+import { json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http.js'
+import { parsePhase1RunSummaryBody } from '../runValidation.js'
 
 async function resolveRunClass(userId: string, requestedClassId: string | null): Promise<string | null> {
   if (requestedClassId) {

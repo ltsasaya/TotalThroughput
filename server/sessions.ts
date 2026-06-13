@@ -1,8 +1,8 @@
-import { pool, type DbQueryable } from './db'
-import { createSessionToken, hashSessionToken } from './crypto'
-import { parseCookies, type AuthedUser } from './http'
+import { pool, type DbQueryable } from './db.js'
+import { createSessionToken, hashSessionToken } from './crypto.js'
+import { parseCookies, type AuthedUser } from './http.js'
 import type { IncomingMessage } from 'node:http'
-export { expiredSessionCookie, sessionCookie } from './sessionCookie'
+export { expiredSessionCookie, sessionCookie } from './sessionCookie.js'
 
 const SESSION_COOKIE = 'tt_session'
 

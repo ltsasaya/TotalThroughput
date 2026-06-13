@@ -1,6 +1,6 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { pool, withTransaction } from './db'
+import { pool, withTransaction } from './db.js'
 
 async function runMigrations() {
   const migrationsDir = resolve(process.cwd(), 'migrations')
