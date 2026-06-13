@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { handleApiRequest } from '../server/app'
 
 interface RewrittenApiRequest extends IncomingMessage {
   query?: Record<string, string | string[] | undefined>
@@ -20,6 +19,15 @@ function restoreApiPath(req: RewrittenApiRequest) {
 }
 
 export default async function handler(req: RewrittenApiRequest, res: ServerResponse) {
-  restoreApiPath(req)
-  await handleApiRequest(req, res)
+  try {
+    restoreApiPath(req)
+    const { handleApiRequest } = await import('../server/app')
+    await handleApiRequest(req, res)
+  } catch (error) {
+    if (res.headersSent) return
+    const message = error instanceof Error ? error.message : 'Unknown server error.'
+    res.statusCode = 500
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ error: 'API adapter failed.', message }))
+  }
 }
