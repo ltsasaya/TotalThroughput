@@ -37,7 +37,8 @@
 
 | File | Description |
 |---|---|
-| `api/[...path].ts` | Single Vercel catch-all function that default-exports the shared Node API request handler for `/api/*` |
+| `api/index.ts` | Vercel API adapter that restores rewritten `/api/*` paths and delegates to the shared Node API request handler |
+| `vercel.json` | Vercel rewrite config mapping `/api/*` to the single API adapter |
 
 ## Store
 
