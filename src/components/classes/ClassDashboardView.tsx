@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
-import { fetchClassDashboard, fetchClassStudentProfile, removeStudent } from '@/api/client'
+import { useEffect, useRef, useState } from 'react'
+import { fetchClassDashboard, removeStudent } from '@/api/client'
 import { useAccountStore } from '@/store/accountStore'
 import { useGameStore } from '@/store/gameStore'
-import type { ClassDashboard, ClassStudentProfile, ClassDashboardStudent } from '@/types/account'
+import type { ClassDashboard, ClassDashboardStudent } from '@/types/account'
 import { RetroHeader } from '@/components/game/RetroHeader'
 import {
   AppButton,
@@ -25,22 +25,54 @@ function StudentMenu({
   onRemove: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (menuRef.current?.contains(event.target as Node)) return
+      setOpen(false)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  const handleView = () => {
+    setOpen(false)
+    onView()
+  }
+
+  const handleRemove = () => {
+    setOpen(false)
+    onRemove()
+  }
+
   return (
-    <div className="relative">
+    <div ref={menuRef} className="relative justify-self-end">
       <button
         type="button"
-        className="border-[2px] border-black px-2 py-1 font-bold"
+        className="inline-flex h-9 w-9 items-center justify-center bg-transparent text-2xl font-bold leading-none text-[color:var(--tt-text)] hover:text-[color:var(--tt-text-subtle)] focus-visible:outline-[3px] focus-visible:outline-offset-2 focus-visible:outline-black"
         aria-label={`Actions for ${student.studentName}`}
-        onClick={() => setOpen(value => !value)}
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
       >
         ...
       </button>
       {open && (
-        <div className="absolute right-0 z-20 grid min-w-36 gap-1 border-[2px] border-black bg-white p-1 shadow-[3px_3px_0_#000]">
-          <button type="button" className="px-3 py-2 text-left text-sm font-bold hover:bg-gray-100" onClick={onView}>
+        <div className="absolute top-full right-0 z-20 mt-1 flex min-w-48 flex-col border-[2px] border-black bg-white p-1 shadow-[3px_3px_0_#000]">
+          <button type="button" className="whitespace-nowrap px-3 py-2 text-left text-sm font-bold hover:bg-gray-100" onClick={handleView}>
             View profile
           </button>
-          <button type="button" className="px-3 py-2 text-left text-sm font-bold text-[color:var(--tt-danger)] hover:bg-gray-100" onClick={onRemove}>
+          <button type="button" className="whitespace-nowrap px-3 py-2 text-left text-sm font-bold text-[color:var(--tt-danger)] hover:bg-gray-100" onClick={handleRemove}>
             Remove student
           </button>
         </div>
@@ -54,8 +86,8 @@ export function ClassDashboardView() {
   const openAuth = useGameStore(s => s.openAuth)
   const selectedClassId = useGameStore(s => s.selectedClassId)
   const openInstructorDashboard = useGameStore(s => s.openInstructorDashboard)
+  const openProfile = useGameStore(s => s.openProfile)
   const [dashboard, setDashboard] = useState<ClassDashboard | null>(null)
-  const [profile, setProfile] = useState<ClassStudentProfile | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const loadDashboard = () => {
@@ -73,14 +105,9 @@ export function ClassDashboardView() {
     loadDashboard()
   }, [openAuth, selectedClassId, user])
 
-  const viewProfile = async (studentUserId: string) => {
+  const viewProfile = (studentUserId: string) => {
     if (!selectedClassId) return
-    setError(null)
-    try {
-      setProfile(await fetchClassStudentProfile(selectedClassId, studentUserId))
-    } catch (viewError) {
-      setError(viewError instanceof Error ? viewError.message : 'Student profile failed to load.')
-    }
+    openProfile(studentUserId, selectedClassId)
   }
 
   const remove = async (studentUserId: string) => {
@@ -97,14 +124,18 @@ export function ClassDashboardView() {
   return (
     <div className="app-shell min-h-screen">
       <RetroHeader />
-      <DashboardShell
-        label="Class Dashboard"
-        headerAction={(
-          <AppButton type="button" variant="secondary" className="min-h-10 px-3 py-2 text-sm" onClick={openInstructorDashboard}>
-            Back to Instructor Dashboard
+      <DashboardShell>
+        <div>
+          <AppButton
+            type="button"
+            variant="secondary"
+            className="tt-button-compact"
+            aria-label="Back to Instructor Dashboard"
+            onClick={openInstructorDashboard}
+          >
+            Back
           </AppButton>
-        )}
-      >
+        </div>
         <ErrorText>{error}</ErrorText>
         <MetricBand className="md:grid-cols-[minmax(0,1fr)_auto_auto]">
           <MetricItem label="Class Name" value={dashboard?.class.className ?? '-'} />
@@ -140,27 +171,6 @@ export function ClassDashboardView() {
         </Panel>
       </DashboardShell>
 
-      {profile && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4">
-          <Panel variant="modal" className="grid max-h-[80vh] w-full max-w-2xl gap-3 overflow-auto p-5">
-            <SectionLabel>Student profile</SectionLabel>
-            {profile.runs.length > 0 ? profile.runs.map(run => (
-              <div key={run.id} className="grid gap-2 border-[2px] border-black px-3 py-2">
-                <div className="font-bold">{run.difficultyLabel}</div>
-                <div className="tt-label">{new Date(run.completedAt).toLocaleString()}</div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <MetricItem label="Completed" value={run.completedCount} />
-                  <MetricItem label="Avg R" value={`${(run.averageResponseTime / 1000).toFixed(2)}s`} />
-                  <MetricItem label="Avg Queue" value={run.averageQueueLength.toFixed(1)} />
-                </div>
-              </div>
-            )) : (
-              <div className="tt-label">No class-scoped runs yet.</div>
-            )}
-            <AppButton type="button" variant="secondary" onClick={() => setProfile(null)}>Close</AppButton>
-          </Panel>
-        </div>
-      )}
     </div>
   )
 }

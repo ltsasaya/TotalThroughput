@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-06-12
+Last updated: 2026-06-15
 
 ## Current State
 
@@ -13,6 +13,25 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
 
 ## Recent Work
 
+- Added latest-calibration persistence on `users`, hydrated signed-in sessions
+  with calibration data, and saved completed calibration updates through the
+  profile API.
+- Added complete target-profile viewing so instructors can open a student's
+  real profile from the class dashboard instead of a generated popup.
+- Cleaned class student action menus, added outside-click dismissal, and
+  reduced the profile return control to a compact `Back` button.
+- Unified calibration and Phase 1 typing words into one shared pool and removed
+  Phase 1 prompt-size selection.
+- Removed noisy Global Data hover and graph-switch animations, fixed visible
+  queueing notation to use `U`, and kept utilization/arrival graph bounds
+  aligned with observed data.
+- Simplified the educational preview diagrams and auth/profile/game-menu
+  headers per BOSS's UI cleanup requests.
+- Moved page-return Back buttons to the compact top-left placement and removed
+  redundant class-dashboard header text.
+- Simplified the Simulation Lab sidebar/sweep to finite observed run metrics
+  and removed the tooltip popup transition while preserving the existing hover
+  content.
 - Moved current Phase 1 run tasks to medium-length request prompts and updated
   expected service-demand and arrival-rate calculations.
 - Reworked the Phase 1 play view so the active typing task stays anchored while
@@ -56,31 +75,22 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
   before a DB-backed endpoint actually needs `DATABASE_URL`.
 - Removed the temporary 100 WPM run-testing calibration bypass; Game Menu now
   requires a real completed calibration before runs unlock.
+- BOSS configured the Vercel `DATABASE_URL` and confirmed the hosted app works.
+- Closed the calibrated gameplay review gate; follow-up tweaks and bug fixes
+  are now tracked in `TODO-015`.
 
 ## Remaining Work
 
-- Manually test difficulty offsets, target loads, and WPM bins during TODO-006.
-- Decide the final seed/data-collection strategy for Phase 1 runs.
-- Decide whether unfinished work should stay visible, be relabeled, or be
-  hidden in run summaries.
-- Run BOSS's pre-main Simulation Lab walkthrough and record any remaining UI,
-  labeling, or model-tuning fixes.
-- Decide whether the current `Queue Length (N)` display label should remain or
-  be adjusted for stricter queueing notation.
-- Add full server-owned run/task/event lifecycle and server-finalized metrics
-  for the later TODO-007 through TODO-011 foundation.
-- Connect the finalized browser-owned run model to server-owned task generation
-  and run reloads.
-- Smoke-test Vercel after the API wrapper fix is deployed.
+- Work through BOSS-supplied small changes and bug fixes under `TODO-015`.
+- Keep future Phase 2 deferred until BOSS supplies the new concept.
 
 ## Verification
 
 - `git diff --check`: passed
-- `npm test`: passed, 168 tests
+- `npm test`: passed, 171 tests
 - `npm run lint`: passed
 - `npm run build`: passed with Vite's existing large chunk warning
-- `npm run db:migrate`: passed against the configured `.env` `DATABASE_URL`
-  for migrations 001 through 004, with a non-blocking `pg` SSL-mode warning.
+- `npm run db:migrate`: not run for migration 005 in this checkpoint.
 - HTTP smoke: Vite served `/` on the fallback local dev port and the running
   API returned `/api/auth/me`.
 - Browser interaction smoke: not run in the final review because no browser
@@ -89,6 +99,8 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
   popup, class create/code display, Join Class, duplicate already-enrolled
   message, class dashboard student row/menu, Global Data empty scatterplot
   shell, and Simulation Lab activity count passed locally.
+- Hosted smoke: BOSS confirmed the Vercel deployment works after configuring
+  `DATABASE_URL`.
 - Browser QA: Phase 1 layout stability passed on desktop and mobile for empty
   queue, queued requests with overflow, wrong-letter highlighting, and
   wrong-space underline states.

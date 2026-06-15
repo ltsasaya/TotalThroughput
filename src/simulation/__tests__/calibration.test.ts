@@ -8,6 +8,7 @@ import {
   WPM_BINS,
   wpmBinIndex,
 } from '../calibration'
+import { SHARED_TYPING_WORDS } from '../content'
 
 describe('calibration WPM bins', () => {
   it('uses the approved WPM table', () => {
@@ -66,7 +67,7 @@ describe('calibration row window', () => {
     const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0)
 
     try {
-      expect(buildCalibrationText(3)).toBe('server server server')
+      expect(buildCalibrationText(3)).toBe(`${SHARED_TYPING_WORDS[0]} ${SHARED_TYPING_WORDS[0]} ${SHARED_TYPING_WORDS[0]}`)
       expect(randomSpy).toHaveBeenCalledTimes(3)
     } finally {
       randomSpy.mockRestore()

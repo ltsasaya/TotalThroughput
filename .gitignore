@@ -23,6 +23,8 @@ AGENTS.md
 CODEX_*.md
 .codex/
 .agents/
+design/
 notes/
 TODOS.md
 .gstack/
+.vercel/

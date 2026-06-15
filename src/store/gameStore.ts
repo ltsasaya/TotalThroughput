@@ -12,6 +12,7 @@ import type {
   Phase1RunConfig,
 } from '../types/game'
 import type { LiveMetrics, Phase1LevelResult, Phase1Result, Phase1RunRecord, RunSummary, TimePoint } from '../types/metrics'
+import type { UserCalibration } from '../types/account'
 import type { ScheduledArrival } from '../simulation/arrival'
 import { computePhase1RunTick } from '../simulation/phase1Tick'
 import { computePhase2Tick } from '../simulation/phase2Tick'
@@ -21,6 +22,8 @@ import {
   buildPhase1DifficultyOptions,
   calculateCalibrationResult,
   CALIBRATION_DURATION_MS,
+  WPM_BINS,
+  wpmBinIndex,
 } from '../simulation/calibration'
 import {
   buildPhase1RunConfig,
@@ -35,7 +38,7 @@ import {
   phase2WorkerCount,
   PHASE2_DURATION_MS,
 } from '../simulation/phase2Runs'
-import { savePhase1RunIfSignedIn } from '../api/client'
+import { saveCalibrationIfSignedIn, savePhase1RunIfSignedIn } from '../api/client'
 
 function navigationInterruptionMessage(phase: GamePhase): string | null {
   if (phase === 'calibration') return "Current calibration wasn't saved."
@@ -169,6 +172,38 @@ function buildPhase1ResultFromRecord(record: Phase1RunRecord): Phase1Result {
   }
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function savedCalibrationToResult(calibration: UserCalibration): CalibrationResult | null {
+  if (!Number.isFinite(calibration.wpm) || calibration.wpm <= 0) return null
+  const fallbackIndex = wpmBinIndex(calibration.wpm)
+  const binIndex = clamp(
+    Number.isInteger(calibration.binIndex) ? calibration.binIndex : fallbackIndex,
+    0,
+    WPM_BINS.length - 1,
+  )
+  const wpmRange = WPM_BINS[binIndex] ?? WPM_BINS[fallbackIndex]
+  const effectiveWpm = clamp(calibration.wpm, WPM_BINS[0].min, WPM_BINS[WPM_BINS.length - 1].max)
+  const estimatedServiceDemandMs = Number.isFinite(calibration.serviceDemandMs) && calibration.serviceDemandMs > 0
+    ? calibration.serviceDemandMs
+    : Math.round((30 * 60_000) / (effectiveWpm * 5))
+
+  return {
+    rawWpm: calibration.wpm,
+    effectiveWpm,
+    binIndex,
+    wpmRange,
+    correctChars: 0,
+    typedChars: 0,
+    accuracy: 1,
+    estimatedServiceDemandMs,
+    reactionSpeedMs: 0,
+    durationMs: CALIBRATION_DURATION_MS,
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Store shape
 // ---------------------------------------------------------------------------
@@ -190,6 +225,8 @@ interface GameStore {
   lastPhase1RunRecord: Phase1RunRecord | null
   hasSeenEducationalManual: boolean
   selectedClassId: string | null
+  selectedProfileUserId: string | null
+  profileReturnClassId: string | null
   returnPhaseAfterAuth: GamePhase | null
 
   arrivalSchedule: ScheduledArrival[]
@@ -224,7 +261,7 @@ interface GameStore {
   openSimulationLab: () => void
   openConcurrencyRaceSample: () => void
   openAuth: (returnPhase?: GamePhase | null) => void
-  openProfile: () => void
+  openProfile: (profileUserId?: string | null, returnClassId?: string | null) => void
   openInstructorDashboard: () => void
   openClassDashboard: (classId: string) => void
   openJoinClass: () => void
@@ -232,6 +269,7 @@ interface GameStore {
   consumeReturnPhaseAfterAuth: () => GamePhase | null
   clearSystemNotification: () => void
   markEducationalManualSeen: () => void
+  applySavedCalibration: (calibration: UserCalibration | null) => void
   startCalibration: () => void
   typeCalibrationChar: (char: string) => void
   handleCalibrationBackspace: () => void
@@ -292,6 +330,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastPhase1RunRecord: null,
   hasSeenEducationalManual: false,
   selectedClassId: null,
+  selectedProfileUserId: null,
+  profileReturnClassId: null,
   returnPhaseAfterAuth: null,
   arrivalSchedule: [],
   nextArrivalIndex: 0,
@@ -331,6 +371,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunRecords: hasCompletedCalibration ? state.phase1RunRecords : [],
       lastPhase1RunRecord: hasCompletedCalibration ? state.lastPhase1RunRecord : null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       phase1MaxQueueLength: 0,
       phase1Result: hasCompletedCalibration ? state.phase1Result : null,
@@ -355,6 +397,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunRecords: state.phase1RunRecords,
       lastPhase1RunRecord: state.lastPhase1RunRecord,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
       currentPhase1LevelIndex: 0,
@@ -381,6 +425,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification,
     })
@@ -397,6 +443,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       systemNotification: systemNotification ?? state.systemNotification,
     })
   },
@@ -411,6 +459,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       phase1MaxQueueLength: 0,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification: systemNotification ?? state.systemNotification,
     })
@@ -425,12 +475,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: returnPhase,
       systemNotification,
     })
   },
 
-  openProfile: () => {
+  openProfile: (profileUserId = null, returnClassId = null) => {
     const state = get()
     const systemNotification = navigationInterruptionMessage(state.phase)
     set({
@@ -439,6 +491,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       selectedClassId: null,
+      selectedProfileUserId: profileUserId,
+      profileReturnClassId: returnClassId,
       returnPhaseAfterAuth: null,
       systemNotification,
     })
@@ -453,6 +507,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification,
     })
@@ -467,6 +523,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       selectedClassId: classId,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification,
     })
@@ -481,6 +539,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification,
     })
@@ -495,6 +555,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedPhase1Difficulty: null,
       phase1RunConfig: null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification,
     })
@@ -509,6 +571,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   clearSystemNotification: () => set({ systemNotification: null }),
 
   markEducationalManualSeen: () => set({ hasSeenEducationalManual: true }),
+
+  applySavedCalibration: (calibration) => {
+    if (!calibration) return
+    const calibrationResult = savedCalibrationToResult(calibration)
+    if (!calibrationResult) return
+    set({
+      calibrationResult,
+      phase1DifficultyOptions: buildPhase1DifficultyOptions(calibrationResult),
+      hasSeenEducationalManual: true,
+    })
+  },
 
   startCalibration: () => {
     set({
@@ -574,6 +647,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       queue: [],
       liveMetrics: { ...DEFAULT_METRICS },
       systemNotification: null,
+    })
+    void saveCalibrationIfSignedIn(calibrationResult).catch(() => {
+      set({ systemNotification: 'Calibration saved locally; server save failed.' })
     })
   },
 
@@ -830,6 +906,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunRecords: [],
       lastPhase1RunRecord: null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       phase1Levels: [...DEFAULT_CONFIG.phase1Levels],
       currentPhase1LevelIndex: 0,
@@ -847,6 +925,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase1RunConfig: null,
       activePhase1TaskId: null,
       selectedClassId: null,
+      selectedProfileUserId: null,
+      profileReturnClassId: null,
       returnPhaseAfterAuth: null,
       systemNotification: null,
     }),

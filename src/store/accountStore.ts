@@ -7,6 +7,7 @@ import {
   type ApiError,
 } from '@/api/client'
 import type { AuthUser } from '@/types/account'
+import { useGameStore } from './gameStore'
 
 interface AccountStore {
   user: AuthUser | null
@@ -24,6 +25,10 @@ function messageFromError(error: unknown): string {
   return 'Request failed.'
 }
 
+function applyUserCalibration(user: AuthUser | null) {
+  if (user?.calibration) useGameStore.getState().applySavedCalibration(user.calibration)
+}
+
 export const useAccountStore = create<AccountStore>((set) => ({
   user: null,
   status: 'idle',
@@ -32,7 +37,9 @@ export const useAccountStore = create<AccountStore>((set) => ({
   loadCurrentUser: async () => {
     set({ status: 'loading', error: null })
     try {
-      set({ user: await getCurrentUser(), status: 'ready' })
+      const user = await getCurrentUser()
+      applyUserCalibration(user)
+      set({ user, status: 'ready' })
     } catch (error) {
       set({ user: null, status: 'ready', error: messageFromError(error) })
     }
@@ -41,7 +48,9 @@ export const useAccountStore = create<AccountStore>((set) => ({
   signIn: async (username, password) => {
     set({ status: 'loading', error: null })
     try {
-      set({ user: await loginAccount(username, password), status: 'ready' })
+      const user = await loginAccount(username, password)
+      applyUserCalibration(user)
+      set({ user, status: 'ready' })
     } catch (error) {
       set({ status: 'ready', error: messageFromError(error as ApiError) })
       throw error
@@ -51,7 +60,9 @@ export const useAccountStore = create<AccountStore>((set) => ({
   register: async (username, password) => {
     set({ status: 'loading', error: null })
     try {
-      set({ user: await registerAccount(username, password), status: 'ready' })
+      const user = await registerAccount(username, password)
+      applyUserCalibration(user)
+      set({ user, status: 'ready' })
     } catch (error) {
       set({ status: 'ready', error: messageFromError(error as ApiError) })
       throw error

@@ -18,7 +18,7 @@ const SERIES_META: Array<{
   label: string
   color: string
 }> = [
-  { key: 'systemCount', label: 'Queue Length (N)', color: '#1a1a1a' },
+  { key: 'systemCount', label: 'Requests in System (N)', color: '#1a1a1a' },
   { key: 'responseTime', label: 'Response Time (R)', color: '#6b7280' },
   { key: 'utilization', label: 'Utilization (U)', color: '#374151' },
   { key: 'arrivalRate', label: 'Arrival Rate (λ)', color: '#9ca3af' },
@@ -58,9 +58,6 @@ function createInputDrafts(inputs: Record<SimulationLabEditableInput, number>) {
   }
 }
 
-const formatNumber = (value: number | null, digits = 3) => (
-  value === null || !Number.isFinite(value) ? 'unstable' : value.toFixed(digits)
-)
 const formatPercent = (value: number) => `${(value * 100).toFixed(1)}%`
 
 function clampNumber(value: number, min: number, max: number) {
@@ -90,16 +87,6 @@ export function SimulationLabView() {
     setInputDrafts(createInputDrafts(inputs))
   }, [inputs])
 
-  const steadyStateRows = useMemo(() => {
-    if (!currentRun) return null
-    const steady = currentRun.steadyState
-    return [
-      ['λD', steady.offeredLoad.toFixed(3)],
-      ['ρ', formatPercent(steady.utilization)],
-      ['R*', formatNumber(steady.responseTime)],
-      ['N*', formatNumber(steady.systemCount)],
-    ]
-  }, [currentRun])
   const currentEstimate = useMemo(() => estimateServerLabExperiment(inputs), [inputs])
 
   const setAxis = (key: keyof SimulationAxisSettings) => (value: string) => {
@@ -171,7 +158,7 @@ export function SimulationLabView() {
               </span>
             )}
             <span className="text-center font-mono text-[10px] font-bold tracking-wide text-gray-500">
-              ρ {formatPercent(currentEstimate.loadProfile.perWorkerLoad)} · {currentEstimate.loadProfile.label}
+              U {formatPercent(currentEstimate.loadProfile.perWorkerLoad)} · {currentEstimate.loadProfile.label}
             </span>
             </div>
           </div>
@@ -223,47 +210,6 @@ export function SimulationLabView() {
                   </button>
                 )
               })}
-            </div>
-
-            <div className="mt-4 border-t-[2px] border-black pt-3">
-              <div className="mb-2 border-b-[2px] border-black pb-2 font-mono text-[10px] font-bold uppercase tracking-widest">
-                Stable M/M/c Reference
-              </div>
-              <div className="mb-2 font-mono text-[10px] font-bold text-gray-500">M/M/c model</div>
-              {steadyStateRows ? (
-                <dl className="flex flex-col gap-2 font-mono text-xs">
-                  {steadyStateRows.map(([label, value], index) => (
-                    <div
-                      key={label}
-                      className={cx(
-                        'flex justify-between gap-4',
-                        index === 2 && 'border-t border-gray-200 pt-2',
-                      )}
-                    >
-                      <dt className="text-gray-500">{label} =</dt>
-                      <dd className="font-bold">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : (
-                <div className="border-[2px] border-gray-300 px-2 py-2 font-mono text-[10px] font-bold text-gray-500">
-                  Run simulation to compute reference.
-                </div>
-              )}
-              {currentRun && !currentRun.steadyState.stable && (
-                <div className="mt-2 border-[2px] border-black px-2 py-1 text-center font-mono text-[10px]">
-                  no stable reference
-                </div>
-              )}
-              <div className="mt-2 border-[2px] border-gray-300 px-2 py-1 font-mono text-[10px]">
-                <div className="font-bold">{currentEstimate.loadProfile.label}</div>
-                <div className="text-gray-500">{currentEstimate.loadProfile.description}</div>
-              </div>
-              <div className="mt-3 space-y-1 font-mono text-[10px] leading-relaxed text-gray-500">
-                <div>N = λ * R</div>
-                <div>U = λ * D / c</div>
-                <div>R uses Erlang C</div>
-              </div>
             </div>
           </aside>
 

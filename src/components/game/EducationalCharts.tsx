@@ -113,15 +113,15 @@ export function ExpansionFactorChart({
 }) {
   const points = 50
   const curve = Array.from({ length: points }, (_, i) => {
-    const rho = i / (points + 1)
+    const load = i / (points + 1)
     return {
-      rho: +rho.toFixed(3),
-      expansion: +(1 / (1 - rho)).toFixed(3),
+      load: +load.toFixed(3),
+      expansion: +(1 / (1 - load)).toFixed(3),
     }
   })
 
   const playerRD = avgServiceTime > 0 ? +(avgResponseTime / avgServiceTime).toFixed(2) : 1
-  const playerRho = +Math.min(avgUtil, 0.97).toFixed(3)
+  const playerLoad = +Math.min(avgUtil, 0.97).toFixed(3)
 
   return (
     <div>
@@ -130,12 +130,12 @@ export function ExpansionFactorChart({
         <LineChart data={curve} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
           <CartesianGrid {...GRID_STYLE} />
           <XAxis
-            dataKey="rho"
+            dataKey="load"
             type="number"
             domain={[0, 1]}
             tick={AXIS_TICK}
             tickFormatter={v => `${(v * 100).toFixed(0)}%`}
-            label={{ value: 'Per-worker load rho', position: 'insideBottom', offset: -12, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
+            label={{ value: 'Per-worker load U', position: 'insideBottom', offset: -12, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <YAxis
             domain={[1, 10]}
@@ -143,9 +143,9 @@ export function ExpansionFactorChart({
             label={{ value: 'R/D', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--tt-text-subtle)', fontSize: 11 }}
           />
           <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => v.toFixed(2)} />
-          <Line type="monotone" dataKey="expansion" stroke="var(--tt-accent)" strokeWidth={1.5} dot={false} name="1 / (1 - rho)" />
+          <Line type="monotone" dataKey="expansion" stroke="var(--tt-accent)" strokeWidth={1.5} dot={false} name="1 / (1 - U)" />
           <ReferenceDot
-            x={playerRho}
+            x={playerLoad}
             y={Math.min(playerRD, 10)}
             r={5}
             fill="var(--tt-danger)"
@@ -156,7 +156,7 @@ export function ExpansionFactorChart({
         </LineChart>
       </ResponsiveContainer>
       <ChartCaption>
-        R/D ~= 1/(1 - rho) is a simple stable single-server reference curve. It is not an exact M/M/c or finite-run result.
+        R/D ~= 1/(1 - U) is a simple stable single-server reference curve. It is not an exact M/M/c or finite-run result.
       </ChartCaption>
     </div>
   )

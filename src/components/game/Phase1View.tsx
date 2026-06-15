@@ -65,7 +65,7 @@ export function Phase1View() {
         cls += ' text-[color:var(--tt-danger)] underline decoration-[color:var(--tt-danger)] decoration-[3px] underline-offset-4'
       }
     } else if (idx === typedContent.length) {
-      cls += ' text-[color:var(--tt-text)] underline underline-offset-4'
+      cls += ' text-[color:var(--tt-text-subtle)]'
     } else {
       cls += ' text-[color:var(--tt-text-subtle)]'
     }

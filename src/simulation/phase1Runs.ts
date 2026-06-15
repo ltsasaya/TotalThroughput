@@ -2,7 +2,6 @@ import type { CalibrationResult, Phase1DifficultyKey, Phase1DifficultyOption, Ph
 import type { Phase1RunRecord } from '../types/metrics'
 import type { Task } from '../types/task'
 import { generatePoissonArrivalSchedule, type ScheduledArrival } from './arrival'
-import { PHASE1_PROMPT_SIZE } from './content'
 
 export const PHASE1_RUN_DURATION_MS = 60_000
 
@@ -51,7 +50,6 @@ export function generatePhase1RunArrivalSchedule(run: Phase1RunConfig): Schedule
     lambdaPerSecond: run.lambda,
     arrivalWindowMs: run.arrivalWindowMs,
     seed: run.seed,
-    sizeMix: [{ size: PHASE1_PROMPT_SIZE, weight: 1 }],
   })
 }
 

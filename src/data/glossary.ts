@@ -39,9 +39,9 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition: 'Reference request arrival rate at saturation. A continuing queue cannot sustain arrivals above λmax without growing backlog.',
   },
   {
-    symbol: 'ρ',
+    symbol: 'U',
     name: 'Offered Load',
-    formula: 'ρ ≈ λD',
+    formula: 'U ≈ λD',
     definition: 'Reference load for one server during the arrival window. It estimates pressure against capacity, not an exact finite-run busy fraction.',
   },
   {
@@ -66,7 +66,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition: 'Long-run requests in the server equal arrival rate times response time for stable systems. Use as reference intuition for finite runs.',
   },
   {
-    symbol: 'R = D / (1 − ρ)',
+    symbol: 'R = D / (1 − U)',
     name: 'Simple Response Reference',
     definition: 'Simple stable M/M/1 reference curve: as offered load approaches 1, response time grows sharply. It is not the game\'s exact finite-run model.',
   },
@@ -76,7 +76,7 @@ export const GLOSSARY: GlossaryEntry[] = [
     definition: 'With c identical server workers, ideal peak throughput scales linearly before dispatch and coordination costs.',
   },
   {
-    symbol: 'ρcore = λD / c',
+    symbol: 'Ucore = λD / c',
     name: 'Per-Worker Load',
     definition: 'Average offered load per worker in a server pool. High per-worker load makes queues and response time sensitive to bursts.',
   },

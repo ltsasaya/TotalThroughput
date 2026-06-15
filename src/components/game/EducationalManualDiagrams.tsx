@@ -160,13 +160,13 @@ export function QueueDiagram({ playerName }: { playerName: string }) {
 export function TypingRunPreviewDiagram() {
   return (
     <figure className="retro-manual-diagram retro-manual-diagram-typing-run" aria-label="Typing run preview diagram">
-      <svg viewBox="0 0 620 270" role="img" aria-labelledby="typing-run-diagram-title typing-run-diagram-desc">
+      <svg viewBox="0 0 620 220" role="img" aria-labelledby="typing-run-diagram-title typing-run-diagram-desc">
         <title id="typing-run-diagram-title">
-          Placeholder preview of the typing run with a queue, active task, and stats
+          Placeholder preview of the typing run with a queue and active task
         </title>
         <desc id="typing-run-diagram-desc">
-          A preview of the play screen shows incoming requests waiting in a queue,
-          one active typing task, and live stats such as time, WPM, and queue length.
+          A preview of the play screen shows requests waiting in a queue and one
+          active typing task.
         </desc>
         <defs>
           <marker id="typing-run-arrow" markerWidth="6" markerHeight="6" refX="5.2" refY="3" orient="auto">
@@ -174,45 +174,28 @@ export function TypingRunPreviewDiagram() {
           </marker>
         </defs>
 
-        <rect className="queue-diagram-server-shell" x="18" y="18" width="584" height="234" rx="10" />
-        <text className="queue-diagram-label" x="310" y="50" textAnchor="middle">Typing Run Preview</text>
+        <rect className="queue-diagram-server-shell" x="18" y="18" width="584" height="184" rx="10" />
+        <text className="queue-diagram-label" x="310" y="48" textAnchor="middle">Typing Run Preview</text>
 
-        <line className="diagram-arrow queue-diagram-secondary-arrow" x1="0" y1="120" x2="44" y2="120" markerEnd="url(#typing-run-arrow)" />
-        <line className="diagram-arrow queue-diagram-secondary-arrow" x1="0" y1="168" x2="44" y2="148" markerEnd="url(#typing-run-arrow)" />
-        <text className="queue-diagram-small" x="74" y="76" textAnchor="middle">incoming</text>
-        <text className="queue-diagram-small" x="74" y="94" textAnchor="middle">requests</text>
+        <line className="diagram-arrow queue-diagram-secondary-arrow" x1="0" y1="112" x2="44" y2="112" markerEnd="url(#typing-run-arrow)" />
+        <line className="diagram-arrow queue-diagram-secondary-arrow" x1="0" y1="152" x2="44" y2="134" markerEnd="url(#typing-run-arrow)" />
 
-        <rect className="queue-diagram-box" x="44" y="98" width="132" height="112" rx="6" />
-        <text className="queue-diagram-label" x="110" y="122" textAnchor="middle">Queue</text>
-        <rect className="queue-diagram-slot" x="68" y="136" width="84" height="18" rx="3" />
-        <text className="queue-diagram-small" x="110" y="150" textAnchor="middle">P2</text>
-        <rect className="queue-diagram-slot" x="68" y="160" width="84" height="18" rx="3" />
-        <text className="queue-diagram-small" x="110" y="174" textAnchor="middle">P3</text>
-        <rect className="queue-diagram-slot queue-diagram-slot-empty" x="68" y="184" width="84" height="10" rx="3" />
+        <rect className="queue-diagram-box" x="44" y="82" width="132" height="104" rx="6" />
+        <text className="queue-diagram-label" x="110" y="106" textAnchor="middle">Queue</text>
+        <rect className="queue-diagram-slot" x="68" y="120" width="84" height="18" rx="3" />
+        <text className="queue-diagram-small" x="110" y="134" textAnchor="middle">P2</text>
+        <rect className="queue-diagram-slot" x="68" y="144" width="84" height="18" rx="3" />
+        <text className="queue-diagram-small" x="110" y="158" textAnchor="middle">P3</text>
+        <rect className="queue-diagram-slot queue-diagram-slot-empty" x="68" y="168" width="84" height="10" rx="3" />
 
-        <line className="diagram-arrow" x1="176" y1="154" x2="210" y2="154" markerEnd="url(#typing-run-arrow)" />
+        <line className="diagram-arrow" x1="176" y1="132" x2="210" y2="132" markerEnd="url(#typing-run-arrow)" />
 
-        <rect className="queue-diagram-box" x="210" y="82" width="250" height="144" rx="6" />
-        <text className="queue-diagram-label" x="335" y="110" textAnchor="middle">Active Typing Task</text>
-        <rect className="queue-diagram-slot" x="232" y="128" width="206" height="48" rx="3" />
-        <text className="queue-diagram-small" x="335" y="151" textAnchor="middle">server queue latency</text>
-        <line className="diagram-arrow" x1="250" y1="166" x2="330" y2="166" />
-        <rect className="queue-diagram-slot-empty" x="232" y="194" width="206" height="12" rx="3" />
-        <rect className="diagram-server-dot" x="232" y="194" width="124" height="12" rx="3" />
+        <rect className="queue-diagram-box" x="210" y="66" width="250" height="124" rx="6" />
+        <text className="queue-diagram-label" x="335" y="94" textAnchor="middle">Active Typing Task</text>
+        <rect className="queue-diagram-slot" x="232" y="112" width="206" height="44" rx="3" />
+        <text className="queue-diagram-small" x="335" y="138" textAnchor="middle">(typing task)</text>
 
-        <line className="diagram-arrow" x1="460" y1="154" x2="592" y2="154" markerEnd="url(#typing-run-arrow)" />
-        <text className="queue-diagram-small" x="526" y="137" textAnchor="middle">response</text>
-
-        <rect className="queue-diagram-box" x="480" y="70" width="96" height="58" rx="6" />
-        <text className="queue-diagram-small" x="528" y="92" textAnchor="middle">time</text>
-        <text className="queue-diagram-label" x="528" y="116" textAnchor="middle">42s</text>
-
-        <rect className="queue-diagram-box" x="480" y="180" width="96" height="42" rx="6" />
-        <text className="queue-diagram-small" x="528" y="198" textAnchor="middle">queue</text>
-        <text className="queue-diagram-label" x="528" y="218" textAnchor="middle">3</text>
-
-        <text className="queue-diagram-small" x="92" y="232" textAnchor="middle">waiting work</text>
-        <text className="queue-diagram-small" x="334" y="246" textAnchor="middle">typed service work</text>
+        <line className="diagram-arrow" x1="460" y1="132" x2="592" y2="132" markerEnd="url(#typing-run-arrow)" />
       </svg>
     </figure>
   )

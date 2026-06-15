@@ -44,7 +44,7 @@ function characterClassName({
       ? 'text-[color:var(--tt-success)]'
       : 'text-[color:var(--tt-danger)]'
   }
-  if (index === typedContent.length) return 'text-[color:var(--tt-text)] underline underline-offset-4'
+  if (index === typedContent.length) return 'text-[color:var(--tt-text-subtle)]'
   return 'text-[color:var(--tt-text-subtle)]'
 }
 

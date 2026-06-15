@@ -100,8 +100,7 @@ export function DifficultySelectView() {
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="game-menu-intro">
               <div>
-                <SectionLabel>Game menu</SectionLabel>
-                <h1 className="mt-2 text-3xl font-bold text-[color:var(--tt-text)]">Calibrate and Play</h1>
+                <h1 className="text-3xl font-bold text-[color:var(--tt-text)]">Calibrate and Play</h1>
                 <p className="tt-copy mt-2 max-w-2xl">
                   Your typing baseline sets your level availability. The following one-minute runs have different request arrival rates, each designed to have an expected <span className="text-[color:var(--tt-danger)]">Utilization (U) percentage</span>.
                 </p>

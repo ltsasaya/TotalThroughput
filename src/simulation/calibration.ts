@@ -1,5 +1,5 @@
 import type { CalibrationResult, Phase1DifficultyOption, Phase1DifficultyKey, WpmRange } from '../types/game'
-import { estimatePhase1PromptLength } from './content'
+import { estimatePhase1PromptLength, SHARED_TYPING_WORDS } from './content'
 
 export const CALIBRATION_DURATION_MS = 30_000
 export const CALIBRATION_VISIBLE_ROWS = 5
@@ -17,13 +17,6 @@ export const WPM_BINS: readonly WpmRange[] = [
   { min: 140, max: 160, label: '140-160' },
   { min: 160, max: 180, label: '160-180' },
   { min: 180, max: 200, label: '180-200' },
-]
-
-const CALIBRATION_WORDS = [
-  'server', 'queue', 'worker', 'request', 'response', 'client', 'latency',
-  'throughput', 'service', 'arrival', 'waiting', 'capacity', 'busy', 'idle',
-  'typing', 'system', 'load', 'timer', 'buffer', 'complete', 'measure',
-  'window', 'saturation', 'demand', 'baseline', 'retry', 'finish', 'observe',
 ]
 
 const DIFFICULTY_SPECS: Array<{
@@ -46,8 +39,8 @@ function clamp(value: number, min: number, max: number): number {
 
 export function buildCalibrationText(wordCount = 360): string {
   return Array.from({ length: wordCount }, () => {
-    const wordIndex = Math.floor(Math.random() * CALIBRATION_WORDS.length)
-    return CALIBRATION_WORDS[wordIndex]
+    const wordIndex = Math.floor(Math.random() * SHARED_TYPING_WORDS.length)
+    return SHARED_TYPING_WORDS[wordIndex]
   }).join(' ')
 }
 

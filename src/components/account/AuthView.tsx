@@ -44,7 +44,7 @@ export function AuthView() {
   return (
     <div className="app-shell min-h-screen">
       <RetroHeader />
-      <DashboardShell label="Account" title={mode === 'signIn' ? 'Sign In' : 'Create Account'}>
+      <DashboardShell>
         <Panel className="mx-auto grid w-full max-w-xl gap-4 p-5">
           <div className="flex gap-2 border-b-[3px] border-black pb-3">
             <button

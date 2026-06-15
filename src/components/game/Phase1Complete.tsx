@@ -30,6 +30,17 @@ export function Phase1Complete() {
   return (
     <div className="app-shell flex min-h-screen items-center justify-center px-4 py-8">
       <Panel variant="modal" className="mx-auto w-full max-w-3xl p-6 md:p-8">
+        <div className="mb-5">
+          <AppButton
+            type="button"
+            onClick={returnToMenu}
+            variant="secondary"
+            className="tt-button-compact"
+            aria-label="Back to Game Menu"
+          >
+            Back
+          </AppButton>
+        </div>
         <div className="mb-6 grid gap-5 md:grid-cols-[minmax(0,1fr)_210px]">
           <div>
             <StatusBadge tone={phase1Result.passed ? 'info' : 'warning'}>
@@ -122,12 +133,6 @@ export function Phase1Complete() {
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <AppButton
-            onClick={returnToMenu}
-            className="flex-1"
-          >
-            Back to Menu
-          </AppButton>
           <AppButton
             onClick={reset}
             variant="secondary"

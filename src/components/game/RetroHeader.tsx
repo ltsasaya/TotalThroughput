@@ -43,7 +43,7 @@ export function RetroHeader({ onHome, onGameMenu }: RetroHeaderProps) {
           <button
             type="button"
             className="retro-header-text retro-app-signin"
-            onClick={user ? openProfile : () => openAuth(null)}
+            onClick={user ? () => openProfile() : () => openAuth(null)}
           >
             {user ? 'Profile' : 'Sign In'}
           </button>

@@ -156,7 +156,7 @@ export function GlobalDataView() {
   return (
     <div className="app-shell min-h-screen">
       <RetroHeader />
-      <DashboardShell label="Global Data">
+      <DashboardShell>
         <ErrorText>{error}</ErrorText>
         <div className="flex flex-wrap gap-2 border-[3px] border-black bg-white p-2">
           {GRAPH_OPTIONS.map(option => (
@@ -215,6 +215,8 @@ export function GlobalDataView() {
                       label={{ value: activeGraph.y, angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip
+                      isAnimationActive={false}
+                      animationDuration={0}
                       content={(
                         <GlobalDataTooltip
                           graphLabel={activeGraph.label}
@@ -223,8 +225,9 @@ export function GlobalDataView() {
                         />
                       )}
                       cursor={{ strokeDasharray: '3 3' }}
+                      wrapperStyle={{ transition: 'none' }}
                     />
-                    <Scatter data={chartData}>
+                    <Scatter data={chartData} isAnimationActive={false} animationDuration={0}>
                       {chartData.map(point => (
                         <Cell key={point.id} fill={pointFill(point, wpmSource)} stroke="#000" strokeWidth={1} />
                       ))}
