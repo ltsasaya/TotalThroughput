@@ -3,6 +3,15 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 export interface AuthedUser {
   id: string
   username: string
+  calibration: UserCalibration | null
+}
+
+export interface UserCalibration {
+  wpm: number
+  rangeLabel: string
+  binIndex: number
+  serviceDemandMs: number
+  updatedAt: string | null
 }
 
 export interface RequestContext {

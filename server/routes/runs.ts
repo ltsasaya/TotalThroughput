@@ -1,4 +1,4 @@
-import { pool } from '../db.js'
+import { pool, withTransaction } from '../db.js'
 import { json, noContent, readJsonBody, requireUser, route, type RouteDefinition } from '../http.js'
 import { parsePhase1RunSummaryBody } from '../runValidation.js'
 
@@ -30,53 +30,75 @@ export const runRoutes: RouteDefinition[] = [
     const observedArrivalRate = ratePerSecond(body.arrivalCount, body.durationMs)
     const throughputPerSecond = ratePerSecond(body.completedCount, body.durationMs)
 
-    await pool.query(
-      `
-        insert into typing_runs (
-          user_id, class_id, difficulty_key,
-          calibration_wpm, calibration_range_label, calibration_bin_index, target_load,
-          arrival_rate, observed_arrival_rate, expected_arrivals, arrival_count, completed_count,
-          throughput_per_second, avg_response_ms, avg_service_demand_ms,
-          avg_typing_wpm, reaction_ms, utilization, avg_queue_length, max_queue_length,
-          still_waiting_count, duration_ms, service_demand_estimate_ms, reference_response_ms, seed
-        )
-        values (
-          $1, $2, $3,
-          $4, $5, $6, $7,
-          $8, $9, $10, $11, $12,
-          $13, $14, $15,
-          $16, $17, $18, $19, $20,
-          $21, $22, $23, $24, $25
-        )
-      `,
-      [
-        authedUser.id,
-        classId,
-        body.difficultyKey,
-        body.calibrationWpm,
-        body.calibrationRangeLabel,
-        body.calibrationBinIndex,
-        body.targetLoad,
-        body.arrivalRate,
-        observedArrivalRate,
-        body.expectedArrivals,
-        body.arrivalCount,
-        body.completedCount,
-        throughputPerSecond,
-        body.averageResponseTime,
-        body.averageServiceDemand,
-        body.averageTypingSpeed,
-        body.reactionSpeed,
-        body.utilizationPercent,
-        body.averageQueueLength,
-        body.maxQueueLength,
-        body.stillWaitingCount,
-        body.durationMs,
-        body.serviceDemandEstimateMs,
-        body.referenceResponseTimeMs,
-        body.seed,
-      ],
-    )
+    await withTransaction(async (client) => {
+      await client.query(
+        `
+          insert into typing_runs (
+            user_id, class_id, difficulty_key,
+            calibration_wpm, calibration_range_label, calibration_bin_index, target_load,
+            arrival_rate, observed_arrival_rate, expected_arrivals, arrival_count, completed_count,
+            throughput_per_second, avg_response_ms, avg_service_demand_ms,
+            avg_typing_wpm, reaction_ms, utilization, avg_queue_length, max_queue_length,
+            still_waiting_count, duration_ms, service_demand_estimate_ms, reference_response_ms, seed
+          )
+          values (
+            $1, $2, $3,
+            $4, $5, $6, $7,
+            $8, $9, $10, $11, $12,
+            $13, $14, $15,
+            $16, $17, $18, $19, $20,
+            $21, $22, $23, $24, $25
+          )
+        `,
+        [
+          authedUser.id,
+          classId,
+          body.difficultyKey,
+          body.calibrationWpm,
+          body.calibrationRangeLabel,
+          body.calibrationBinIndex,
+          body.targetLoad,
+          body.arrivalRate,
+          observedArrivalRate,
+          body.expectedArrivals,
+          body.arrivalCount,
+          body.completedCount,
+          throughputPerSecond,
+          body.averageResponseTime,
+          body.averageServiceDemand,
+          body.averageTypingSpeed,
+          body.reactionSpeed,
+          body.utilizationPercent,
+          body.averageQueueLength,
+          body.maxQueueLength,
+          body.stillWaitingCount,
+          body.durationMs,
+          body.serviceDemandEstimateMs,
+          body.referenceResponseTimeMs,
+          body.seed,
+        ],
+      )
+      await client.query(
+        `
+          update users
+          set
+            calibration_wpm = $2,
+            calibration_range_label = $3,
+            calibration_bin_index = $4,
+            calibration_service_demand_ms = $5,
+            calibration_updated_at = now(),
+            updated_at = now()
+          where id = $1
+        `,
+        [
+          authedUser.id,
+          body.calibrationWpm,
+          body.calibrationRangeLabel,
+          body.calibrationBinIndex,
+          body.serviceDemandEstimateMs,
+        ],
+      )
+    })
     noContent(res)
   }),
 

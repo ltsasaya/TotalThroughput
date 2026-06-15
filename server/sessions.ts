@@ -1,6 +1,7 @@
 import { pool, type DbQueryable } from './db.js'
 import { createSessionToken, hashSessionToken } from './crypto.js'
 import { parseCookies, type AuthedUser } from './http.js'
+import { authUserFromRow, type UserCalibrationRow } from './userCalibration.js'
 import type { IncomingMessage } from 'node:http'
 export { expiredSessionCookie, sessionCookie } from './sessionCookie.js'
 
@@ -31,7 +32,7 @@ export async function resolveUserFromRequest(req: IncomingMessage): Promise<Auth
   const token = parseCookies(req.headers.cookie)[SESSION_COOKIE]
   if (!token) return null
 
-  const result = await pool.query<AuthedUser>(
+  const result = await pool.query<UserCalibrationRow>(
     `
       update sessions s
       set last_seen_at = now()
@@ -40,10 +41,18 @@ export async function resolveUserFromRequest(req: IncomingMessage): Promise<Auth
         and s.token_hash = $1
         and s.revoked_at is null
         and s.expires_at > now()
-      returning u.id, u.username
+      returning
+        u.id,
+        u.username,
+        u.calibration_wpm,
+        u.calibration_range_label,
+        u.calibration_bin_index,
+        u.calibration_service_demand_ms,
+        u.calibration_updated_at
     `,
     [hashSessionToken(token)],
   )
 
-  return result.rows[0] ?? null
+  const user = result.rows[0]
+  return user ? authUserFromRow(user) : null
 }

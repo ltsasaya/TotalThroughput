@@ -22,9 +22,12 @@ export function ProfileDashboardView() {
   const openAuth = useGameStore(s => s.openAuth)
   const goHome = useGameStore(s => s.goHome)
   const openClassDashboard = useGameStore(s => s.openClassDashboard)
+  const selectedProfileUserId = useGameStore(s => s.selectedProfileUserId)
+  const profileReturnClassId = useGameStore(s => s.profileReturnClassId)
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [activeTab, setActiveTab] = useState<'runs' | 'classes'>('runs')
   const [error, setError] = useState<string | null>(null)
+  const isOwnProfile = profile ? profile.userId === user?.id : !selectedProfileUserId
 
   const handleSignOut = async () => {
     setError(null)
@@ -43,7 +46,9 @@ export function ProfileDashboardView() {
     }
 
     let cancelled = false
-    fetchProfile()
+    setProfile(null)
+    setError(null)
+    fetchProfile(selectedProfileUserId)
       .then(data => {
         if (!cancelled) setProfile(data)
       })
@@ -53,15 +58,27 @@ export function ProfileDashboardView() {
     return () => {
       cancelled = true
     }
-  }, [openAuth, user])
+  }, [openAuth, selectedProfileUserId, user])
+
+  const headerAction = profileReturnClassId ? (
+    <AppButton
+      type="button"
+      variant="secondary"
+      className="tt-button-compact"
+      aria-label="Back to Class Dashboard"
+      onClick={() => openClassDashboard(profileReturnClassId)}
+    >
+      Back
+    </AppButton>
+  ) : null
 
   return (
     <div className="app-shell min-h-screen">
       <RetroHeader />
-      <DashboardShell>
+      <DashboardShell headerAction={headerAction}>
         <ErrorText>{error}</ErrorText>
         <MetricBand className="md:grid-cols-6">
-          <MetricItem label="Username" value={profile?.username ?? user?.username ?? '-'} />
+          <MetricItem label="Username" value={profile?.username ?? (isOwnProfile ? user?.username : '-') ?? '-'} />
           <MetricItem label="Runs Complete" value={profile?.summary.runCount ?? '-'} />
           <MetricItem label="Calibration WPM" value={profile ? Math.round(profile.summary.calibrationWpm) : '-'} />
           <MetricItem
@@ -85,9 +102,11 @@ export function ProfileDashboardView() {
               </button>
             ))}
           </div>
-          <AppButton type="button" variant="secondary" className="min-h-10 px-3 py-2 text-sm" onClick={handleSignOut}>
-            Sign Out
-          </AppButton>
+          {isOwnProfile ? (
+            <AppButton type="button" variant="secondary" className="min-h-10 px-3 py-2 text-sm" onClick={handleSignOut}>
+              Sign Out
+            </AppButton>
+          ) : null}
         </div>
 
         {activeTab === 'runs' && (
@@ -118,7 +137,7 @@ export function ProfileDashboardView() {
               <SectionLabel>Classes teaching</SectionLabel>
               {profile && profile.teachingClasses.length > 0 ? (
                 profile.teachingClasses.map(item => (
-                  <ClassCard key={item.id} item={item} onClick={() => openClassDashboard(item.id)} />
+                  <ClassCard key={item.id} item={item} onClick={isOwnProfile ? () => openClassDashboard(item.id) : undefined} />
                 ))
               ) : (
                 <div className="tt-label">No teaching classes.</div>

@@ -185,14 +185,14 @@ export const classRoutes: RouteDefinition[] = [
           coalesce(cm.student_name, 'Anon') as student_name,
           cm.student_id,
           count(tr.id)::int as run_count,
-          coalesce(max(tr.calibration_wpm), 0) as calibration_wpm,
+          coalesce(u.calibration_wpm, max(tr.calibration_wpm), 0) as calibration_wpm,
           coalesce(max(ua.simulation_run_count), 0)::int as simulation_run_count
         from class_memberships cm
         join users u on u.id = cm.user_id
         left join typing_runs tr on tr.user_id = u.id and tr.class_id = cm.class_id
         left join user_activity ua on ua.user_id = u.id
         where cm.class_id = $1
-        group by u.id, cm.student_name, cm.student_id
+        group by u.id, u.calibration_wpm, cm.student_name, cm.student_id
         order by lower(coalesce(cm.student_name, u.username)), u.username
       `,
       [classId],
@@ -228,41 +228,4 @@ export const classRoutes: RouteDefinition[] = [
     noContent(res)
   }),
 
-  route('GET', '/api/classes/:classId/students/:studentUserId/profile', async ({ res, user, params }) => {
-    const authedUser = requireUser(user)
-    const classId = uuidValue(params.classId, 'classId')
-    const studentUserId = uuidValue(params.studentUserId, 'studentUserId')
-    await ensureInstructorOwnsClass(classId, authedUser.id)
-    const result = await pool.query(
-      `
-        select tr.id, tr.completed_at,
-          case tr.difficulty_key
-            when 'easy' then 'Easy'
-            when 'medium' then 'Medium'
-            when 'hard' then 'Hard'
-            when 'impossible' then 'Impossible'
-            else tr.difficulty_key
-          end as difficulty_label,
-          tr.completed_count,
-          tr.calibration_wpm, tr.avg_response_ms, tr.avg_queue_length, tr.utilization
-        from typing_runs tr
-        where tr.class_id = $1 and tr.user_id = $2
-        order by tr.completed_at desc
-        limit 20
-      `,
-      [classId, studentUserId],
-    )
-    json(res, 200, {
-      runs: result.rows.map(row => ({
-        id: row.id,
-        completedAt: row.completed_at,
-        difficultyLabel: row.difficulty_label,
-        completedCount: row.completed_count,
-        calibrationWpm: Number(row.calibration_wpm ?? 0),
-        averageResponseTime: Number(row.avg_response_ms ?? 0),
-        averageQueueLength: Number(row.avg_queue_length ?? 0),
-        utilizationPercent: Number(row.utilization ?? 0),
-      })),
-    })
-  }),
 ]

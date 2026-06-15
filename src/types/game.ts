@@ -40,7 +40,7 @@ export interface Phase1LevelConfig {
   regime: Phase1LoadRegime
   seed: number
   lambda: number              // requests/sec during the arrival window
-  referenceLoad: number       // reference rho = lambda * D_ref
+  referenceLoad: number       // reference U/load = lambda * D_ref
   expectedArrivals: number
   arrivalWindowMs: number
   drainTailMs: number

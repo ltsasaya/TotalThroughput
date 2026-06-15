@@ -95,7 +95,7 @@ export function SimulationLabView() {
     const steady = currentRun.steadyState
     return [
       ['λD', steady.offeredLoad.toFixed(3)],
-      ['ρ', formatPercent(steady.utilization)],
+      ['U', formatPercent(steady.utilization)],
       ['R*', formatNumber(steady.responseTime)],
       ['N*', formatNumber(steady.systemCount)],
     ]
@@ -171,7 +171,7 @@ export function SimulationLabView() {
               </span>
             )}
             <span className="text-center font-mono text-[10px] font-bold tracking-wide text-gray-500">
-              ρ {formatPercent(currentEstimate.loadProfile.perWorkerLoad)} · {currentEstimate.loadProfile.label}
+              U {formatPercent(currentEstimate.loadProfile.perWorkerLoad)} · {currentEstimate.loadProfile.label}
             </span>
             </div>
           </div>

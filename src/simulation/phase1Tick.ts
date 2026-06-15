@@ -50,7 +50,7 @@ export function computePhase1RunTick(state: Phase1RunTickInput, elapsed: number)
 
   while (arrivalIdx < arrivalSchedule.length && arrivalSchedule[arrivalIdx].arrivalTime <= elapsed) {
     const arrival = arrivalSchedule[arrivalIdx]
-    const task = generatePhase1Task(arrival.arrivalTime, phase1RunConfig.seed + arrivalIdx, arrival.size)
+    const task = generatePhase1Task(arrival.arrivalTime, phase1RunConfig.seed + arrivalIdx)
     newTasks[task.id] = task
     newQueue.push(task.id)
     arrivalIdx++

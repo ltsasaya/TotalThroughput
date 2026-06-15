@@ -13,6 +13,20 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
 
 ## Recent Work
 
+- Added latest-calibration persistence on `users`, hydrated signed-in sessions
+  with calibration data, and saved completed calibration updates through the
+  profile API.
+- Added complete target-profile viewing so instructors can open a student's
+  real profile from the class dashboard instead of a generated popup.
+- Cleaned class student action menus, added outside-click dismissal, and
+  reduced the profile return control to a compact `Back` button.
+- Unified calibration and Phase 1 typing words into one shared pool and removed
+  Phase 1 prompt-size selection.
+- Removed noisy Global Data hover and graph-switch animations, fixed visible
+  queueing notation to use `U`, and kept utilization/arrival graph bounds
+  aligned with observed data.
+- Simplified the educational preview diagrams and auth/profile/game-menu
+  headers per BOSS's UI cleanup requests.
 - Moved current Phase 1 run tasks to medium-length request prompts and updated
   expected service-demand and arrival-rate calculations.
 - Reworked the Phase 1 play view so the active typing task stays anchored while
@@ -68,11 +82,10 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
 ## Verification
 
 - `git diff --check`: passed
-- `npm test`: passed, 168 tests
+- `npm test`: passed, 171 tests
 - `npm run lint`: passed
 - `npm run build`: passed with Vite's existing large chunk warning
-- `npm run db:migrate`: passed against the configured `.env` `DATABASE_URL`
-  for migrations 001 through 004, with a non-blocking `pg` SSL-mode warning.
+- `npm run db:migrate`: not run for migration 005 in this checkpoint.
 - HTTP smoke: Vite served `/` on the fallback local dev port and the running
   API returned `/api/auth/me`.
 - Browser interaction smoke: not run in the final review because no browser

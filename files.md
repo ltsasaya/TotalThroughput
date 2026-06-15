@@ -64,12 +64,13 @@
 | `server/runValidation.ts` | Field-specific Phase 1 run-summary validation and bounds before persistence |
 | `server/sessionCookie.ts` | HttpOnly SameSite session cookie string helpers without database dependency |
 | `server/sessions.ts` | HttpOnly session cookie creation, session lookup, and revocation |
+| `server/userCalibration.ts` | User-level calibration DTO mapping shared by auth/session/profile responses |
 | `server/validation.ts` | Runtime request-body validation helpers for strings, booleans, usernames, passwords, and numeric fields |
 | `server/migrate.ts` | SQL migration runner for `migrations/*.sql` |
 | `server/routes/auth.ts` | Register, login, logout, and current-user API routes |
-| `server/routes/classes.ts` | Instructor profile/dashboard, class creation, class check/join, class dashboard, student remove/profile routes |
+| `server/routes/classes.ts` | Instructor profile/dashboard, class creation, class check/join, class dashboard, and student removal routes |
 | `server/routes/globalData.ts` | Global completed-run scatterplot data route with WPM filtering |
-| `server/routes/profile.ts` | Signed-in profile summary, run list, joined classes, and teaching classes route |
+| `server/routes/profile.ts` | Signed-in own/target profile summaries, run lists, joined classes, teaching classes, and calibration save route |
 | `server/routes/runs.ts` | Signed-in Phase 1 run summary persistence and Simulation Lab activity counter routes |
 | `server/crypto.test.ts` | Unit tests for password hashing/verification, opaque session token hashing, and cookie flags |
 | `server/runValidation.test.ts` | Unit tests for Phase 1 run-summary bounds, difficulty enum, and UUID validation |
@@ -82,12 +83,13 @@
 | `migrations/002_typing_run_summary_constraints.sql` | Postgres check constraints for persisted Phase 1 summary bounds and difficulty keys |
 | `migrations/003_remove_class_password_requirement.sql` | Postgres migration that makes legacy class password hashes nullable for code-only class joins |
 | `migrations/004_simplify_typing_run_summary.sql` | Postgres migration that removes duplicate run-summary columns and adds observed arrival rate plus throughput/sec |
+| `migrations/005_user_calibration.sql` | Postgres migration that stores the latest user calibration for auth/profile hydration and backfills from run summaries |
 
 ## Simulation
 
 | File | Description |
 |---|---|
-| `src/simulation/content.ts` | Task word pools (S/M/L), Phase 2 `generateTask(...)`, and Phase 1 medium-length `generatePhase1Task(...)` |
+| `src/simulation/content.ts` | Task word pools, shared calibration/Phase 1 typing word pool, Phase 2 `generateTask(...)`, and Phase 1 `generatePhase1Task(...)` |
 | `src/simulation/arrival.ts` | Seeded constant-rate Poisson arrival schedule generator shared by phase run builders |
 | `src/simulation/calibration.ts` | Calibration random-word text, generated display rows, WPM bins, WPM calculation, and calibrated difficulty option derivation |
 | `src/simulation/phase1Levels.ts` | Phase 1 level table, fixed seeds, per-level durations, and Poisson schedule helper |
@@ -99,7 +101,7 @@
 | `src/simulation/chartTicks.ts` | Graph tick helpers — clean time-axis tick generation and compact numeric tick labels |
 | `src/simulation/phase2Runs.ts` | Phase 2 server-pool run config builder — target per-worker load, measured-D lambda, seeds, size mix, and Poisson schedule helper |
 | `src/simulation/phase2Tick.ts` | `computePhase2Tick` — pure Phase 2 tick: arrivals, core progress, completion, idle waste, RunSummary + grade computation |
-| `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, Phase 1 medium prompts, word count ranges per size, exact deadline values |
+| `src/simulation/__tests__/content.test.ts` | Unit tests — task generation, shared Phase 1 prompts, word count ranges per size, exact deadline values |
 | `src/simulation/__tests__/arrival.poisson.test.ts` | Unit tests — seeded Poisson arrival schedule determinism, bounds, expected count, default size bucket, weighted mix, and invalid inputs |
 | `src/simulation/__tests__/calibration.test.ts` | Unit tests — calibration WPM/binning, clamping, difficulty derivation, and row-window movement |
 | `src/simulation/__tests__/phase1Results.test.ts` | Unit tests — Phase 1 gate/demo result math and aggregate unlock rules |
@@ -124,9 +126,9 @@
 | `src/components/ui/primitives.tsx` | Shared visual-system primitives — panels, labels, metric items, buttons, badges, formula callouts, and `cx` helper |
 | `src/components/account/DashboardBits.tsx` | Shared account/class dashboard helpers — dashboard shell, metric band, fields, errors, masked class-code display, class cards, and run rows |
 | `src/components/account/AuthView.tsx` | Sign In/Register page with post-auth return routing |
-| `src/components/profile/ProfileDashboardView.tsx` | Profile dashboard with top metrics, Runs/Classes tabs, saved run bars, joined classes, and teaching classes |
+| `src/components/profile/ProfileDashboardView.tsx` | Own/target profile dashboard with top metrics, Runs/Classes tabs, saved run bars, joined classes, and teaching classes |
 | `src/components/classes/InstructorDashboardView.tsx` | Instructor dashboard with first-use instructor-name modal, metric band, icon-only new-class button, and Class Info modal |
-| `src/components/classes/ClassDashboardView.tsx` | Class dashboard with class metrics, student rows, `...` actions, remove student, and class-scoped student profile modal |
+| `src/components/classes/ClassDashboardView.tsx` | Class dashboard with class metrics, student rows, `...` actions, direct student profile navigation, and remove student |
 | `src/components/classes/JoinClassView.tsx` | Two-step Join Class flow: class code, then optional/required student name and ID |
 | `src/components/global-data/GlobalDataView.tsx` | Global Data page with graph selector, WPM filter rail, and Recharts scatterplot |
 | `src/components/game/RetroHeader.tsx` | Shared semi-retro header with persistent Home/Game Menu, Global Data, For Instructors, and Sign In/Profile controls |

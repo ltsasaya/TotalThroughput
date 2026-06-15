@@ -61,7 +61,6 @@ describe('buildPhase1RunConfig', () => {
     const second = generatePhase1RunArrivalSchedule(config)
     expect(first).toEqual(second)
     expect(first.every(arrival => arrival.arrivalTime < PHASE1_RUN_DURATION_MS)).toBe(true)
-    expect(first.every(arrival => arrival.size === 'M')).toBe(true)
   })
 })
 

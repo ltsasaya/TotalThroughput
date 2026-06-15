@@ -158,6 +158,15 @@ a:focus-visible {
   transform: none;
 }
 
+.tt-button.tt-button-compact {
+  border-width: 2px;
+  box-shadow: 2px 2px 0 #000;
+  font-size: 0.75rem;
+  line-height: 1;
+  min-height: 28px;
+  padding: 0.3rem 0.55rem;
+}
+
 .tt-button-primary {
   background: var(--tt-accent);
   color: #fff;

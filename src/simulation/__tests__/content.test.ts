@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { estimatePhase1PromptLength, generatePhase1Task, generateTask } from '../content'
+import { estimatePhase1PromptLength, generatePhase1Task, generateTask, SHARED_TYPING_WORDS } from '../content'
 
 describe('generateTask', () => {
   it('returns a task with the correct shape', () => {
@@ -45,12 +45,15 @@ describe('generateTask', () => {
 })
 
 describe('generatePhase1Task', () => {
-  it('creates medium-length Phase 1 prompts without deadlines', () => {
+  it('creates shared-pool Phase 1 prompts without deadlines', () => {
     const task = generatePhase1Task(500, 10)
     expect(task.arrivalTime).toBe(500)
     expect(task.size).toBe('M')
     expect(task.deadline).toBeUndefined()
     expect(task.content!.split(' ')).toHaveLength(4)
+    for (const word of task.content!.split(' ')) {
+      expect(SHARED_TYPING_WORDS).toContain(word)
+    }
   })
 
   it('uses the content seed to produce repeatable prompt text', () => {
@@ -61,8 +64,17 @@ describe('generatePhase1Task', () => {
     expect(third.content).not.toBe(first.content)
   })
 
-  it('estimates Phase 1 service demand from medium prompt length', () => {
+  it('estimates Phase 1 service demand from the shared typing pool', () => {
     expect(estimatePhase1PromptLength()).toBeGreaterThan(20)
+  })
+})
+
+describe('shared typing pool', () => {
+  it('contains words from calibration and every legacy task size pool', () => {
+    expect(SHARED_TYPING_WORDS).toContain('server')
+    expect(SHARED_TYPING_WORDS).toContain('queue')
+    expect(SHARED_TYPING_WORDS).toContain('latency')
+    expect(SHARED_TYPING_WORDS).toContain('throughput')
   })
 })
 

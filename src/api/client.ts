@@ -1,8 +1,8 @@
 import type { Phase1RunRecord } from '@/types/metrics'
+import type { CalibrationResult } from '@/types/game'
 import type {
   AuthUser,
   ClassDashboard,
-  ClassStudentProfile,
   GlobalDataPoint,
   InstructorDashboard,
   JoinClassCheck,
@@ -71,8 +71,11 @@ export async function logoutAccount() {
   await apiRequest('/api/auth/logout', { method: 'POST', allowUnauthorized: true })
 }
 
-export async function fetchProfile(): Promise<ProfileData> {
-  return (await apiRequest<ProfileData>('/api/profile'))!
+export async function fetchProfile(userId?: string | null): Promise<ProfileData> {
+  const path = userId
+    ? `/api/profiles/${encodeURIComponent(userId)}`
+    : '/api/profile'
+  return (await apiRequest<ProfileData>(path))!
 }
 
 export async function fetchInstructorDashboard(): Promise<InstructorDashboard> {
@@ -125,12 +128,6 @@ export async function removeStudent(classId: string, studentUserId: string) {
   })
 }
 
-export async function fetchClassStudentProfile(classId: string, studentUserId: string): Promise<ClassStudentProfile> {
-  return (await apiRequest<ClassStudentProfile>(
-    `/api/classes/${encodeURIComponent(classId)}/students/${encodeURIComponent(studentUserId)}/profile`,
-  ))!
-}
-
 export async function fetchGlobalData(
   wpmMin: number,
   wpmMax: number,
@@ -146,6 +143,21 @@ export async function savePhase1RunIfSignedIn(record: Phase1RunRecord) {
     body: JSON.stringify(record),
     allowUnauthorized: true,
   })
+}
+
+export async function saveCalibrationIfSignedIn(result: CalibrationResult): Promise<AuthUser | null> {
+  if (typeof window === 'undefined') return null
+  const data = await apiRequest<{ user: AuthUser }>('/api/profile/calibration', {
+    method: 'POST',
+    body: JSON.stringify({
+      calibrationWpm: result.rawWpm,
+      calibrationRangeLabel: result.wpmRange.label,
+      calibrationBinIndex: result.binIndex,
+      serviceDemandEstimateMs: result.estimatedServiceDemandMs,
+    }),
+    allowUnauthorized: true,
+  })
+  return data?.user ?? null
 }
 
 export async function recordSimulationActivityIfSignedIn() {

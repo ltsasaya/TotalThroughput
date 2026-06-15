@@ -32,7 +32,7 @@ export function SimulationSweepPanel({ results }: { results: ServerLabSweepResul
                 <span className="text-[10px] font-bold text-gray-500">{result.loadProfile.label}</span>
               </div>
               <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
-                <dt className="text-gray-500">ρ</dt>
+                <dt className="text-gray-500">U</dt>
                 <dd className="text-right font-bold">{formatPercent(result.loadProfile.perWorkerLoad)}</dd>
                 <dt className="text-gray-500">R*</dt>
                 <dd className="text-right font-bold">{formatNumber(result.steadyState.responseTime)}s</dd>

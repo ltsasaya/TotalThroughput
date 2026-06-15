@@ -87,7 +87,7 @@ export function JoinClassView() {
           )}
 
           {message === 'Class joined.' && (
-            <AppButton type="button" variant="secondary" onClick={openProfile}>
+            <AppButton type="button" variant="secondary" onClick={() => openProfile()}>
               View Profile
             </AppButton>
           )}

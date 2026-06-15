@@ -1,6 +1,15 @@
+export interface UserCalibration {
+  wpm: number
+  rangeLabel: string
+  binIndex: number
+  serviceDemandMs: number
+  updatedAt: string | null
+}
+
 export interface AuthUser {
   id: string
   username: string
+  calibration: UserCalibration | null
 }
 
 export interface ProfileRun {
@@ -26,6 +35,7 @@ export interface ProfileClass {
 }
 
 export interface ProfileData {
+  userId: string
   username: string
   summary: {
     runCount: number
@@ -64,19 +74,6 @@ export interface ClassDashboard {
     studentCount: number
   }
   students: ClassDashboardStudent[]
-}
-
-export interface ClassStudentProfile {
-  runs: Array<{
-    id: string
-    completedAt: string
-    difficultyLabel: string
-    completedCount: number
-    calibrationWpm: number
-    averageResponseTime: number
-    averageQueueLength: number
-    utilizationPercent: number
-  }>
 }
 
 export interface JoinClassCheck {

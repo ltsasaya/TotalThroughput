@@ -80,6 +80,32 @@ describe('calibration flow', () => {
     expect(getState().phase1RunRecords).toHaveLength(1)
   })
 
+  it('hydrates a saved signed-in calibration into playable difficulty options', () => {
+    getState().applySavedCalibration({
+      wpm: 100,
+      rangeLabel: '90-105',
+      binIndex: 5,
+      serviceDemandMs: 2_400,
+      updatedAt: '2026-06-15T00:00:00.000Z',
+    })
+
+    getState().goGameMenu()
+
+    expect(getState().calibrationResult?.rawWpm).toBe(100)
+    expect(getState().phase1DifficultyOptions.map(option => option.key)).toEqual([
+      'easy',
+      'medium',
+      'hard',
+      'impossible',
+    ])
+    expect(getState().hasSeenEducationalManual).toBe(true)
+
+    getState().startCalibratedRun('medium')
+
+    expect(getState().phase).toBe('phase1')
+    expect(getState().phase1RunConfig?.calibrationWpm).toBe(100)
+  })
+
   it('does not start a calibrated run before calibration exists', () => {
     getState().startCalibratedRun('easy')
 
@@ -398,6 +424,23 @@ describe('persistent navigation', () => {
     expect(getState().calibrationResult).toEqual(calibration)
     expect(getState().phase1RunRecords).toEqual(records)
     expect(getState().tasks).toEqual({})
+  })
+
+  it('opens a target profile with a class-dashboard return target', () => {
+    const studentUserId = 'student-user-id'
+    const classId = 'class-id'
+
+    getState().openProfile(studentUserId, classId)
+
+    expect(getState().phase).toBe('profile')
+    expect(getState().selectedProfileUserId).toBe(studentUserId)
+    expect(getState().profileReturnClassId).toBe(classId)
+
+    getState().openClassDashboard(classId)
+
+    expect(getState().phase).toBe('classDashboard')
+    expect(getState().selectedProfileUserId).toBeNull()
+    expect(getState().profileReturnClassId).toBeNull()
   })
 
   it('routes an active run to the simulation lab without recording the unfinished run', () => {
