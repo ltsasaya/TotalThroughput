@@ -71,6 +71,17 @@ export function PostRunSummary() {
   return (
     <div className="app-shell flex min-h-screen items-start justify-center overflow-y-auto p-8">
       <Panel variant="modal" className="w-full max-w-2xl p-8">
+        <div className="mb-5">
+          <AppButton
+            type="button"
+            onClick={returnToMenu}
+            variant="secondary"
+            className="tt-button-compact"
+            aria-label="Back to Game Menu"
+          >
+            Back
+          </AppButton>
+        </div>
 
         <SummaryHeader
           failed={failed}
@@ -127,16 +138,6 @@ export function PostRunSummary() {
           avgServiceTime={avgServiceTime}
           avgResponseTime={avgResponseTime}
         />
-
-        <div className="flex justify-center mt-4">
-          <AppButton
-            onClick={returnToMenu}
-            variant="secondary"
-            className="px-8"
-          >
-            Back to Menu
-          </AppButton>
-        </div>
 
       </Panel>
     </div>

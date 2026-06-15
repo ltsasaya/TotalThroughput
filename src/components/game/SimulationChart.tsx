@@ -269,8 +269,11 @@ export function SimulationChart({ run, activeSeries, axisSettings }: SimulationC
           width={42}
         />
         <Tooltip
+          isAnimationActive={false}
+          animationDuration={0}
           content={<CustomTooltip hoverPoint={hoverPoint} />}
           cursor={{ stroke: '#000', strokeWidth: 1, strokeDasharray: '4 2' }}
+          wrapperStyle={{ transition: 'none' }}
         />
         {SERIES.map(series => activeSeries[series.key] && (
           <Line

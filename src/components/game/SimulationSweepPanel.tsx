@@ -29,19 +29,17 @@ export function SimulationSweepPanel({ results }: { results: ServerLabSweepResul
             <div key={result.concurrency} className="border-[2px] border-gray-300 px-2 py-1.5 font-mono">
               <div className="mb-1 flex items-center justify-between gap-2 border-b border-gray-200 pb-1">
                 <span className="text-xs font-bold">c = {result.concurrency}</span>
-                <span className="text-[10px] font-bold text-gray-500">{result.loadProfile.label}</span>
+                <span className="text-[10px] font-bold text-gray-500">
+                  {result.summary.completedWithinWindow}/{result.summary.arrivals}
+                </span>
               </div>
               <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px]">
-                <dt className="text-gray-500">U</dt>
-                <dd className="text-right font-bold">{formatPercent(result.loadProfile.perWorkerLoad)}</dd>
-                <dt className="text-gray-500">R*</dt>
-                <dd className="text-right font-bold">{formatNumber(result.steadyState.responseTime)}s</dd>
                 <dt className="text-gray-500">Avg R</dt>
                 <dd className="text-right font-bold">{formatNumber(result.summary.averageResponseTime)}s</dd>
-                <dt className="text-gray-500">Done</dt>
-                <dd className="text-right font-bold">
-                  {result.summary.completedWithinWindow}/{result.summary.arrivals}
-                </dd>
+                <dt className="text-gray-500">Avg U</dt>
+                <dd className="text-right font-bold">{formatPercent(result.summary.averageUtilization)}</dd>
+                <dt className="text-gray-500">Avg N</dt>
+                <dd className="text-right font-bold">{formatNumber(result.summary.averageSystemCount)}</dd>
               </dl>
             </div>
           ))}

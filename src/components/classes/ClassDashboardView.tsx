@@ -124,14 +124,18 @@ export function ClassDashboardView() {
   return (
     <div className="app-shell min-h-screen">
       <RetroHeader />
-      <DashboardShell
-        label="Class Dashboard"
-        headerAction={(
-          <AppButton type="button" variant="secondary" className="min-h-10 px-3 py-2 text-sm" onClick={openInstructorDashboard}>
-            Back to Instructor Dashboard
+      <DashboardShell>
+        <div>
+          <AppButton
+            type="button"
+            variant="secondary"
+            className="tt-button-compact"
+            aria-label="Back to Instructor Dashboard"
+            onClick={openInstructorDashboard}
+          >
+            Back
           </AppButton>
-        )}
-      >
+        </div>
         <ErrorText>{error}</ErrorText>
         <MetricBand className="md:grid-cols-[minmax(0,1fr)_auto_auto]">
           <MetricItem label="Class Name" value={dashboard?.class.className ?? '-'} />

@@ -60,22 +60,23 @@ export function ProfileDashboardView() {
     }
   }, [openAuth, selectedProfileUserId, user])
 
-  const headerAction = profileReturnClassId ? (
-    <AppButton
-      type="button"
-      variant="secondary"
-      className="tt-button-compact"
-      aria-label="Back to Class Dashboard"
-      onClick={() => openClassDashboard(profileReturnClassId)}
-    >
-      Back
-    </AppButton>
-  ) : null
-
   return (
     <div className="app-shell min-h-screen">
       <RetroHeader />
-      <DashboardShell headerAction={headerAction}>
+      <DashboardShell>
+        {profileReturnClassId ? (
+          <div>
+            <AppButton
+              type="button"
+              variant="secondary"
+              className="tt-button-compact"
+              aria-label="Back to Class Dashboard"
+              onClick={() => openClassDashboard(profileReturnClassId)}
+            >
+              Back
+            </AppButton>
+          </div>
+        ) : null}
         <ErrorText>{error}</ErrorText>
         <MetricBand className="md:grid-cols-6">
           <MetricItem label="Username" value={profile?.username ?? (isOwnProfile ? user?.username : '-') ?? '-'} />

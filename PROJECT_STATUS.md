@@ -27,6 +27,11 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
   aligned with observed data.
 - Simplified the educational preview diagrams and auth/profile/game-menu
   headers per BOSS's UI cleanup requests.
+- Moved page-return Back buttons to the compact top-left placement and removed
+  redundant class-dashboard header text.
+- Simplified the Simulation Lab sidebar/sweep to finite observed run metrics
+  and removed the tooltip popup transition while preserving the existing hover
+  content.
 - Moved current Phase 1 run tasks to medium-length request prompts and updated
   expected service-demand and arrival-rate calculations.
 - Reworked the Phase 1 play view so the active typing task stays anchored while
