@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-06-12
+Last updated: 2026-06-15
 
 ## Current State
 
@@ -56,22 +56,14 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
   before a DB-backed endpoint actually needs `DATABASE_URL`.
 - Removed the temporary 100 WPM run-testing calibration bypass; Game Menu now
   requires a real completed calibration before runs unlock.
+- BOSS configured the Vercel `DATABASE_URL` and confirmed the hosted app works.
+- Closed the calibrated gameplay review gate; follow-up tweaks and bug fixes
+  are now tracked in `TODO-015`.
 
 ## Remaining Work
 
-- Manually test difficulty offsets, target loads, and WPM bins during TODO-006.
-- Decide the final seed/data-collection strategy for Phase 1 runs.
-- Decide whether unfinished work should stay visible, be relabeled, or be
-  hidden in run summaries.
-- Run BOSS's pre-main Simulation Lab walkthrough and record any remaining UI,
-  labeling, or model-tuning fixes.
-- Decide whether the current `Queue Length (N)` display label should remain or
-  be adjusted for stricter queueing notation.
-- Add full server-owned run/task/event lifecycle and server-finalized metrics
-  for the later TODO-007 through TODO-011 foundation.
-- Connect the finalized browser-owned run model to server-owned task generation
-  and run reloads.
-- Smoke-test Vercel after the API wrapper fix is deployed.
+- Work through BOSS-supplied small changes and bug fixes under `TODO-015`.
+- Keep future Phase 2 deferred until BOSS supplies the new concept.
 
 ## Verification
 
@@ -89,6 +81,8 @@ Simulation Lab activity counts, and a start-page Concurrency Race sample.
   popup, class create/code display, Join Class, duplicate already-enrolled
   message, class dashboard student row/menu, Global Data empty scatterplot
   shell, and Simulation Lab activity count passed locally.
+- Hosted smoke: BOSS confirmed the Vercel deployment works after configuring
+  `DATABASE_URL`.
 - Browser QA: Phase 1 layout stability passed on desktop and mobile for empty
   queue, queued requests with overflow, wrong-letter highlighting, and
   wrong-space underline states.
